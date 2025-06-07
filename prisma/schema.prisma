@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "debian-openssl-1.1.x", "linux-musl", "rhel-openssl-1.0.x"]
 }
 
 datasource db {
@@ -9,41 +10,46 @@ datasource db {
 
 model Member {
   id        String   @id @default(cuid())
-  name      String   @unique  // Add unique constraint
+  name      String   @unique
   phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  gameParticipants GameParticipant[]
+
+  participants GameParticipant[]
+
+  @@map("members")
 }
 
 model Game {
-  id                   String   @id @default(cuid())
-  date                 DateTime
-  location             String
-  yardCost             Float    @default(0)
-  shuttleCockQuantity  Int      @default(0)  
-  shuttleCockPrice     Float    @default(0)
-  otherFees            Float    @default(0)
-  totalCost            Float    @default(0)
-  costPerMember        Float    @default(0)
-  costPerGame          Float    // Keep existing field
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  
+  id                 String   @id @default(cuid())
+  date               DateTime
+  location           String?
+  yardCost           Float    @default(0)
+  shuttleCockQuantity Int     @default(0)
+  shuttleCockPrice   Float    @default(0)
+  otherFees          Float    @default(0)
+  totalCost          Float    @default(0)
+  costPerMember      Float    @default(0)
+  costPerGame        Float    @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
   participants GameParticipant[]
+
+  @@map("games")
 }
 
 model GameParticipant {
-  id       String  @id @default(cuid())
+  id       String    @id @default(cuid())
   gameId   String
   memberId String
-  hasPaid  Boolean @default(false)  // Payment tracking
-  paidAt   DateTime?               // Payment timestamp
-  prePaid  Float   @default(0)     // ✅ Add pre-pay amount
-  
+  hasPaid  Boolean   @default(false)
+  paidAt   DateTime?
+  prePaid  Float     @default(0)
+
   game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
   member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  
+
   @@unique([gameId, memberId])
+  @@map("game_participants")
 }
