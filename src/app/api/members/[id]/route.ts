@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '../../../../lib/db'
+import { prisma } from '../../../../lib/prisma'
 
 // GET - Get a specific member by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params
     const { id } = params
 
     const member = await prisma.member.findUnique({
@@ -33,9 +34,10 @@ export async function GET(
 // DELETE - Delete a member by ID
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params
     const { id } = params
 
     if (!id) {
@@ -75,12 +77,13 @@ export async function DELETE(
   }
 }
 
-// PUT - Update a member by ID (optional)
+// PUT - Update a member by ID
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params
     const { id } = params
     const body = await request.json()
     const { name, email, phone } = body
@@ -109,7 +112,6 @@ export async function PUT(
       where: { id },
       data: {
         name: name?.trim() || existingMember.name,
-        email: email?.trim().toLowerCase() || existingMember.email,
         phone: phone?.trim() || existingMember.phone
       }
     })

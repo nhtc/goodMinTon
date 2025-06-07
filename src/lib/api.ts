@@ -30,29 +30,18 @@ api.interceptors.response.use(
 )
 
 export const apiService = {
-  members: {
-    getAll: async () => {
-      const response = await api.get('/members')
-      return response.data
-    },
-    create: async (memberData: { name: string; email: string; phone?: string }) => {
-      const response = await api.post('/members', memberData)
-      return response.data
-    },
-    delete: async (id: string) => {
-      const response = await api.delete(`/members/${id}`)
-      return response.data
-    }
-  },
-
   games: {
-    getAll: async () => {
-      const response = await api.get('/games')
-      return response.data
+    async getAll() {
+      const response = await fetch('/api/games')
+      if (!response.ok) {
+        throw new Error('Failed to fetch games')
+      }
+      return response.json()
     },
-    
-    create: async (gameData: {
+
+    async create(gameData: {
       date: string
+      location: string
       yardCost: number
       shuttleCockQuantity: number
       shuttleCockPrice: number
@@ -60,34 +49,139 @@ export const apiService = {
       totalCost: number
       memberIds: string[]
       costPerMember: number
-    }) => {
-      const response = await api.post('/games', gameData)
-      return response.data
-    },
-    
-    delete: async (id: string) => {
-      const response = await api.delete(`/games/${id}`)
-      return response.data
+      memberPrePays?: { [key: string]: number } // ✅ Add pre-pays
+    }) {
+      const response = await fetch('/api/games', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(gameData),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to create game')
+      }
+
+      return response.json()
     },
 
-   // ✅ Add the missing togglePayment method
-   togglePayment: async (gameId: string, participantId: string, hasPaid: boolean) => {
-    const response = await fetch(`/api/games/${gameId}/participants/${participantId}/payment`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ hasPaid }),
-    })
-    
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Failed to update payment status')
-    }
-    
-    return response.json()
-  }
-  }
+    // ✅ Add the missing update method
+    async update(gameId: string, gameData: {
+      date: string
+      location: string
+      yardCost: number
+      shuttleCockQuantity: number
+      shuttleCockPrice: number
+      otherFees: number
+      totalCost: number
+      memberIds: string[]
+      costPerMember: number
+      memberPrePays?: { [key: string]: number }
+    }) {
+      const response = await fetch(`/api/games/${gameId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(gameData),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to update game')
+      }
+
+      return response.json()
+    },
+
+    async delete(id: string) {
+      const response = await fetch(`/api/games?id=${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to delete game')
+      }
+
+      return response.json()
+    },
+
+    async togglePayment(gameId: string, participantId: string, hasPaid: boolean) {
+      const response = await fetch(`/api/games/${gameId}/participants/${participantId}/payment`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ hasPaid }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to update payment status')
+      }
+
+      return response.json()
+    },
+  },
+
+  members: {
+    async getAll() {
+      const response = await fetch('/api/members')
+      if (!response.ok) {
+        throw new Error('Failed to fetch members')
+      }
+      return response.json()
+    },
+
+    async create(memberData: { name: string; phone?: string }) {
+      const response = await fetch('/api/members', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(memberData),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to create member')
+      }
+
+      return response.json()
+    },
+
+    async delete(id: string) {
+      const response = await fetch(`/api/members/${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to delete member')
+      }
+
+      return response.json()
+    },
+
+    async update(id: string, memberData: { name: string; phone?: string }) {
+      const response = await fetch(`/api/members/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(memberData),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to update member')
+      }
+
+      return response.json()
+    },
+  },
 }
-
 export default api

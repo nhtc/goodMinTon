@@ -1,15 +1,17 @@
-import {prisma} from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
 
 // PATCH - Toggle payment status
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { gameId: string; participantId: string } }
+  // The second argument's type should reflect that 'params' will be a Promise
+  { params }: { params: Promise<{ gameId: string; participantId: string }> }
 ) {
   try {
-    const { gameId, participantId } = params
-    const body = await request.json()
-    const { hasPaid } = body
+    // Await the params because it's a Promise
+    const { gameId, participantId } = await params;
+    const body = await request.json();
+    const { hasPaid } = body;
 
     // Find the participant
     const participant = await prisma.gameParticipant.findFirst({
@@ -17,13 +19,13 @@ export async function PATCH(
         gameId,
         memberId: participantId
       }
-    })
+    });
 
     if (!participant) {
       return NextResponse.json(
         { error: 'Participant not found' },
         { status: 404 }
-      )
+      );
     }
 
     // Update payment status
@@ -39,14 +41,14 @@ export async function PATCH(
         member: true,
         game: true
       }
-    })
+    });
 
-    return NextResponse.json(updatedParticipant)
+    return NextResponse.json(updatedParticipant);
   } catch (error) {
-    console.error('Error updating payment status:', error)
+    console.error('Error updating payment status:', error);
     return NextResponse.json(
       { error: 'Failed to update payment status', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
-    )
+    );
   }
 }

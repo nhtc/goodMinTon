@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '../../../lib/db'
+import { prisma } from '../../../lib/prisma'
 import { Prisma } from '@prisma/client'
 
 export async function GET() {
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         error: 'Failed to create member',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        details: process.env.NODE_ENV === 'development' ?(error instanceof Error ? error.message : 'Unknown error')  : undefined
       },
       { status: 500 }
     )

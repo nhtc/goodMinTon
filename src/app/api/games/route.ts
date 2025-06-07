@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '../../../lib/db'
+import { prisma } from '../../../lib/prisma'
 
 // ...existing code...
 
@@ -28,7 +28,7 @@ export async function GET() {
         participantId: p.id,
         hasPaid: p.hasPaid,
         paidAt: p.paidAt,
-        prePaid: p.prePaid // ✅ Include pre-pay data
+        prePaid: p.prePaid
       }))
     }))
 
@@ -163,52 +163,91 @@ export async function DELETE(request: NextRequest) {
 }
 
 
-
-// PATCH - Toggle payment status
-export async function PATCH(
+export async function PUT(
   request: NextRequest,
-  { params }: { params: { gameId: string; participantId: string } }
+  context: { params: Promise<{ gameId: string }> }
 ) {
   try {
-    const { gameId, participantId } = params
+    const params = await context.params
+    const { gameId } = params
     const body = await request.json()
-    const { hasPaid } = body
+    const {
+      date,
+      location,
+      yardCost,
+      shuttleCockQuantity,
+      shuttleCockPrice,
+      otherFees,
+      totalCost,
+      memberIds,
+      costPerMember,
+      memberPrePays = {}
+    } = body
 
-    // Find the participant
-    const participant = await prisma.gameParticipant.findFirst({
-      where: {
-        gameId,
-        memberId: participantId
+    // Check if game exists
+    const existingGame = await prisma.game.findUnique({
+      where: { id: gameId },
+      include: {
+        participants: true
       }
     })
 
-    if (!participant) {
+    if (!existingGame) {
       return NextResponse.json(
-        { error: 'Participant not found' },
+        { error: 'Game not found' },
         { status: 404 }
       )
     }
 
-    // Update payment status
-    const updatedParticipant = await prisma.gameParticipant.update({
-      where: {
-        id: participant.id
-      },
+    // Update game
+    const updatedGame = await prisma.game.update({
+      where: { id: gameId },
       data: {
-        hasPaid: Boolean(hasPaid),
-        paidAt: Boolean(hasPaid) ? new Date() : null
+        date: new Date(date),
+        location: location.trim(),
+        yardCost: Number(yardCost) || 0,
+        shuttleCockQuantity: Number(shuttleCockQuantity) || 0,
+        shuttleCockPrice: Number(shuttleCockPrice) || 0,
+        otherFees: Number(otherFees) || 0,
+        totalCost: Number(totalCost) || 0,
+        costPerMember: Number(costPerMember) || 0,
+        costPerGame: Number(totalCost) || 0,
+        // Update pre-pays for existing participants
+        participants: {
+          updateMany: memberIds.map((memberId: string) => ({
+            where: { memberId },
+            data: {
+              prePaid: Number(memberPrePays[memberId]) || 0
+            }
+          }))
+        }
       },
       include: {
-        member: true,
-        game: true
+        participants: {
+          include: {
+            member: true
+          }
+        }
       }
     })
 
-    return NextResponse.json(updatedParticipant)
+    // Transform response
+    const transformedGame = {
+      ...updatedGame,
+      participants: updatedGame.participants.map(p => ({
+        ...p.member,
+        participantId: p.id,
+        hasPaid: p.hasPaid,
+        paidAt: p.paidAt,
+        prePaid: p.prePaid
+      }))
+    }
+
+    return NextResponse.json(transformedGame)
   } catch (error) {
-    console.error('Error updating payment status:', error)
+    console.error('Error updating game:', error)
     return NextResponse.json(
-      { error: 'Failed to update payment status' },
+      { error: 'Failed to update game', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
