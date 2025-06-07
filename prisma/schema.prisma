@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Member {
+  id        String   @id @default(cuid())
+  name      String   @unique  // Add unique constraint
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  gameParticipants GameParticipant[]
+}
+
+model Game {
+  id                   String   @id @default(cuid())
+  date                 DateTime
+  location             String
+  yardCost             Float    @default(0)
+  shuttleCockQuantity  Int      @default(0)  
+  shuttleCockPrice     Float    @default(0)
+  otherFees            Float    @default(0)
+  totalCost            Float    @default(0)
+  costPerMember        Float    @default(0)
+  costPerGame          Float    // Keep existing field
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  
+  participants GameParticipant[]
+}
+
+model GameParticipant {
+  id       String  @id @default(cuid())
+  gameId   String
+  memberId String
+  hasPaid  Boolean @default(false)  // Payment tracking
+  paidAt   DateTime?               // Payment timestamp
+  prePaid  Float   @default(0)     // ✅ Add pre-pay amount
+  
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  
+  @@unique([gameId, memberId])
+}
