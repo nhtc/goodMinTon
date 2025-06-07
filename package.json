@@ -5,10 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "postinstall": "prisma generate --no-engine",
-    "vercel-build": "prisma generate && prisma db push && next build",
     "start": "next start",
-    "lint": "eslint ."
+    "postinstall": "prisma generate",
+    "railway-build": "prisma generate && npm run build",
+    "lint": "next lint"
   },
   "dependencies": {
     "@prisma/client": "^3.15.2",
