@@ -1104,6 +1104,7 @@ button:active {
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
+  color: #000;
 }
 
 .stat-label {
