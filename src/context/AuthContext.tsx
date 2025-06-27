@@ -36,15 +36,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // Check if user has edit permissions
   const isAuthorized = user?.role === "admin" || user?.role === "editor"
   const isAuthenticated = !!user
-  console.log("🚀 ~ user:", user)
-  console.log("🚀 ~ isAuthenticated:", isAuthenticated)
 
   useEffect(() => {
     // Check for stored auth token on app load
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem("auth_token")
-        console.log("🚀 ~ checkAuth ~ token:", token)
         if (token) {
           const response = await fetch("/api/auth/verify", {
             headers: {
@@ -54,7 +51,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
           if (response.ok) {
             const userData = await response.json()
-            console.log("🚀 ~ checkAuth ~ userData:", userData)
             setUser(userData.user)
           } else {
             localStorage.removeItem("auth_token")

@@ -32,7 +32,6 @@ export async function POST(req: NextRequest) {
           expiresIn: '24h'
         }
       )
-      console.log("🚀 ~ POST ~ token:", token)
 
       // Create response
       // Create response with token included
