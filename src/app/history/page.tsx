@@ -1,7 +1,15 @@
 "use client"
-import React, { useEffect, useState } from "react"
-import GameForm from "../../components/GameForm"
+import React, { useEffect, useState, lazy, Suspense } from "react"
+import styles from "./page.module.css"
 import { apiService } from "../../lib/api"
+import {
+  AuthorizedComponent,
+  EditableContent,
+  usePermissions,
+} from "../../components/AuthorizedComponent"
+
+// Lazy load heavy components for better performance
+const GameForm = lazy(() => import("../../components/GameForm"))
 
 interface Member {
   id: string
@@ -37,6 +45,7 @@ const HistoryPage = () => {
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [paymentLoading, setPaymentLoading] = useState<string | null>(null)
+  const { canEdit, userRole } = usePermissions()
 
   // ✅ Helper function to calculate remaining amount for a participant
   const getMemberRemainingAmount = (
@@ -214,11 +223,41 @@ const HistoryPage = () => {
 
   const stats = getTotalStats()
 
+  // Modal close handlers
+  const handleCloseModal = () => {
+    setSelectedGame(null)
+  }
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      handleCloseModal()
+    }
+  }
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && selectedGame) {
+        handleCloseModal()
+      }
+    }
+
+    if (selectedGame) {
+      document.addEventListener("keydown", handleEscKey)
+      document.body.classList.add("modal-open")
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEscKey)
+      document.body.classList.remove("modal-open")
+    }
+  }, [selectedGame])
+
   if (loading) {
     return (
-      <div className='history-loading'>
-        <div className='loading-content'>
-          <div className='loading-spinner'></div>
+      <div className={styles.historyLoading}>
+        <div className={styles.loadingContent}>
+          <div className={styles.loadingSpinner}></div>
           <h2>Đang tải lịch sử trận đấu...</h2>
           <p>Vui lòng đợi một chút</p>
         </div>
@@ -227,368 +266,730 @@ const HistoryPage = () => {
   }
 
   return (
-    <div className='history-page'>
-      {/* Header Section */}
-      <div className='history-header'>
-        <div className='header-content'>
-          <div className='header-info'>
-            <div className='header-icon-wrapper'>
-              <div className='header-icon'>🏸</div>
-              <div className='icon-glow'></div>
-            </div>
-            <div className='header-text'>
-              <h1 className='header-title'>Lịch Sử Trận Đấu</h1>
-              <p className='header-subtitle'>
-                Theo dõi và quản lý tất cả các trận cầu lông của bạn
-              </p>
-            </div>
-          </div>
-
-          <div className='header-actions'>
-            {error && (
-              <button
-                onClick={fetchGames}
-                className='action-btn retry-btn'
-                disabled={loading}
-              >
-                {loading ? (
-                  <div className='btn-spinner'></div>
-                ) : (
-                  <span className='btn-icon'>🔄</span>
-                )}
-                <span>Thử lại</span>
-              </button>
-            )}
-            <button
-              onClick={() => setShowForm(!showForm)}
-              className={`action-btn primary-btn ${showForm ? "active" : ""}`}
-              disabled={loading}
-            >
-              <span className='btn-icon'>{showForm ? "✕" : "➕"}</span>
-              <span>{showForm ? "Hủy" : "Trận đấu mới"}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className='history-container'>
-        {/* Error Alert */}
-        {error && (
-          <div className='error-alert'>
-            <div className='alert-content'>
-              <div className='alert-icon'>⚠️</div>
-              <div className='alert-text'>
-                <strong>Có lỗi xảy ra:</strong> {error}
+    <AuthorizedComponent>
+      <div className={styles.historyPage}>
+        {/* Header Section */}
+        <div className={styles.historyHeader}>
+          <div className={styles.headerContent}>
+            <div className={styles.headerInfo}>
+              <div className={styles.headerIconWrapper}>
+                <div className={styles.headerIcon}>🏸</div>
+                <div className={styles.iconGlow}></div>
+              </div>
+              <div className={styles.headerText}>
+                <h1 className={styles.headerTitle}>Lịch Sử Trận Đấu</h1>
+                <p className={styles.headerSubtitle}>
+                  Theo dõi và quản lý tất cả các trận cầu lông của bạn
+                </p>
               </div>
             </div>
-            <button onClick={() => setError("")} className='alert-close'>
-              ✕
-            </button>
-          </div>
-        )}
 
-        {/* Stats Cards */}
-        <div className='stats-grid'>
-          <div className='stat-card games-stat'>
-            <div className='stat-icon'>🎯</div>
-            <div className='stat-value'>{stats.totalGames}</div>
-            <div className='stat-label'>Tổng trận đấu</div>
-            <div className='stat-trend'>
-              {stats.totalGames > 0 && (
-                <span className='trend-text'>+{stats.totalGames} trận</span>
+            <div className={styles.headerActions}>
+              {error && (
+                <button
+                  onClick={fetchGames}
+                  className={`${styles.actionBtn} ${styles.retryBtn}`}
+                  disabled={loading}
+                  aria-label='Thử lại tải dữ liệu'
+                >
+                  {loading ? (
+                    <div className={styles.btnSpinner} aria-hidden='true'></div>
+                  ) : (
+                    <span className={styles.btnIcon} aria-hidden='true'>
+                      🔄
+                    </span>
+                  )}
+                  <span className={styles.btnText}>Thử lại</span>
+                </button>
               )}
-            </div>
-          </div>
 
-          <div className='stat-card cost-stat'>
-            <div className='stat-icon'>💰</div>
-            <div className='stat-value'>
-              {stats.totalCost.toLocaleString("vi-VN")}đ
-            </div>
-            <div className='stat-label'>Tổng chi phí</div>
-            <div className='stat-trend'>
-              {stats.totalCost > 0 && (
-                <span className='trend-text'>Đã chi tiêu</span>
-              )}
-            </div>
-          </div>
+              {/* Permission Indicator */}
+              <div className={`${styles.permissionBadge} ${styles[userRole]}`}>
+                <span>
+                  {userRole === "admin"
+                    ? "👑"
+                    : userRole === "editor"
+                    ? "✏️"
+                    : "👁️"}
+                </span>
+                <span>{userRole}</span>
+              </div>
 
-          <div className='stat-card avg-stat'>
-            <div className='stat-icon'>📊</div>
-            <div className='stat-value'>
-              {stats.avgCostPerGame.toLocaleString("vi-VN")}đ
-            </div>
-            <div className='stat-label'>TB mỗi trận</div>
-            <div className='stat-trend'>
-              {stats.avgCostPerGame > 0 && (
-                <span className='trend-text'>Trung bình</span>
-              )}
-            </div>
-          </div>
-
-          <div className='stat-card players-stat'>
-            <div className='stat-icon'>👥</div>
-            <div className='stat-value'>{stats.totalParticipants}</div>
-            <div className='stat-label'>Thành viên tham gia</div>
-            <div className='stat-trend'>
-              {stats.totalParticipants > 0 && (
-                <span className='trend-text'>Duy nhất</span>
-              )}
+              {/* Edit-only: Add Game Button */}
+              <EditableContent
+                viewContent={
+                  <div className={styles.viewOnlyIndicator}>
+                    <span>👁️ Chế độ xem</span>
+                  </div>
+                }
+              >
+                <button
+                  onClick={() => setShowForm(!showForm)}
+                  className={`${styles.actionBtn} ${styles.primaryBtn} ${
+                    showForm ? styles.active : ""
+                  }`}
+                  disabled={loading}
+                  aria-label={
+                    showForm ? "Hủy thêm trận đấu" : "Thêm trận đấu mới"
+                  }
+                >
+                  <span className={styles.btnIcon} aria-hidden='true'>
+                    {showForm ? "✕" : "➕"}
+                  </span>
+                  <span className={styles.btnText}>
+                    {showForm ? "Hủy" : "Trận đấu mới"}
+                  </span>
+                </button>
+              </EditableContent>
             </div>
           </div>
         </div>
 
-        {/* Game Form */}
-        {showForm && (
-          <div className='form-section'>
-            <div className='form-header'>
-              <h2>🆕 Thêm Trận Đấu Mới</h2>
-              <p>Ghi lại thông tin trận đấu và chi phí</p>
+        <div className={styles.historyContainer}>
+          {/* Error Alert */}
+          {error && (
+            <div className={styles.errorAlert}>
+              <div className={styles.alertContent}>
+                <div className={styles.alertIcon}>⚠️</div>
+                <div className={styles.alertText}>
+                  <strong>Có lỗi xảy ra:</strong> {error}
+                </div>
+              </div>
+              <button
+                onClick={() => setError("")}
+                className={styles.alertClose}
+              >
+                ✕
+              </button>
             </div>
-            <GameForm members={members} onGameCreated={handleGameCreated} />
-          </div>
-        )}
+          )}
 
-        {/* Search and Filter */}
-        {games.length > 0 && (
-          <div className='search-section'>
-            <div className='search-wrapper'>
-              <div className='search-icon'>🔍</div>
-              <input
-                type='text'
-                placeholder='Tìm kiếm theo ngày, địa điểm hoặc tên thành viên...'
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className='search-input'
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm("")}
-                  className='search-clear'
+          {/* Stats Cards */}
+          <div className={styles.statsGrid}>
+            <div className={`${styles.statCard} ${styles.gamesStat}`}>
+              <div className={styles.statIcon}>🎯</div>
+              <div className={styles.statValue}>{stats.totalGames}</div>
+              <div className={styles.statLabel}>Tổng trận đấu</div>
+              <div className={styles.statTrend}>
+                {stats.totalGames > 0 && (
+                  <span className={styles.trendText}>
+                    +{stats.totalGames} trận
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className={`${styles.statCard} ${styles.costStat}`}>
+              <div className={styles.statIcon}>💰</div>
+              <div className={styles.statValue}>
+                {stats.totalCost.toLocaleString("vi-VN")}đ
+              </div>
+              <div className={styles.statLabel}>Tổng chi phí</div>
+              <div className={styles.statTrend}>
+                {stats.totalCost > 0 && (
+                  <span className={styles.trendText}>Đã chi tiêu</span>
+                )}
+              </div>
+            </div>
+
+            <div className={`${styles.statCard} ${styles.avgStat}`}>
+              <div className={styles.statIcon}>📊</div>
+              <div className={styles.statValue}>
+                {stats.avgCostPerGame.toLocaleString("vi-VN")}đ
+              </div>
+              <div className={styles.statLabel}>TB mỗi trận</div>
+              <div className={styles.statTrend}>
+                {stats.avgCostPerGame > 0 && (
+                  <span className={styles.trendText}>Trung bình</span>
+                )}
+              </div>
+            </div>
+
+            <div className={`${styles.statCard} ${styles.playersStat}`}>
+              <div className={styles.statIcon}>👥</div>
+              <div className={styles.statValue}>{stats.totalParticipants}</div>
+              <div className={styles.statLabel}>Thành viên tham gia</div>
+              <div className={styles.statTrend}>
+                {stats.totalParticipants > 0 && (
+                  <span className={styles.trendText}>Duy nhất</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Game Form */}
+          {showForm && (
+            <div className={styles.formSection}>
+              <div className={styles.formHeader}>
+                <h2>🆕 Thêm Trận Đấu Mới</h2>
+                <p>Ghi lại thông tin trận đấu và chi phí</p>
+              </div>
+              <EditableContent
+                viewContent={
+                  <div className={styles.authViewOnly}>
+                    <span className={styles.authIcon}>👁️</span>
+                    <h3>Chế độ xem</h3>
+                    <p>
+                      Bạn chỉ có quyền xem. Liên hệ quản trị viên để thêm trận
+                      đấu mới.
+                    </p>
+                  </div>
+                }
+              >
+                <Suspense
+                  fallback={
+                    <div className={styles.loadingForm}>
+                      <div className={styles.loadingSpinner}></div>
+                      <p>Đang tải form tạo game...</p>
+                    </div>
+                  }
                 >
-                  ✕
+                  <GameForm
+                    members={members}
+                    onGameCreated={handleGameCreated}
+                  />
+                </Suspense>
+              </EditableContent>
+            </div>
+          )}
+
+          {/* Search and Filter */}
+          {games.length > 0 && (
+            <div className={styles.searchSection}>
+              <div className={styles.searchWrapper}>
+                <div className={styles.searchIcon}>🔍</div>
+                <input
+                  type='text'
+                  placeholder='Tìm kiếm theo ngày, địa điểm hoặc tên thành viên...'
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className={styles.searchInput}
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className={styles.searchClear}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              {searchTerm && (
+                <div className={styles.searchResults}>
+                  Tìm thấy {filteredGames.length} trận đấu
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Games List */}
+          {filteredGames.length === 0 ? (
+            <div className={styles.emptyState}>
+              <div className={styles.emptyIcon}>🏸</div>
+              <h3 className={styles.emptyTitle}>
+                {games.length === 0
+                  ? "Chưa có trận đấu nào"
+                  : "Không tìm thấy trận đấu nào"}
+              </h3>
+              <p className={styles.emptyDescription}>
+                {games.length === 0
+                  ? "Hãy thêm trận đấu đầu tiên của bạn!"
+                  : "Thử tìm kiếm với từ khóa khác"}
+              </p>
+              {games.length === 0 && (
+                <button
+                  onClick={() => setShowForm(true)}
+                  className={styles.emptyAction}
+                >
+                  <span className={styles.btnIcon}>➕</span>
+                  Thêm trận đấu đầu tiên
                 </button>
               )}
             </div>
-            {searchTerm && (
-              <div className='search-results'>
-                Tìm thấy {filteredGames.length} trận đấu
+          ) : (
+            <div className={styles.gamesSection}>
+              <div className={styles.sectionHeader}>
+                <h2>📅 Danh Sách Trận Đấu</h2>
+                <div className={styles.gamesCount}>
+                  {filteredGames.length} trận đấu
+                </div>
               </div>
-            )}
-          </div>
-        )}
 
-        {/* Games List */}
-        {filteredGames.length === 0 ? (
-          <div className='empty-state'>
-            <div className='empty-icon'>🏸</div>
-            <h3>
-              {games.length === 0
-                ? "Chưa có trận đấu nào"
-                : "Không tìm thấy trận đấu nào"}
-            </h3>
-            <p>
-              {games.length === 0
-                ? "Hãy thêm trận đấu đầu tiên của bạn!"
-                : "Thử tìm kiếm với từ khóa khác"}
-            </p>
-            {games.length === 0 && (
-              <button
-                onClick={() => setShowForm(true)}
-                className='empty-action-btn'
-              >
-                <span className='btn-icon'>➕</span>
-                Thêm trận đấu đầu tiên
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className='games-section'>
-            <div className='section-header'>
-              <h2>📅 Danh Sách Trận Đấu</h2>
-              <div className='games-count'>{filteredGames.length} trận đấu</div>
-            </div>
+              <div className={styles.gamesGrid}>
+                {filteredGames.map((game, index) => {
+                  const paidCount = game.participants.filter(
+                    p => p.hasPaid
+                  ).length
+                  const unpaidCount = game.participants.length - paidCount
 
-            <div className='games-grid'>
-              {filteredGames.map((game, index) => {
-                const paidCount = game.participants.filter(
-                  p => p.hasPaid
-                ).length
-                const unpaidCount = game.participants.length - paidCount
+                  // ✅ Calculate totals including pre-pays
+                  const totalPrePaid = getGameTotalPrePaid(game)
+                  const totalRemaining = getGameTotalRemaining(game)
+                  const totalCollectedFromPaid = game.participants
+                    .filter(p => p.hasPaid)
+                    .reduce(
+                      (sum, p) =>
+                        sum + getMemberRemainingAmount(p, game.costPerMember),
+                      0
+                    )
 
-                // ✅ Calculate totals including pre-pays
-                const totalPrePaid = getGameTotalPrePaid(game)
-                const totalRemaining = getGameTotalRemaining(game)
-                const totalCollectedFromPaid = game.participants
-                  .filter(p => p.hasPaid)
-                  .reduce(
-                    (sum, p) =>
-                      sum + getMemberRemainingAmount(p, game.costPerMember),
-                    0
-                  )
-
-                return (
-                  <div
-                    key={game.id}
-                    className='game-card'
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    {/* Game Header */}
-                    <div className='game-header'>
-                      <div className='game-date-info'>
-                        <div className='game-date'>
-                          {new Date(game.date).getDate()}
-                        </div>
-                        <div className='game-month'>
-                          Tháng {new Date(game.date).getMonth() + 1}
-                        </div>
-                      </div>
-                      <div className='game-title-info'>
-                        <h3 className='game-title'>{formatDate(game.date)}</h3>
-                        <p className='game-subtitle'>
-                          {game.location && `📍 ${game.location} • `}
-                          {game.participants.length} người tham gia
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Game Stats */}
-                    <div className='game-stats'>
-                      <div className='stat-item'>
-                        <div className='stat-icon-small'>💰</div>
-                        <div className='stat-info'>
-                          <div className='stat-value-small'>
-                            {game.totalCost.toLocaleString("vi-VN")}đ
+                  return (
+                    <div
+                      key={game.id}
+                      className={styles.gameCard}
+                      data-animation-index={index}
+                    >
+                      {/* Game Header */}
+                      <div className={styles.gameHeader}>
+                        <div className={styles.gameDateInfo}>
+                          <div className={styles.gameDate}>
+                            {new Date(game.date).getDate()}
                           </div>
-                          <div className='stat-label-small'>Tổng chi phí</div>
-                        </div>
-                      </div>
-                      <div className='stat-item'>
-                        <div className='stat-icon-small'>👤</div>
-                        <div className='stat-info'>
-                          <div className='stat-value-small'>
-                            {game.costPerMember.toLocaleString("vi-VN")}đ
+                          <div className={styles.gameMonth}>
+                            Tháng {new Date(game.date).getMonth() + 1}
                           </div>
-                          <div className='stat-label-small'>Mỗi người</div>
+                        </div>
+                        <div className={styles.gameTitleInfo}>
+                          <h3 className={styles.gameTitle}>
+                            {formatDate(game.date)}
+                          </h3>
+                          <p className={styles.gameSubtitle}>
+                            {game.location && `📍 ${game.location} • `}
+                            {game.participants.length} người tham gia
+                          </p>
                         </div>
                       </div>
-                      {/* ✅ Add pre-pay info if exists */}
-                      {totalPrePaid > 0 && (
-                        <div className='stat-item'>
-                          <div className='stat-icon-small'>💸</div>
-                          <div className='stat-info'>
-                            <div className='stat-value-small'>
-                              {totalPrePaid.toLocaleString("vi-VN")}đ
+
+                      {/* Game Stats */}
+                      <div className={styles.gameStats}>
+                        <div className={styles.statItem}>
+                          <div className={styles.statIconSmall}>💰</div>
+                          <div className={styles.statInfo}>
+                            <div className={styles.statValueSmall}>
+                              {game.totalCost.toLocaleString("vi-VN")}đ
                             </div>
-                            <div className='stat-label-small'>Đã trả trước</div>
+                            <div className={styles.statLabelSmall}>
+                              Tổng chi phí
+                            </div>
                           </div>
                         </div>
-                      )}
-                    </div>
-
-                    {/* Payment Status */}
-                    <div className='payment-status-card'>
-                      <div className='payment-header'>
-                        <span className='payment-title'>💰 Thanh toán</span>
-                        <div className='payment-summary'>
-                          <span
-                            className={`payment-badge paid ${
-                              paidCount > 0 ? "active" : ""
-                            }`}
-                          >
-                            ✅ {paidCount}
-                          </span>
-                          <span
-                            className={`payment-badge unpaid ${
-                              unpaidCount > 0 ? "active" : ""
-                            }`}
-                          >
-                            ⏳ {unpaidCount}
-                          </span>
+                        <div className={styles.statItem}>
+                          <div className={styles.statIconSmall}>👤</div>
+                          <div className={styles.statInfo}>
+                            <div className={styles.statValueSmall}>
+                              {game.costPerMember.toLocaleString("vi-VN")}đ
+                            </div>
+                            <div className={styles.statLabelSmall}>
+                              Mỗi người
+                            </div>
+                          </div>
                         </div>
+                        {/* ✅ Add pre-pay info if exists */}
+                        {totalPrePaid > 0 && (
+                          <div className={styles.statItem}>
+                            <div className={styles.statIconSmall}>💸</div>
+                            <div className={styles.statInfo}>
+                              <div className={styles.statValueSmall}>
+                                {totalPrePaid.toLocaleString("vi-VN")}đ
+                              </div>
+                              <div className={styles.statLabelSmall}>
+                                Đã trả trước
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
-                      <div className='participants-payment-list'>
-                        {game.participants.map(participant => {
-                          const paymentKey = `${game.id}-${participant.id}`
-                          const isLoading = paymentLoading === paymentKey
-                          const remainingAmount = getMemberRemainingAmount(
-                            participant,
-                            game.costPerMember
-                          )
-                          const prePaid = participant.prePaid || 0
-
-                          return (
-                            <div
-                              key={participant.id}
-                              className={`participant-payment-item ${
-                                participant.hasPaid ? "paid" : "unpaid"
-                              }`}
+                      {/* Payment Status */}
+                      <div className={styles.paymentStatusCard}>
+                        <div className={styles.paymentHeader}>
+                          <span className={styles.paymentTitle}>
+                            💰 Thanh toán
+                          </span>
+                          <div className={styles.paymentSummary}>
+                            <span
+                              className={`${styles.paymentBadge} ${
+                                styles.paid
+                              } ${paidCount > 0 ? styles.active : ""}`}
                             >
-                              <button
-                                onClick={() =>
-                                  handlePaymentToggle(
-                                    game.id,
-                                    participant.id,
-                                    participant.hasPaid || false
-                                  )
-                                }
-                                disabled={isLoading}
-                                className='participant-payment-btn'
-                                title={
+                              ✅ {paidCount}
+                            </span>
+                            <span
+                              className={`${styles.paymentBadge} ${
+                                styles.unpaid
+                              } ${unpaidCount > 0 ? styles.active : ""}`}
+                            >
+                              ⏳ {unpaidCount}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className={styles.participantsPaymentList}>
+                          {game.participants.map(participant => {
+                            const paymentKey = `${game.id}-${participant.id}`
+                            const isLoading = paymentLoading === paymentKey
+                            const remainingAmount = getMemberRemainingAmount(
+                              participant,
+                              game.costPerMember
+                            )
+                            const prePaid = participant.prePaid || 0
+
+                            return (
+                              <div
+                                key={participant.id}
+                                className={`${styles.participantPaymentItem} ${
                                   participant.hasPaid
-                                    ? "Đã thanh toán - Click để đánh dấu chưa trả"
-                                    : "Chưa thanh toán - Click để đánh dấu đã trả"
-                                }
+                                    ? styles.paid
+                                    : styles.unpaid
+                                }`}
                               >
-                                <div className='participant-avatar-small'>
-                                  {participant.name.charAt(0).toUpperCase()}
-                                </div>
-                                <div className='participant-info-small'>
-                                  <div className='participant-name-small'>
-                                    {participant.name}
+                                <button
+                                  onClick={() =>
+                                    canEdit &&
+                                    handlePaymentToggle(
+                                      game.id,
+                                      participant.id,
+                                      participant.hasPaid || false
+                                    )
+                                  }
+                                  disabled={isLoading || !canEdit}
+                                  className={`${styles.participantPaymentBtn} ${
+                                    !canEdit ? styles.disabled : ""
+                                  }`}
+                                  title={
+                                    !canEdit
+                                      ? "Bạn không có quyền chỉnh sửa thanh toán"
+                                      : participant.hasPaid
+                                      ? "Đã thanh toán - Click để đánh dấu chưa trả"
+                                      : "Chưa thanh toán - Click để đánh dấu đã trả"
+                                  }
+                                >
+                                  <div
+                                    className={styles.participantAvatarSmall}
+                                  >
+                                    {participant.name.charAt(0).toUpperCase()}
                                   </div>
-                                  <div className='participant-amount'>
-                                    {/* ✅ Show remaining amount instead of full cost */}
-                                    {prePaid > 0 ? (
-                                      <div className='amount-breakdown'>
-                                        <div className='original-amount'>
-                                          {game.costPerMember.toLocaleString(
-                                            "vi-VN"
-                                          )}
-                                          đ
+                                  <div className={styles.participantInfoSmall}>
+                                    <div
+                                      className={styles.participantNameSmall}
+                                    >
+                                      {participant.name}
+                                    </div>
+                                    <div className={styles.participantAmount}>
+                                      {/* ✅ Show remaining amount instead of full cost */}
+                                      {prePaid > 0 ? (
+                                        <div className={styles.amountBreakdown}>
+                                          <div
+                                            className={styles.originalAmount}
+                                          >
+                                            {game.costPerMember.toLocaleString(
+                                              "vi-VN"
+                                            )}
+                                            đ
+                                          </div>
+                                          <div className={styles.prepaidAmount}>
+                                            -💸{prePaid.toLocaleString("vi-VN")}
+                                            đ
+                                          </div>
+                                          <div
+                                            className={styles.remainingAmount}
+                                          >
+                                            ={" "}
+                                            {remainingAmount.toLocaleString(
+                                              "vi-VN"
+                                            )}
+                                            đ
+                                          </div>
                                         </div>
-                                        <div className='prepaid-amount'>
-                                          -💸{prePaid.toLocaleString("vi-VN")}đ
-                                        </div>
-                                        <div className='remaining-amount'>
-                                          ={" "}
-                                          {remainingAmount.toLocaleString(
-                                            "vi-VN"
-                                          )}
-                                          đ
-                                        </div>
-                                      </div>
+                                      ) : (
+                                        `${remainingAmount.toLocaleString(
+                                          "vi-VN"
+                                        )}đ`
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className={styles.paymentStatusIcon}>
+                                    {isLoading ? (
+                                      <div
+                                        className={styles.paymentSpinner}
+                                      ></div>
+                                    ) : participant.hasPaid ? (
+                                      <span className={styles.paidIcon}>
+                                        ✅
+                                      </span>
                                     ) : (
-                                      `${remainingAmount.toLocaleString(
-                                        "vi-VN"
-                                      )}đ`
+                                      <span className={styles.unpaidIcon}>
+                                        ⏳
+                                      </span>
                                     )}
                                   </div>
+                                </button>
+                                {participant.hasPaid && participant.paidAt && (
+                                  <div className={styles.paymentTime}>
+                                    💰{" "}
+                                    {new Date(
+                                      participant.paidAt
+                                    ).toLocaleDateString("vi-VN", {
+                                      day: "2-digit",
+                                      month: "2-digit",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+
+                        {/* ✅ Updated payment total to show correct amounts */}
+                        <div className={styles.paymentTotals}>
+                          {totalPrePaid > 0 && (
+                            <div
+                              className={`${styles.paymentTotal} ${styles.prepaid}`}
+                            >
+                              <span className={styles.totalLabel}>
+                                💸 Đã trả trước:
+                              </span>
+                              <span className={styles.totalAmount}>
+                                {totalPrePaid.toLocaleString("vi-VN")}đ
+                              </span>
+                            </div>
+                          )}
+                          {paidCount > 0 && (
+                            <div
+                              className={`${styles.paymentTotal} ${styles.collected}`}
+                            >
+                              <span className={styles.totalLabel}>
+                                ✅ Đã thu thêm:
+                              </span>
+                              <span className={styles.totalAmount}>
+                                {totalCollectedFromPaid.toLocaleString("vi-VN")}
+                                đ
+                              </span>
+                            </div>
+                          )}
+                          <div
+                            className={`${styles.paymentTotal} ${styles.remaining}`}
+                          >
+                            <span className={styles.totalLabel}>
+                              ⏳ Còn cần thu:
+                            </span>
+                            <span className={styles.totalAmount}>
+                              {game.participants
+                                .filter(p => !p.hasPaid)
+                                .reduce(
+                                  (sum, p) =>
+                                    sum +
+                                    getMemberRemainingAmount(
+                                      p,
+                                      game.costPerMember
+                                    ),
+                                  0
+                                )
+                                .toLocaleString("vi-VN")}
+                              đ
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Game Actions */}
+                      <div className={styles.gameActions}>
+                        <button
+                          onClick={() => setSelectedGame(game)}
+                          className={`${styles.gameActionBtn} ${styles.viewBtn}`}
+                          title='Xem chi tiết'
+                        >
+                          <span className={styles.btnIcon}>👁️</span>
+                          <span>Chi tiết</span>
+                        </button>
+                      </div>
+
+                      {/* Game Card Glow Effect */}
+                      <div className={styles.cardGlow}></div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Game Detail Modal - Enhanced with overlay click */}
+        {selectedGame && (
+          <div className={styles.modalOverlay} onClick={handleOverlayClick}>
+            <div className={`${styles.modalContent} ${styles.modalWide}`}>
+              <div className={styles.modalHeader}>
+                <div className={styles.modalTitleSection}>
+                  <div className={styles.modalIcon}>🏸</div>
+                  <div>
+                    <h3 className={styles.modalTitle}>Chi Tiết Trận Đấu</h3>
+                    <p className={styles.modalSubtitle}>
+                      {formatDate(selectedGame.date)}
+                      {selectedGame.location && ` • ${selectedGame.location}`}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleCloseModal}
+                  className={styles.modalClose}
+                  aria-label='Đóng modal'
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className={styles.modalBody}>
+                {/* Cost Breakdown */}
+                <div className={styles.modalSection}>
+                  <h4 className={styles.sectionTitle}>
+                    <span className={styles.sectionIcon}>💰</span>
+                    Chi Phí Chi Tiết
+                  </h4>
+                  <div className={styles.costBreakdown}>
+                    <div className={styles.costItem}>
+                      <span className={styles.costLabel}>🏟️ Thuê sân:</span>
+                      <span className={styles.costValue}>
+                        {selectedGame.yardCost.toLocaleString("vi-VN")}đ
+                      </span>
+                    </div>
+                    <div className={styles.costItem}>
+                      <span className={styles.costLabel}>
+                        🏸 Cầu lông ({selectedGame.shuttleCockQuantity} quả):
+                      </span>
+                      <span className={styles.costValue}>
+                        {(
+                          selectedGame.shuttleCockQuantity *
+                          selectedGame.shuttleCockPrice
+                        ).toLocaleString("vi-VN")}
+                        đ
+                      </span>
+                    </div>
+                    <div className={styles.costItem}>
+                      <span className={styles.costLabel}>📋 Chi phí khác:</span>
+                      <span className={styles.costValue}>
+                        {selectedGame.otherFees.toLocaleString("vi-VN")}đ
+                      </span>
+                    </div>
+                    <div className={styles.costTotal}>
+                      <span className={styles.totalLabel}>Tổng cộng:</span>
+                      <span className={styles.totalValue}>
+                        {selectedGame.totalCost.toLocaleString("vi-VN")}đ
+                      </span>
+                    </div>
+                    <div className={styles.costPerMember}>
+                      <span className={styles.perMemberLabel}>Mỗi người:</span>
+                      <span className={styles.perMemberValue}>
+                        {selectedGame.costPerMember.toLocaleString("vi-VN")}đ
+                      </span>
+                    </div>
+                    {/* ✅ Add pre-pay breakdown in modal */}
+                    {getGameTotalPrePaid(selectedGame) > 0 && (
+                      <div className={styles.prepayBreakdown}>
+                        <div className={`${styles.costItem} ${styles.prepay}`}>
+                          <span className={styles.costLabel}>
+                            💸 Tổng đã trả trước:
+                          </span>
+                          <span className={styles.costValue}>
+                            -
+                            {getGameTotalPrePaid(selectedGame).toLocaleString(
+                              "vi-VN"
+                            )}
+                            đ
+                          </span>
+                        </div>
+                        <div
+                          className={`${styles.costItem} ${styles.remaining}`}
+                        >
+                          <span className={styles.costLabel}>
+                            ⏳ Tổng còn cần thu:
+                          </span>
+                          <span className={styles.costValue}>
+                            {getGameTotalRemaining(selectedGame).toLocaleString(
+                              "vi-VN"
+                            )}
+                            đ
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Participants with Payment Status */}
+                <div className={styles.modalSection}>
+                  <h4 className={styles.sectionTitle}>
+                    <span className={styles.sectionIcon}>👥</span>
+                    Thành Viên Tham Gia ({selectedGame.participants.length})
+                  </h4>
+                  <div className={styles.participantsList}>
+                    {selectedGame.participants.map(participant => {
+                      const paymentKey = `${selectedGame.id}-${participant.id}`
+                      const isLoading = paymentLoading === paymentKey
+                      const remainingAmount = getMemberRemainingAmount(
+                        participant,
+                        selectedGame.costPerMember
+                      )
+                      const prePaid = participant.prePaid || 0
+
+                      return (
+                        <div
+                          key={participant.id}
+                          className={`${styles.participantItemModal} ${
+                            participant.hasPaid ? styles.paid : styles.unpaid
+                          }`}
+                        >
+                          <div className={styles.participantInfoWrapper}>
+                            <div className={styles.participantAvatarLarge}>
+                              {participant.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className={styles.participantInfo}>
+                              <div className={styles.participantName}>
+                                {participant.name}
+                              </div>
+                              {participant.phone && (
+                                <div className={styles.participantPhone}>
+                                  📱 {participant.phone}
                                 </div>
-                                <div className='payment-status-icon'>
-                                  {isLoading ? (
-                                    <div className='payment-spinner'></div>
-                                  ) : participant.hasPaid ? (
-                                    <span className='paid-icon'>✅</span>
-                                  ) : (
-                                    <span className='unpaid-icon'>⏳</span>
-                                  )}
+                              )}
+                              {/* ✅ Show payment breakdown in modal */}
+                              <div
+                                className={styles.participantPaymentBreakdown}
+                              >
+                                <div className={styles.breakdownItem}>
+                                  <span>
+                                    💰 Phải trả:{" "}
+                                    {selectedGame.costPerMember.toLocaleString(
+                                      "vi-VN"
+                                    )}
+                                    đ
+                                  </span>
                                 </div>
-                              </button>
+                                {prePaid > 0 && (
+                                  <div
+                                    className={`${styles.breakdownItem} ${styles.prepaid}`}
+                                  >
+                                    <span>
+                                      💸 Đã trả trước:{" "}
+                                      {prePaid.toLocaleString("vi-VN")}đ
+                                    </span>
+                                  </div>
+                                )}
+                                <div
+                                  className={`${styles.breakdownItem} ${styles.remaining}`}
+                                >
+                                  <span>
+                                    ⏳ Còn cần trả:{" "}
+                                    <strong>
+                                      {remainingAmount.toLocaleString("vi-VN")}đ
+                                    </strong>
+                                  </span>
+                                </div>
+                              </div>
                               {participant.hasPaid && participant.paidAt && (
-                                <div className='payment-time'>
-                                  💰{" "}
+                                <div className={styles.participantPaidTime}>
+                                  💰 Đã trả lúc{" "}
                                   {new Date(
                                     participant.paidAt
                                   ).toLocaleDateString("vi-VN", {
@@ -600,331 +1001,127 @@ const HistoryPage = () => {
                                 </div>
                               )}
                             </div>
-                          )
-                        })}
-                      </div>
-
-                      {/* ✅ Updated payment total to show correct amounts */}
-                      <div className='payment-totals'>
-                        {totalPrePaid > 0 && (
-                          <div className='payment-total prepaid'>
-                            <span className='total-label'>
-                              💸 Đã trả trước:
-                            </span>
-                            <span className='total-amount'>
-                              {totalPrePaid.toLocaleString("vi-VN")}đ
-                            </span>
                           </div>
-                        )}
-                        {paidCount > 0 && (
-                          <div className='payment-total collected'>
-                            <span className='total-label'>✅ Đã thu thêm:</span>
-                            <span className='total-amount'>
-                              {totalCollectedFromPaid.toLocaleString("vi-VN")}đ
-                            </span>
-                          </div>
-                        )}
-                        <div className='payment-total remaining'>
-                          <span className='total-label'>⏳ Còn cần thu:</span>
-                          <span className='total-amount'>
-                            {game.participants
-                              .filter(p => !p.hasPaid)
-                              .reduce(
-                                (sum, p) =>
-                                  sum +
-                                  getMemberRemainingAmount(
-                                    p,
-                                    game.costPerMember
-                                  ),
-                                0
+                          <button
+                            onClick={() =>
+                              canEdit &&
+                              handlePaymentToggle(
+                                selectedGame.id,
+                                participant.id,
+                                participant.hasPaid || false
                               )
-                              .toLocaleString("vi-VN")}
-                            đ
-                          </span>
+                            }
+                            disabled={isLoading || !canEdit}
+                            className={`${styles.paymentToggleModal} ${
+                              participant.hasPaid ? styles.paid : styles.unpaid
+                            } ${!canEdit ? styles.disabled : ""}`}
+                            title={
+                              !canEdit
+                                ? "Bạn không có quyền chỉnh sửa thanh toán"
+                                : participant.hasPaid
+                                ? "Đã thanh toán - Click để đánh dấu chưa trả"
+                                : "Chưa thanh toán - Click để đánh dấu đã trả"
+                            }
+                          >
+                            {isLoading ? (
+                              <div className={styles.paymentSpinner}></div>
+                            ) : participant.hasPaid ? (
+                              <>
+                                <span className={styles.paymentIcon}>✅</span>
+                                <span>Đã trả</span>
+                                <div className={styles.paymentAmount}>
+                                  {remainingAmount > 0
+                                    ? `${remainingAmount.toLocaleString(
+                                        "vi-VN"
+                                      )}đ`
+                                    : "Hoàn thành"}
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <span className={styles.paymentIcon}>⏳</span>
+                                <span>Chưa trả</span>
+                                <div className={styles.paymentAmount}>
+                                  {remainingAmount.toLocaleString("vi-VN")}đ
+                                </div>
+                              </>
+                            )}
+                          </button>
                         </div>
-                      </div>
-                    </div>
+                      )
+                    })}
+                  </div>
 
-                    {/* Game Actions */}
-                    <div className='game-actions'>
-                      <button
-                        onClick={() => setSelectedGame(game)}
-                        className='game-action-btn view-btn'
-                        title='Xem chi tiết'
-                      >
-                        <span className='btn-icon'>👁️</span>
-                        <span>Chi tiết</span>
-                      </button>
-                    </div>
-
-                    {/* Game Card Glow Effect */}
-                    <div className='card-glow'></div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Game Detail Modal */}
-      {selectedGame && (
-        <div className='modal-overlay'>
-          <div className='modal-content'>
-            <div className='modal-header'>
-              <div className='modal-title-section'>
-                <div className='modal-icon'>🏸</div>
-                <div>
-                  <h3 className='modal-title'>Chi Tiết Trận Đấu</h3>
-                  <p className='modal-subtitle'>
-                    {formatDate(selectedGame.date)}
-                    {selectedGame.location && ` • ${selectedGame.location}`}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedGame(null)}
-                className='modal-close'
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className='modal-body'>
-              {/* Cost Breakdown */}
-              <div className='modal-section'>
-                <h4 className='section-title'>
-                  <span className='section-icon'>💰</span>
-                  Chi Phí Chi Tiết
-                </h4>
-                <div className='cost-breakdown'>
-                  <div className='cost-item'>
-                    <span className='cost-label'>🏟️ Thuê sân:</span>
-                    <span className='cost-value'>
-                      {selectedGame.yardCost.toLocaleString("vi-VN")}đ
-                    </span>
-                  </div>
-                  <div className='cost-item'>
-                    <span className='cost-label'>
-                      🏸 Cầu lông ({selectedGame.shuttleCockQuantity} quả):
-                    </span>
-                    <span className='cost-value'>
-                      {(
-                        selectedGame.shuttleCockQuantity *
-                        selectedGame.shuttleCockPrice
-                      ).toLocaleString("vi-VN")}
-                      đ
-                    </span>
-                  </div>
-                  <div className='cost-item'>
-                    <span className='cost-label'>📋 Chi phí khác:</span>
-                    <span className='cost-value'>
-                      {selectedGame.otherFees.toLocaleString("vi-VN")}đ
-                    </span>
-                  </div>
-                  <div className='cost-total'>
-                    <span className='total-label'>Tổng cộng:</span>
-                    <span className='total-value'>
-                      {selectedGame.totalCost.toLocaleString("vi-VN")}đ
-                    </span>
-                  </div>
-                  <div className='cost-per-member'>
-                    <span className='per-member-label'>Mỗi người:</span>
-                    <span className='per-member-value'>
-                      {selectedGame.costPerMember.toLocaleString("vi-VN")}đ
-                    </span>
-                  </div>
-                  {/* ✅ Add pre-pay breakdown in modal */}
-                  {getGameTotalPrePaid(selectedGame) > 0 && (
-                    <div className='prepay-breakdown'>
-                      <div className='cost-item prepay'>
-                        <span className='cost-label'>
+                  {/* ✅ Updated Payment Summary in Modal */}
+                  <div className={styles.modalPaymentSummary}>
+                    {getGameTotalPrePaid(selectedGame) > 0 && (
+                      <div className={styles.summaryItem}>
+                        <span className={styles.summaryLabel}>
                           💸 Tổng đã trả trước:
                         </span>
-                        <span className='cost-value'>
-                          -
+                        <span className={styles.summaryValue}>
                           {getGameTotalPrePaid(selectedGame).toLocaleString(
                             "vi-VN"
                           )}
                           đ
                         </span>
                       </div>
-                      <div className='cost-item remaining'>
-                        <span className='cost-label'>⏳ Tổng còn cần thu:</span>
-                        <span className='cost-value'>
-                          {getGameTotalRemaining(selectedGame).toLocaleString(
-                            "vi-VN"
-                          )}
-                          đ
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Participants with Payment Status */}
-              <div className='modal-section'>
-                <h4 className='section-title'>
-                  <span className='section-icon'>👥</span>
-                  Thành Viên Tham Gia ({selectedGame.participants.length})
-                </h4>
-                <div className='participants-list'>
-                  {selectedGame.participants.map(participant => {
-                    const paymentKey = `${selectedGame.id}-${participant.id}`
-                    const isLoading = paymentLoading === paymentKey
-                    const remainingAmount = getMemberRemainingAmount(
-                      participant,
-                      selectedGame.costPerMember
-                    )
-                    const prePaid = participant.prePaid || 0
-
-                    return (
-                      <div
-                        key={participant.id}
-                        className={`participant-item-modal ${
-                          participant.hasPaid ? "paid" : "unpaid"
-                        }`}
-                      >
-                        <div className='participant-info-wrapper'>
-                          <div className='participant-avatar-large'>
-                            {participant.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div className='participant-info'>
-                            <div className='participant-name'>
-                              {participant.name}
-                            </div>
-                            {participant.phone && (
-                              <div className='participant-phone'>
-                                📱 {participant.phone}
-                              </div>
-                            )}
-                            {/* ✅ Show payment breakdown in modal */}
-                            <div className='participant-payment-breakdown'>
-                              <div className='breakdown-item'>
-                                <span>
-                                  💰 Phải trả:{" "}
-                                  {selectedGame.costPerMember.toLocaleString(
-                                    "vi-VN"
-                                  )}
-                                  đ
-                                </span>
-                              </div>
-                              {prePaid > 0 && (
-                                <div className='breakdown-item prepaid'>
-                                  <span>
-                                    💸 Đã trả trước:{" "}
-                                    {prePaid.toLocaleString("vi-VN")}đ
-                                  </span>
-                                </div>
-                              )}
-                              <div className='breakdown-item remaining'>
-                                <span>
-                                  ⏳ Còn cần trả:{" "}
-                                  <strong>
-                                    {remainingAmount.toLocaleString("vi-VN")}đ
-                                  </strong>
-                                </span>
-                              </div>
-                            </div>
-                            {participant.hasPaid && participant.paidAt && (
-                              <div className='participant-paid-time'>
-                                💰 Đã trả lúc{" "}
-                                {new Date(
-                                  participant.paidAt
-                                ).toLocaleDateString("vi-VN", {
-                                  day: "2-digit",
-                                  month: "2-digit",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <button
-                          onClick={() =>
-                            handlePaymentToggle(
-                              selectedGame.id,
-                              participant.id,
-                              participant.hasPaid || false
-                            )
-                          }
-                          disabled={isLoading}
-                          className={`payment-toggle-modal ${
-                            participant.hasPaid ? "paid" : "unpaid"
-                          }`}
-                          title={
-                            participant.hasPaid
-                              ? "Đã thanh toán - Click để đánh dấu chưa trả"
-                              : "Chưa thanh toán - Click để đánh dấu đã trả"
-                          }
-                        >
-                          {isLoading ? (
-                            <div className='payment-spinner'></div>
-                          ) : participant.hasPaid ? (
-                            <>
-                              <span className='payment-icon'>✅</span>
-                              <span>Đã trả</span>
-                              <div className='payment-amount'>
-                                {remainingAmount > 0
-                                  ? `${remainingAmount.toLocaleString(
-                                      "vi-VN"
-                                    )}đ`
-                                  : "Hoàn thành"}
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <span className='payment-icon'>⏳</span>
-                              <span>Chưa trả</span>
-                              <div className='payment-amount'>
-                                {remainingAmount.toLocaleString("vi-VN")}đ
-                              </div>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {/* ✅ Updated Payment Summary in Modal */}
-                <div className='modal-payment-summary'>
-                  {getGameTotalPrePaid(selectedGame) > 0 && (
-                    <div className='summary-item'>
-                      <span className='summary-label'>
-                        💸 Tổng đã trả trước:
+                    )}
+                    <div className={styles.summaryItem}>
+                      <span className={styles.summaryLabel}>
+                        ✅ Đã thanh toán:
                       </span>
-                      <span className='summary-value'>
-                        {getGameTotalPrePaid(selectedGame).toLocaleString(
-                          "vi-VN"
-                        )}
+                      <span className={styles.summaryValue}>
+                        {
+                          selectedGame.participants.filter(p => p.hasPaid)
+                            .length
+                        }{" "}
+                        người
+                      </span>
+                    </div>
+                    <div className={styles.summaryItem}>
+                      <span className={styles.summaryLabel}>
+                        ⏳ Chưa thanh toán:
+                      </span>
+                      <span className={styles.summaryValue}>
+                        {
+                          selectedGame.participants.filter(p => !p.hasPaid)
+                            .length
+                        }{" "}
+                        người
+                      </span>
+                    </div>
+                    <div className={`${styles.summaryItem} ${styles.total}`}>
+                      <span className={styles.summaryLabel}>
+                        💰 Tổng đã thu:
+                      </span>
+                      <span className={styles.summaryValue}>
+                        {(
+                          getGameTotalPrePaid(selectedGame) +
+                          selectedGame.participants
+                            .filter(p => p.hasPaid)
+                            .reduce(
+                              (sum, p) =>
+                                sum +
+                                getMemberRemainingAmount(
+                                  p,
+                                  selectedGame.costPerMember
+                                ),
+                              0
+                            )
+                        ).toLocaleString("vi-VN")}
                         đ
                       </span>
                     </div>
-                  )}
-                  <div className='summary-item'>
-                    <span className='summary-label'>✅ Đã thanh toán:</span>
-                    <span className='summary-value'>
-                      {selectedGame.participants.filter(p => p.hasPaid).length}{" "}
-                      người
-                    </span>
-                  </div>
-                  <div className='summary-item'>
-                    <span className='summary-label'>⏳ Chưa thanh toán:</span>
-                    <span className='summary-value'>
-                      {selectedGame.participants.filter(p => !p.hasPaid).length}{" "}
-                      người
-                    </span>
-                  </div>
-                  <div className='summary-item total'>
-                    <span className='summary-label'>💰 Tổng đã thu:</span>
-                    <span className='summary-value'>
-                      {(
-                        getGameTotalPrePaid(selectedGame) +
-                        selectedGame.participants
-                          .filter(p => p.hasPaid)
+                    <div
+                      className={`${styles.summaryItem} ${styles.remaining}`}
+                    >
+                      <span className={styles.summaryLabel}>
+                        ⏳ Còn cần thu:
+                      </span>
+                      <span className={styles.summaryValue}>
+                        {selectedGame.participants
+                          .filter(p => !p.hasPaid)
                           .reduce(
                             (sum, p) =>
                               sum +
@@ -934,67 +1131,50 @@ const HistoryPage = () => {
                               ),
                             0
                           )
-                      ).toLocaleString("vi-VN")}
-                      đ
-                    </span>
-                  </div>
-                  <div className='summary-item remaining'>
-                    <span className='summary-label'>⏳ Còn cần thu:</span>
-                    <span className='summary-value'>
-                      {selectedGame.participants
-                        .filter(p => !p.hasPaid)
-                        .reduce(
-                          (sum, p) =>
-                            sum +
-                            getMemberRemainingAmount(
-                              p,
-                              selectedGame.costPerMember
-                            ),
-                          0
-                        )
-                        .toLocaleString("vi-VN")}
-                      đ
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Game Info */}
-              <div className='modal-section'>
-                <h4 className='section-title'>
-                  <span className='section-icon'>ℹ️</span>
-                  Thông Tin Bổ Sung
-                </h4>
-                <div className='game-info'>
-                  <div className='info-item'>
-                    <span className='info-label'>📅 Ngày chơi:</span>
-                    <span className='info-value'>
-                      {formatDate(selectedGame.date)}
-                    </span>
-                  </div>
-                  {selectedGame.location && (
-                    <div className='info-item'>
-                      <span className='info-label'>📍 Địa điểm:</span>
-                      <span className='info-value'>
-                        {selectedGame.location}
+                          .toLocaleString("vi-VN")}
+                        đ
                       </span>
                     </div>
-                  )}
-                  <div className='info-item'>
-                    <span className='info-label'>📝 Ghi nhận:</span>
-                    <span className='info-value'>
-                      {new Date(selectedGame.createdAt).toLocaleDateString(
-                        "vi-VN"
-                      )}
-                    </span>
+                  </div>
+                </div>
+
+                {/* Game Info */}
+                <div className={styles.modalSection}>
+                  <h4 className={styles.sectionTitle}>
+                    <span className={styles.sectionIcon}>ℹ️</span>
+                    Thông Tin Bổ Sung
+                  </h4>
+                  <div className={styles.gameInfo}>
+                    <div className={styles.infoItem}>
+                      <span className={styles.infoLabel}>📅 Ngày chơi:</span>
+                      <span className={styles.infoValue}>
+                        {formatDate(selectedGame.date)}
+                      </span>
+                    </div>
+                    {selectedGame.location && (
+                      <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>📍 Địa điểm:</span>
+                        <span className={styles.infoValue}>
+                          {selectedGame.location}
+                        </span>
+                      </div>
+                    )}
+                    <div className={styles.infoItem}>
+                      <span className={styles.infoLabel}>📝 Ghi nhận:</span>
+                      <span className={styles.infoValue}>
+                        {new Date(selectedGame.createdAt).toLocaleDateString(
+                          "vi-VN"
+                        )}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </AuthorizedComponent>
   )
 }
 

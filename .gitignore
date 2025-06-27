@@ -206,29 +206,16 @@ web_modules/
 .yarn/install-state.gz
 .pnp.*
 
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
 # Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Prisma
-prisma/migrations/migration_lock.toml
-
-# IDE and Editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+prisma/dev.db
+prisma/dev.db-journal
 
 # Backup files
 *.backup
@@ -274,3 +261,6 @@ playwright/.cache/
 
 # MSW
 public/mockServiceWorker.js
+
+# Shell scripts (cleanup, setup, etc.)
+*.sh

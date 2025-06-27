@@ -27,8 +27,26 @@ export function removeAuthResponse() {
   response.headers.set('Set-Cookie', `${AUTH_COOKIE}=; Path=/; HttpOnly; Max-Age=0`)
   return response
 }
+// Simple mock users for testing
+const MOCK_USERS = [
+  { id: '1', username: 'admin', password: 'password123', role: 'admin' },
+  { id: '2', username: 'manager', password: 'manager123', role: 'manager' },
+  { id: '3', username: 'user', password: 'user123', role: 'user' }
+]
 
-// Simple credential check - replace with proper auth in production
-export function validateCredentials(username: string, password: string): boolean {
-  return username === 'admin' && password === 'password123'
+export async function validateCredentials(username: string, password: string) {
+  // Simple mock validation
+  const user = MOCK_USERS.find(
+    u => u.username === username && u.password === password
+  )
+  
+  if (user) {
+    return {
+      id: user.id,
+      username: user.username,
+      role: user.role
+    }
+  }
+  
+  return null
 }

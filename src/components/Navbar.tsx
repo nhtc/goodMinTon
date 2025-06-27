@@ -2,16 +2,24 @@
 import React, { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useAuth } from "@/context/AuthContext"
+import { usePermissions } from "./AuthorizedComponent"
+import styles from "./Navbar.module.css"
 
 const Navbar = () => {
   const pathname = usePathname()
   const [isScrolled, setIsScrolled] = useState(false)
+  const { isAuthenticated, user, logout } = useAuth()
+  const { userRole, canEdit } = usePermissions()
 
   const navigation = [
     { name: "Home", href: "/", icon: "🏠" },
     { name: "Members", href: "/members", icon: "👥" },
     { name: "Game History", href: "/history", icon: "📅" },
-    { name: "Admin", href: "/login", icon: "🔐" },
+    // Show Admin link only for non-authenticated users
+    ...(!isAuthenticated
+      ? [{ name: "Admin", href: "/login", icon: "🔐" }]
+      : []),
   ]
 
   const isActive = (href: string) => {
@@ -31,30 +39,67 @@ const Navbar = () => {
   }, [])
 
   return (
-    <nav className='navbar'>
-      <div className='navbar-container'>
-        <div className='navbar-content'>
+    <nav className={styles.navbar}>
+      <div className={styles.navbarContainer}>
+        <div className={styles.navbarContent}>
           {/* Logo */}
-          <Link href='/' className='navbar-logo'>
-            <div className='navbar-logo-icon'>🏸</div>
-            <span className='navbar-logo-text'>Badminton Manager</span>
+          <Link href='/' className={styles.navbarLogo}>
+            <div className={styles.navbarLogoIcon}>🏸</div>
+            <span className={styles.navbarLogoText}>Badminton Manager</span>
           </Link>
 
           {/* Navigation */}
-          <div className='navbar-nav'>
+          <div className={styles.navbarNav}>
             {navigation.map(item => (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`navbar-nav-item ${
-                  isActive(item.href) ? "active" : ""
+                className={`${styles.navbarNavItem} ${
+                  isActive(item.href) ? styles.active : ""
                 }`}
               >
-                <span className='navbar-nav-icon'>{item.icon}</span>
-                <span className='navbar-nav-text'>{item.name}</span>
+                <span className={styles.navbarNavIcon}>{item.icon}</span>
+                <span className={styles.navbarNavText}>{item.name}</span>
               </Link>
             ))}
           </div>
+
+          {/* User Info or Login Button */}
+          {isAuthenticated && user ? (
+            <div className={styles.navbarUser}>
+              <div className={styles.userInfo}>
+                <div className={styles.userAvatar}>
+                  {user.name?.charAt(0).toUpperCase() || "U"}
+                </div>
+                <div className={styles.userDetails}>
+                  <span className={styles.userName}>{user.name}</span>
+                  <span className={`${styles.userRole} ${styles[userRole]}`}>
+                    {userRole === "admin" && "👑 Admin"}
+                    {userRole === "editor" && "✏️ Editor"}
+                    {userRole === "viewer" && "👁️ Viewer"}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={logout}
+                className={styles.logoutBtn}
+                title='Đăng xuất'
+              >
+                <span>🚪</span>
+                Đăng xuất
+              </button>
+            </div>
+          ) : (
+            <div className={styles.navbarGuest}>
+              <div className={styles.guestInfo}>
+                <span className={styles.guestRole}>👁️ Chế độ xem</span>
+              </div>
+              <Link href='/login' className={styles.loginBtn}>
+                <span>🔐</span>
+                Đăng nhập Admin
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </nav>

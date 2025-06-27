@@ -1,5 +1,7 @@
 "use client"
+import { withAuth } from "@/components/AuthorizedComponent"
 import React, { useState, useEffect, useRef } from "react"
+import styles from "./MemberForm.module.css"
 
 interface MemberFormProps {
   onUpdate: () => void
@@ -147,18 +149,18 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate }) => {
   }
 
   return (
-    <div className='member-form-container'>
+    <div className={styles.memberFormContainer}>
       {/* Form Header */}
-      <div className='form-header'>
-        <div className='header-icon-wrapper'>
-          <div className='header-icon'>
+      <div className={styles.formHeader}>
+        <div className={styles.headerIconWrapper}>
+          <div className={styles.headerIcon}>
             <span>👤</span>
           </div>
-          <div className='icon-pulse'></div>
+          <div className={styles.iconPulse}></div>
         </div>
-        <div className='header-content'>
-          <h2 className='form-title'>Thêm Thành viên Mới</h2>
-          <p className='form-subtitle'>
+        <div className={styles.headerContent}>
+          <h2 className={styles.formTitle}>Thêm Thành viên Mới</h2>
+          <p className={styles.formSubtitle}>
             Mời thêm thành viên mới vào câu lạc bộ cầu lông của bạn
           </p>
         </div>
@@ -166,73 +168,75 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate }) => {
 
       {/* Success Message */}
       {success && (
-        <div className='alert success-alert'>
-          <div className='alert-icon'>✅</div>
-          <div className='alert-content'>
-            <div className='alert-title'>Thành công!</div>
-            <div className='alert-message'>{success}</div>
+        <div className={`${styles.alert} ${styles.successAlert}`}>
+          <div className={styles.alertIcon}>✅</div>
+          <div className={styles.alertContent}>
+            <div className={styles.alertTitle}>Thành công!</div>
+            <div className={styles.alertMessage}>{success}</div>
           </div>
-          <div className='alert-progress'></div>
+          <div className={styles.alertProgress}></div>
         </div>
       )}
 
       {/* Error Message */}
       {error && (
-        <div className='alert error-alert'>
-          <div className='alert-icon'>⚠️</div>
-          <div className='alert-content'>
-            <div className='alert-title'>Có lỗi xảy ra</div>
-            <div className='alert-message'>{error}</div>
+        <div className={`${styles.alert} ${styles.errorAlert}`}>
+          <div className={styles.alertIcon}>⚠️</div>
+          <div className={styles.alertContent}>
+            <div className={styles.alertTitle}>Có lỗi xảy ra</div>
+            <div className={styles.alertMessage}>{error}</div>
           </div>
-          <button onClick={() => setError("")} className='alert-close'>
+          <button onClick={() => setError("")} className={styles.alertClose}>
             ✕
           </button>
         </div>
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className='member-form'>
-        <div className='form-fields'>
+      <form onSubmit={handleSubmit} className={styles.memberForm}>
+        <div className={styles.formFields}>
           {/* Name Field */}
-          <div className='field-group'>
-            <label htmlFor='name' className='field-label'>
-              <span className='label-icon'>👤</span>
-              <span className='label-text'>Tên đầy đủ</span>
-              <span className='required-star'>*</span>
+          <div className={styles.fieldGroup}>
+            <label htmlFor='name' className={styles.fieldLabel}>
+              <span className={styles.labelIcon}>👤</span>
+              <span className={styles.labelText}>Tên đầy đủ</span>
+              <span className={styles.requiredStar}>*</span>
             </label>
-            <div className='input-wrapper'>
+            <div className={styles.inputWrapper}>
               <input
                 type='text'
                 id='name'
                 value={name}
                 onChange={handleNameChange}
                 required
-                className={`form-input ${
-                  error && !name.trim() ? "error" : ""
-                } ${nameExists ? "error" : ""} ${
-                  name.trim() && !nameExists && !isCheckingName ? "filled" : ""
+                className={`${styles.formInput} ${
+                  error && !name.trim() ? styles.error : ""
+                } ${nameExists ? styles.error : ""} ${
+                  name.trim() && !nameExists && !isCheckingName
+                    ? styles.filled
+                    : ""
                 }`}
                 placeholder='Nhập tên thành viên (phải duy nhất)...'
                 disabled={isSubmitting}
                 maxLength={50}
               />
-              <div className='input-border'></div>
+              <div className={styles.inputBorder}></div>
 
               {/* Input status icons */}
               {isCheckingName && (
-                <div className='input-icon checking'>
-                  <div className='mini-spinner'></div>
+                <div className={`${styles.inputIcon} ${styles.checking}`}>
+                  <div className={styles.miniSpinner}></div>
                 </div>
               )}
 
               {!isCheckingName && nameExists && (
-                <div className='input-icon error'>
+                <div className={`${styles.inputIcon} ${styles.error}`}>
                   <span>✕</span>
                 </div>
               )}
 
               {!isCheckingName && name.trim().length >= 2 && !nameExists && (
-                <div className='input-icon success'>
+                <div className={`${styles.inputIcon} ${styles.success}`}>
                   <span>✓</span>
                 </div>
               )}
@@ -240,63 +244,65 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate }) => {
 
             {/* Field help messages */}
             {nameExists && !isCheckingName && (
-              <div className='field-help error'>
+              <div className={`${styles.fieldHelp} ${styles.error}`}>
                 <span>❌ Tên này đã được sử dụng</span>
               </div>
             )}
 
             {name.trim().length >= 2 && !nameExists && !isCheckingName && (
-              <div className='field-help success'>
+              <div className={`${styles.fieldHelp} ${styles.success}`}>
                 <span>✓ Tên khả dụng</span>
               </div>
             )}
 
             {isCheckingName && (
-              <div className='field-help checking'>
+              <div className={`${styles.fieldHelp} ${styles.checking}`}>
                 <span>🔍 Đang kiểm tra tên...</span>
               </div>
             )}
 
             {name.trim().length > 0 && name.trim().length < 2 && (
-              <div className='field-help warning'>
+              <div className={`${styles.fieldHelp} ${styles.warning}`}>
                 <span>⚠️ Tên phải có ít nhất 2 ký tự</span>
               </div>
             )}
           </div>
 
           {/* Phone Field */}
-          <div className='field-group'>
-            <label htmlFor='phone' className='field-label'>
-              <span className='label-icon'>📱</span>
-              <span className='label-text'>Số điện thoại</span>
-              <span className='optional-text'>(không bắt buộc)</span>
+          <div className={styles.fieldGroup}>
+            <label htmlFor='phone' className={styles.fieldLabel}>
+              <span className={styles.labelIcon}>📱</span>
+              <span className={styles.labelText}>Số điện thoại</span>
+              <span className={styles.optionalText}>(không bắt buộc)</span>
             </label>
-            <div className='input-wrapper'>
+            <div className={styles.inputWrapper}>
               <input
                 type='tel'
                 id='phone'
                 value={phone}
                 onChange={e => setPhone(e.target.value)}
-                className={`form-input ${phone.trim() ? "filled" : ""}`}
+                className={`${styles.formInput} ${
+                  phone.trim() ? styles.filled : ""
+                }`}
                 placeholder='Nhập số điện thoại...'
                 disabled={isSubmitting}
                 maxLength={15}
               />
-              <div className='input-border'></div>
+              <div className={styles.inputBorder}></div>
               {phone.trim() && (
-                <div className='input-icon success'>
+                <div className={`${styles.inputIcon} ${styles.success}`}>
                   <span>✓</span>
                 </div>
               )}
             </div>
-            <div className='field-help'>
+            <div className={styles.fieldHelp}>
               <span>💡 Số điện thoại giúp liên lạc dễ dàng hơn</span>
             </div>
           </div>
         </div>
 
         {/* Submit Button */}
-        <div className='form-actions'>
+        <div className={styles.formActions}>
           <button
             type='submit'
             disabled={
@@ -306,43 +312,45 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate }) => {
               nameExists ||
               isCheckingName
             }
-            className={`submit-btn ${isSubmitting ? "loading" : ""} ${
+            className={`${styles.submitBtn} ${
+              isSubmitting ? styles.loading : ""
+            } ${
               !name.trim() ||
               name.trim().length < 2 ||
               nameExists ||
               isCheckingName
-                ? "disabled"
+                ? styles.disabled
                 : ""
             }`}
           >
-            <span className='btn-content'>
+            <span className={styles.btnContent}>
               {isSubmitting ? (
                 <>
-                  <div className='btn-spinner'></div>
+                  <div className={styles.btnSpinner}></div>
                   <span>Đang thêm thành viên...</span>
                 </>
               ) : (
                 <>
-                  <span className='btn-icon'>➕</span>
+                  <span className={styles.btnIcon}>➕</span>
                   <span>Thêm thành viên</span>
                 </>
               )}
             </span>
-            <div className='btn-shine'></div>
+            <div className={styles.btnShine}></div>
           </button>
 
           {/* Form Tips */}
-          <div className='form-tips'>
-            <div className='tip-item'>
-              <span className='tip-icon'>⚠️</span>
+          <div className={styles.formTips}>
+            <div className={styles.tipItem}>
+              <span className={styles.tipIcon}>⚠️</span>
               <span>Tên phải duy nhất trong hệ thống</span>
             </div>
-            <div className='tip-item'>
-              <span className='tip-icon'>🔍</span>
+            <div className={styles.tipItem}>
+              <span className={styles.tipIcon}>🔍</span>
               <span>Hệ thống sẽ kiểm tra tên tự động</span>
             </div>
-            <div className='tip-item'>
-              <span className='tip-icon'>🔒</span>
+            <div className={styles.tipItem}>
+              <span className={styles.tipIcon}>🔒</span>
               <span>Thông tin của bạn được bảo mật tuyệt đối</span>
             </div>
           </div>
@@ -352,4 +360,4 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate }) => {
   )
 }
 
-export default MemberForm
+export default withAuth(MemberForm)

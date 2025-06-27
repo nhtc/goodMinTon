@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react"
 import { apiService } from "../lib/api"
 import _ from "lodash"
+import { EditableContent, usePermissions } from "./AuthorizedComponent"
+import styles from "./GameForm.module.css"
 
 interface Member {
   id: string
@@ -44,6 +46,9 @@ const GameForm: React.FC<GameFormProps> = ({
   const [memberPaymentStatus, setMemberPaymentStatus] = useState<{
     [key: string]: boolean
   }>({})
+
+  // Get permissions
+  const { canEdit, userRole } = usePermissions()
 
   // Preset values for quick selection
   const presetCosts = [
@@ -370,31 +375,35 @@ const GameForm: React.FC<GameFormProps> = ({
   const totalCollected = paidCount * costPerMember
 
   return (
-    <div className='game-form-container'>
+    <div className={styles.gameFormContainer}>
       {/* Friendly Header */}
-      <div className='form-header-friendly'>
-        <div className='header-emoji'>🏸</div>
-        <div className='header-content'>
-          <h2 className='header-title'>
-            {isEditing ? "Chỉnh Sửa Trận Đấu" : "Ghi Nhận Trận Đấu Mới"}
-          </h2>
-          <p className='header-subtitle'>
-            {isEditing
-              ? "Cập nhật thông tin và theo dõi thanh toán! 💰"
-              : "Hãy điền thông tin về trận cầu lông vừa chơi nhé! 😊"}
-          </p>
+      <div className={styles.formHeaderFriendly}>
+        <div className={styles.headerContent}>
+          <div className={styles.headerEmoji}>🏸</div>
+          <div>
+            <h2 className={styles.headerTitle}>
+              {isEditing ? "Chỉnh Sửa Trận Đấu" : "Ghi Nhận Trận Đấu Mới"}
+            </h2>
+            <p className={styles.headerSubtitle}>
+              {isEditing
+                ? "Cập nhật thông tin và theo dõi thanh toán! 💰"
+                : "Hãy điền thông tin về trận cầu lông vừa chơi nhé! 😊"}
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Success Message */}
       {success && (
-        <div className='alert success-alert bounce-in'>
-          <div className='alert-icon'>🎉</div>
-          <div className='alert-content'>
-            <div className='alert-title'>Tuyệt vời!</div>
-            <div className='alert-message'>{success}</div>
+        <div
+          className={`${styles.alert} ${styles.successAlert} ${styles.bounceIn}`}
+        >
+          <div className={styles.alertIcon}>🎉</div>
+          <div className={styles.alertContent}>
+            <div className={styles.alertTitle}>Tuyệt vời!</div>
+            <div className={styles.alertMessage}>{success}</div>
           </div>
-          <div className='success-confetti'>
+          <div className={styles.successConfetti}>
             <span>🎊</span>
             <span>✨</span>
             <span>🎉</span>
@@ -404,41 +413,44 @@ const GameForm: React.FC<GameFormProps> = ({
 
       {/* Global Error */}
       {errors.submit && (
-        <div className='alert error-alert shake'>
-          <div className='alert-icon'>😅</div>
-          <div className='alert-content'>
-            <div className='alert-title'>Oops! Có lỗi xảy ra</div>
-            <div className='alert-message'>{errors.submit}</div>
+        <div className={`${styles.alert} ${styles.errorAlert} ${styles.shake}`}>
+          <div className={styles.alertIcon}>😅</div>
+          <div className={styles.alertContent}>
+            <div className={styles.alertTitle}>Oops! Có lỗi xảy ra</div>
+            <div className={styles.alertMessage}>{errors.submit}</div>
           </div>
           <button
             onClick={() => setErrors(prev => _.omit(prev, "submit"))}
-            className='alert-close'
+            className={styles.alertClose}
           >
             ✕
           </button>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className='game-form-friendly'>
+      <form onSubmit={handleSubmit} className={styles.gameFormFriendly}>
         {/* Section 1: Basic Info */}
-        <div className='form-section'>
-          <div className='section-header'>
-            <div className='section-icon'>📅</div>
-            <div className='section-title'>
+        <div className={styles.formSection}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.sectionIcon}>📅</div>
+            <div className={styles.sectionTitle}>
               <h3>Thông Tin Cơ Bản</h3>
               <p>Cho chúng mình biết khi nào và ở đâu bạn chơi nhé!</p>
             </div>
           </div>
 
-          <div className='section-content'>
-            <div className='form-row'>
-              <div className='field-group'>
-                <label htmlFor='date' className='field-label friendly'>
-                  <span className='label-icon'>📅</span>
-                  <span className='label-text'>Ngày chơi</span>
-                  <span className='required-star'>*</span>
+          <div className={styles.sectionContent}>
+            <div className={styles.formRow}>
+              <div className={styles.fieldGroup}>
+                <label
+                  htmlFor='date'
+                  className={`${styles.fieldLabel} ${styles.friendly}`}
+                >
+                  <span className={styles.labelIcon}>📅</span>
+                  <span className={styles.labelText}>Ngày chơi</span>
+                  <span className={styles.requiredStar}>*</span>
                 </label>
-                <div className='input-wrapper'>
+                <div className={styles.inputWrapper}>
                   <input
                     type='date'
                     id='date'
@@ -447,27 +459,27 @@ const GameForm: React.FC<GameFormProps> = ({
                       setDate(e.target.value)
                       if (errors.date) setErrors(prev => _.omit(prev, "date"))
                     }}
-                    className={`form-input friendly ${
+                    className={`${styles.formInput} ${styles.friendly} ${
                       errors.date ? "error" : ""
                     }`}
                     max={new Date().toISOString().split("T")[0]}
                   />
-                  <div className='input-glow'></div>
+                  <div className={styles.inputGlow}></div>
                 </div>
                 {errors.date && (
-                  <div className='field-error friendly'>
+                  <div className={`${styles.fieldError} ${styles.friendly}`}>
                     <span>😅 {errors.date}</span>
                   </div>
                 )}
               </div>
 
-              <div className='field-group'>
-                <label htmlFor='location' className='field-label friendly'>
-                  <span className='label-icon'>📍</span>
-                  <span className='label-text'>Địa điểm chơi</span>
-                  <span className='required-star'>*</span>
+              <div className={styles.fieldGroup}>
+                <label htmlFor='location' className={`${styles.fieldLabel} ${styles.friendly}`}>
+                  <span className={styles.labelIcon}>📍</span>
+                  <span className={styles.labelText}>Địa điểm chơi</span>
+                  <span className={styles.requiredStar}>*</span>
                 </label>
-                <div className='input-wrapper'>
+                <div className={styles.inputWrapper}>
                   <input
                     type='text'
                     id='location'
@@ -477,21 +489,21 @@ const GameForm: React.FC<GameFormProps> = ({
                       if (errors.location)
                         setErrors(prev => _.omit(prev, "location"))
                     }}
-                    className={`form-input friendly ${
+                    className={`${styles.formInput} ${styles.friendly} ${
                       errors.location ? "error" : ""
                     } ${location.trim() ? "filled" : ""}`}
                     placeholder='VD: Sân cầu lông ABC, Quận 1 🏟️'
                     maxLength={100}
                   />
-                  <div className='input-glow'></div>
-                  {location.trim() && <div className='input-check'>✓</div>}
+                  <div className={styles.inputGlow}></div>
+                  {location.trim() && <div className={styles.inputCheck}>✓</div>}
                 </div>
                 {errors.location && (
-                  <div className='field-error friendly'>
+                  <div className={`${styles.fieldError} ${styles.friendly}`}>
                     <span>😅 {errors.location}</span>
                   </div>
                 )}
-                <div className='field-tip'>
+                <div className={styles.fieldTip}>
                   <span>💡 Ghi rõ tên sân để lần sau dễ nhớ nha!</span>
                 </div>
               </div>
@@ -500,25 +512,25 @@ const GameForm: React.FC<GameFormProps> = ({
         </div>
 
         {/* Section 2: Costs */}
-        <div className='form-section'>
-          <div className='section-header'>
-            <div className='section-icon'>💰</div>
-            <div className='section-title'>
+        <div className={styles.formSection}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.sectionIcon}>💰</div>
+            <div className={styles.sectionTitle}>
               <h3>Chi Phí</h3>
               <p>Hãy nhập chi phí để chia đều cho mọi người!</p>
             </div>
           </div>
 
-          <div className='section-content'>
+          <div className={styles.sectionContent}>
             {/* Court Cost */}
-            <div className='subsection'>
-              <h4 className='subsection-title'>
+            <div className={styles.subsection}>
+              <h4 className={styles.subsectionTitle}>
                 <span>🏟️</span>
                 Chi phí thuê sân
               </h4>
 
               {/* Preset buttons */}
-              <div className='preset-grid'>
+              <div className={styles.presetGrid}>
                 {presetCosts.map((preset, index) => (
                   <button
                     key={index}
@@ -528,24 +540,24 @@ const GameForm: React.FC<GameFormProps> = ({
                       if (errors.yardCost)
                         setErrors(prev => _.omit(prev, "yardCost"))
                     }}
-                    className={`preset-card ${
+                    className={`${styles.presetCard} ${
                       yardCost === preset.value ? "selected" : ""
                     }`}
                   >
-                    <div className='preset-icon'>{preset.icon}</div>
-                    <div className='preset-label'>{preset.label}</div>
-                    <div className='preset-value'>
+                    <div className={styles.presetIcon}>{preset.icon}</div>
+                    <div className={styles.presetLabel}>{preset.label}</div>
+                    <div className={styles.presetValue}>
                       {preset.value.toLocaleString("vi-VN")}đ
                     </div>
                   </button>
                 ))}
               </div>
 
-              <div className='field-group'>
-                <label htmlFor='yardCost' className='field-label friendly'>
-                  <span className='label-text'>Hoặc nhập số tiền khác</span>
+              <div className={styles.fieldGroup}>
+                <label htmlFor='yardCost' className={`${styles.fieldLabel} ${styles.friendly}`}>
+                  <span className={styles.labelText}>Hoặc nhập số tiền khác</span>
                 </label>
-                <div className='input-wrapper money'>
+                <div className={`${styles.inputWrapper} ${styles.money}`}>
                   <input
                     type='number'
                     id='yardCost'
@@ -555,18 +567,18 @@ const GameForm: React.FC<GameFormProps> = ({
                       if (errors.yardCost)
                         setErrors(prev => _.omit(prev, "yardCost"))
                     }}
-                    className={`form-input friendly money ${
+                    className={`${styles.formInput} ${styles.friendly} ${styles.money} ${
                       errors.yardCost ? "error" : ""
                     } ${yardCost > 0 ? "filled" : ""}`}
                     min='0'
                     max='1000000'
                     placeholder='0'
                   />
-                  <div className='input-suffix money'>đ</div>
-                  <div className='input-glow'></div>
+                  <div className={`${styles.inputSuffix} ${styles.money}`}>đ</div>
+                  <div className={styles.inputGlow}></div>
                 </div>
                 {errors.yardCost && (
-                  <div className='field-error friendly'>
+                  <div className={`${styles.fieldError} ${styles.friendly}`}>
                     <span>😅 {errors.yardCost}</span>
                   </div>
                 )}
@@ -574,14 +586,14 @@ const GameForm: React.FC<GameFormProps> = ({
             </div>
 
             {/* Shuttlecock Section */}
-            <div className='subsection'>
-              <h4 className='subsection-title'>
+            <div className={styles.subsection}>
+              <h4 className={styles.subsectionTitle}>
                 <span>🏸</span>
                 Chi phí cầu lông
               </h4>
 
               {/* Preset shuttlecock combinations */}
-              <div className='preset-grid'>
+              <div className={styles.presetGrid}>
                 {presetShuttlecocks.map((preset, index) => (
                   <button
                     key={index}
@@ -594,20 +606,20 @@ const GameForm: React.FC<GameFormProps> = ({
                       if (errors.shuttleCockPrice)
                         setErrors(prev => _.omit(prev, "shuttleCockPrice"))
                     }}
-                    className={`preset-card ${
+                    className={`${styles.presetCard} ${
                       shuttleCockQuantity === preset.quantity &&
                       shuttleCockPrice === preset.price
                         ? "selected"
                         : ""
                     }`}
                   >
-                    <div className='preset-icon'>{preset.icon}</div>
-                    <div className='preset-label'>{preset.label}</div>
-                    <div className='preset-detail'>
+                    <div className={styles.presetIcon}>{preset.icon}</div>
+                    <div className={styles.presetLabel}>{preset.label}</div>
+                    <div className={styles.presetDetail}>
                       {preset.quantity} quả ×{" "}
                       {preset.price.toLocaleString("vi-VN")}đ
                     </div>
-                    <div className='preset-total'>
+                    <div className={styles.presetTotal}>
                       ={" "}
                       {(preset.quantity * preset.price).toLocaleString("vi-VN")}
                       đ
@@ -616,16 +628,16 @@ const GameForm: React.FC<GameFormProps> = ({
                 ))}
               </div>
 
-              <div className='form-row'>
-                <div className='field-group'>
+              <div className={styles.formRow}>
+                <div className={styles.fieldGroup}>
                   <label
                     htmlFor='shuttleCockQuantity'
-                    className='field-label friendly'
+                    className={`${styles.fieldLabel} ${styles.friendly}`}
                   >
-                    <span className='label-icon'>🔢</span>
-                    <span className='label-text'>Số lượng cầu</span>
+                    <span className={styles.labelIcon}>🔢</span>
+                    <span className={styles.labelText}>Số lượng cầu</span>
                   </label>
-                  <div className='input-wrapper'>
+                  <div className={styles.inputWrapper}>
                     <input
                       type='number'
                       id='shuttleCockQuantity'
@@ -635,32 +647,32 @@ const GameForm: React.FC<GameFormProps> = ({
                         if (errors.shuttleCockQuantity)
                           setErrors(prev => _.omit(prev, "shuttleCockQuantity"))
                       }}
-                      className={`form-input friendly ${
+                      className={`${styles.formInput} ${styles.friendly} ${
                         errors.shuttleCockQuantity ? "error" : ""
                       }`}
                       min='0'
                       max='20'
                       placeholder='0'
                     />
-                    <div className='input-suffix'>quả</div>
-                    <div className='input-glow'></div>
+                    <div className={styles.inputSuffix}>quả</div>
+                    <div className={styles.inputGlow}></div>
                   </div>
                   {errors.shuttleCockQuantity && (
-                    <div className='field-error friendly'>
+                    <div className={`${styles.fieldError} ${styles.friendly}`}>
                       <span>😅 {errors.shuttleCockQuantity}</span>
                     </div>
                   )}
                 </div>
 
-                <div className='field-group'>
+                <div className={styles.fieldGroup}>
                   <label
                     htmlFor='shuttleCockPrice'
-                    className='field-label friendly'
+                    className={`${styles.fieldLabel} ${styles.friendly}`}
                   >
-                    <span className='label-icon'>💰</span>
-                    <span className='label-text'>Giá mỗi quả</span>
+                    <span className={styles.labelIcon}>💰</span>
+                    <span className={styles.labelText}>Giá mỗi quả</span>
                   </label>
-                  <div className='input-wrapper money'>
+                  <div className={`${styles.inputWrapper} ${styles.money}`}>
                     <input
                       type='number'
                       id='shuttleCockPrice'
@@ -670,18 +682,18 @@ const GameForm: React.FC<GameFormProps> = ({
                         if (errors.shuttleCockPrice)
                           setErrors(prev => _.omit(prev, "shuttleCockPrice"))
                       }}
-                      className={`form-input friendly money ${
+                      className={`${styles.formInput} ${styles.friendly} ${styles.money} ${
                         errors.shuttleCockPrice ? "error" : ""
                       }`}
                       min='0'
                       max='100000'
                       placeholder='15000'
                     />
-                    <div className='input-suffix money'>đ</div>
-                    <div className='input-glow'></div>
+                    <div className={`${styles.inputSuffix} ${styles.money}`}>đ</div>
+                    <div className={styles.inputGlow}></div>
                   </div>
                   {errors.shuttleCockPrice && (
-                    <div className='field-error friendly'>
+                    <div className={`${styles.fieldError} ${styles.friendly}`}>
                       <span>😅 {errors.shuttleCockPrice}</span>
                     </div>
                   )}
@@ -689,9 +701,9 @@ const GameForm: React.FC<GameFormProps> = ({
               </div>
 
               {shuttleCockQuantity > 0 && shuttleCockPrice > 0 && (
-                <div className='calculation-result'>
-                  <span className='calc-label'>Tổng tiền cầu:</span>
-                  <span className='calc-value'>
+                <div className={styles.calculationResult}>
+                  <span className={styles.calcLabel}>Tổng tiền cầu:</span>
+                  <span className={styles.calcValue}>
                     {(shuttleCockQuantity * shuttleCockPrice).toLocaleString(
                       "vi-VN"
                     )}
@@ -702,13 +714,13 @@ const GameForm: React.FC<GameFormProps> = ({
             </div>
 
             {/* Other Fees */}
-            <div className='field-group'>
-              <label htmlFor='otherFees' className='field-label friendly'>
-                <span className='label-icon'>📋</span>
-                <span className='label-text'>Chi phí khác</span>
-                <span className='optional-badge'>không bắt buộc</span>
+            <div className={styles.fieldGroup}>
+              <label htmlFor='otherFees' className={`${styles.fieldLabel} ${styles.friendly}`}>
+                <span className={styles.labelIcon}>📋</span>
+                <span className={styles.labelText}>Chi phí khác</span>
+                <span className={styles.optionalBadge}>không bắt buộc</span>
               </label>
-              <div className='input-wrapper money'>
+              <div className={`${styles.inputWrapper} ${styles.money}`}>
                 <input
                   type='number'
                   id='otherFees'
@@ -718,46 +730,46 @@ const GameForm: React.FC<GameFormProps> = ({
                     if (errors.otherFees)
                       setErrors(prev => _.omit(prev, "otherFees"))
                   }}
-                  className={`form-input friendly money ${
+                  className={`${styles.formInput} ${styles.friendly} ${styles.money} ${
                     errors.otherFees ? "error" : ""
                   } ${otherFees > 0 ? "filled" : ""}`}
                   min='0'
                   max='500000'
                   placeholder='0'
                 />
-                <div className='input-suffix money'>đ</div>
-                <div className='input-glow'></div>
+                <div className={`${styles.inputSuffix} ${styles.money}`}>đ</div>
+                <div className={styles.inputGlow}></div>
               </div>
               {errors.otherFees && (
-                <div className='field-error friendly'>
+                <div className={`${styles.fieldError} ${styles.friendly}`}>
                   <span>😅 {errors.otherFees}</span>
                 </div>
               )}
-              <div className='field-tip'>
+              <div className={styles.fieldTip}>
                 <span>💡 VD: Đậu xe, nước uống, vé vào cổng...</span>
               </div>
             </div>
 
             {/* Cost Summary */}
             {totalCost > 0 && (
-              <div className='cost-summary-card'>
-                <h4 className='summary-title'>
+              <div className={styles.costSummaryCard}>
+                <h4 className={styles.summaryTitle}>
                   <span>💳</span>
                   Tổng quan chi phí
                 </h4>
-                <div className='cost-breakdown'>
-                  <div className='cost-item'>
-                    <span className='cost-icon'>🏟️</span>
-                    <span className='cost-label'>Thuê sân:</span>
-                    <span className='cost-value'>
+                <div className={styles.costBreakdown}>
+                  <div className={styles.costItem}>
+                    <span className={styles.costIcon}>🏟️</span>
+                    <span className={styles.costLabel}>Thuê sân:</span>
+                    <span className={styles.costValue}>
                       {yardCost.toLocaleString("vi-VN")}đ
                     </span>
                   </div>
                   {shuttleCockQuantity > 0 && (
-                    <div className='cost-item'>
-                      <span className='cost-icon'>🏸</span>
-                      <span className='cost-label'>Cầu lông:</span>
-                      <span className='cost-value'>
+                    <div className={styles.costItem}>
+                      <span className={styles.costIcon}>🏸</span>
+                      <span className={styles.costLabel}>Cầu lông:</span>
+                      <span className={styles.costValue}>
                         {(
                           shuttleCockQuantity * shuttleCockPrice
                         ).toLocaleString("vi-VN")}
@@ -766,44 +778,44 @@ const GameForm: React.FC<GameFormProps> = ({
                     </div>
                   )}
                   {otherFees > 0 && (
-                    <div className='cost-item'>
-                      <span className='cost-icon'>📋</span>
-                      <span className='cost-label'>Chi phí khác:</span>
-                      <span className='cost-value'>
+                    <div className={styles.costItem}>
+                      <span className={styles.costIcon}>📋</span>
+                      <span className={styles.costLabel}>Chi phí khác:</span>
+                      <span className={styles.costValue}>
                         {otherFees.toLocaleString("vi-VN")}đ
                       </span>
                     </div>
                   )}
-                  <div className='cost-total'>
-                    <span className='total-icon'>🧮</span>
-                    <span className='total-label'>Tổng cộng:</span>
-                    <span className='total-value'>
+                  <div className={styles.costTotal}>
+                    <span className={styles.totalIcon}>🧮</span>
+                    <span className={styles.totalLabel}>Tổng cộng:</span>
+                    <span className={styles.totalValue}>
                       {totalCost.toLocaleString("vi-VN")}đ
                     </span>
                   </div>
                   {selectedMembers.length > 0 && (
-                    <div className='cost-per-person'>
-                      <span className='person-icon'>👤</span>
-                      <span className='person-label'>Mỗi người:</span>
-                      <span className='person-value'>
+                    <div className={styles.costPerPerson}>
+                      <span className={styles.personIcon}>👤</span>
+                      <span className={styles.personLabel}>Mỗi người:</span>
+                      <span className={styles.personValue}>
                         {costPerMember.toLocaleString("vi-VN")}đ
                       </span>
                     </div>
                   )}
                   {/* ✅ Add pre-pay summary */}
                   {selectedMembers.length > 0 && getTotalPrePaid() > 0 && (
-                    <div className='prepay-summary'>
-                      <div className='cost-item prepay'>
-                        <span className='cost-icon'>💸</span>
-                        <span className='cost-label'>Đã trả trước:</span>
-                        <span className='cost-value'>
+                    <div className={styles.prepaySummary}>
+                      <div className={`${styles.costItem} ${styles.prepay}`}>
+                        <span className={styles.costIcon}>💸</span>
+                        <span className={styles.costLabel}>Đã trả trước:</span>
+                        <span className={styles.costValue}>
                           -{getTotalPrePaid().toLocaleString("vi-VN")}đ
                         </span>
                       </div>
-                      <div className='cost-item remaining'>
-                        <span className='cost-icon'>💰</span>
-                        <span className='cost-label'>Còn cần thu:</span>
-                        <span className='cost-value'>
+                      <div className={`${styles.costItem} ${styles.remaining}`}>
+                        <span className={styles.costIcon}>💰</span>
+                        <span className={styles.costLabel}>Còn cần thu:</span>
+                        <span className={styles.costValue}>
                           {getTotalRemaining().toLocaleString("vi-VN")}đ
                         </span>
                       </div>
@@ -816,10 +828,10 @@ const GameForm: React.FC<GameFormProps> = ({
         </div>
 
         {/* Section 3: Members */}
-        <div className='form-section'>
-          <div className='section-header'>
-            <div className='section-icon'>👥</div>
-            <div className='section-title'>
+        <div className={styles.formSection}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.sectionIcon}>👥</div>
+            <div className={styles.sectionTitle}>
               <h3>Thành Viên Tham Gia</h3>
               <p>
                 {isEditing
@@ -829,39 +841,39 @@ const GameForm: React.FC<GameFormProps> = ({
             </div>
           </div>
 
-          <div className='section-content'>
+          <div className={styles.sectionContent}>
             {members.length === 0 ? (
-              <div className='empty-members-card'>
-                <div className='empty-icon'>😕</div>
+              <div className={styles.emptyMembersCard}>
+                <div className={styles.emptyIcon}>😕</div>
                 <h4>Chưa có thành viên nào</h4>
                 <p>Bạn cần thêm thành viên trước khi ghi nhận trận đấu</p>
                 <button
                   type='button'
                   onClick={() => (window.location.href = "/members")}
-                  className='btn-add-members'
+                  className={styles.btnAddMembers}
                 >
                   <span>➕</span>
                   Thêm thành viên ngay
                 </button>
               </div>
             ) : (
-              <div className='members-section-content'>
+              <div className={styles.membersSectionContent}>
                 {/* Search and Quick Actions */}
-                <div className='members-controls'>
-                  <div className='search-wrapper-friendly'>
-                    <div className='search-icon'>🔍</div>
+                <div className={styles.membersControls}>
+                  <div className={styles.searchWrapperFriendly}>
+                    <div className={styles.searchIcon}>🔍</div>
                     <input
                       type='text'
                       placeholder='Tìm tên thành viên...'
                       value={searchTerm}
                       onChange={e => setSearchTerm(e.target.value)}
-                      className='search-input-friendly'
+                      className={styles.searchInputFriendly}
                     />
                     {searchTerm && (
                       <button
                         type='button'
                         onClick={() => setSearchTerm("")}
-                        className='search-clear-friendly'
+                        className={styles.searchClearFriendly}
                       >
                         ✕
                       </button>
@@ -869,11 +881,11 @@ const GameForm: React.FC<GameFormProps> = ({
                   </div>
 
                   {!isEditing && (
-                    <div className='member-quick-actions'>
+                    <div className={styles.memberQuickActions}>
                       <button
                         type='button'
                         onClick={selectAllMembers}
-                        className='quick-action-btn select-all'
+                        className={`${styles.quickActionBtn} ${styles.selectAll}`}
                         disabled={selectedMembers.length === members.length}
                       >
                         <span>✅</span>
@@ -882,7 +894,7 @@ const GameForm: React.FC<GameFormProps> = ({
                       <button
                         type='button'
                         onClick={clearAllMembers}
-                        className='quick-action-btn clear-all'
+                        className={`${styles.quickActionBtn} ${styles.clearAll}`}
                         disabled={selectedMembers.length === 0}
                       >
                         <span>❌</span>
@@ -893,19 +905,19 @@ const GameForm: React.FC<GameFormProps> = ({
                 </div>
 
                 {/* Selection Summary */}
-                <div className='selection-summary-card'>
-                  <div className='summary-left'>
-                    <span className='selected-emoji'>👥</span>
-                    <span className='selected-text'>
+                <div className={styles.selectionSummaryCard}>
+                  <div className={styles.summaryLeft}>
+                    <span className={styles.selectedEmoji}>👥</span>
+                    <span className={styles.selectedText}>
                       {isEditing ? "Tham gia:" : "Đã chọn"}{" "}
                       <strong>{selectedMembers.length}</strong>{" "}
                       {!isEditing && `/ ${members.length}`} người
                     </span>
                   </div>
                   {selectedMembers.length > 0 && totalCost > 0 && (
-                    <div className='summary-right'>
-                      <span className='cost-emoji'>💰</span>
-                      <span className='cost-text'>
+                    <div className={styles.summaryRight}>
+                      <span className={styles.costEmoji}>💰</span>
+                      <span className={styles.costText}>
                         Mỗi người:{" "}
                         <strong>
                           {costPerMember.toLocaleString("vi-VN")}đ
@@ -917,26 +929,26 @@ const GameForm: React.FC<GameFormProps> = ({
 
                 {/* Payment Summary for editing mode */}
                 {isEditing && selectedMembers.length > 0 && (
-                  <div className='payment-summary-card'>
-                    <h4 className='payment-summary-title'>
+                  <div className={styles.paymentSummaryCard}>
+                    <h4 className={styles.paymentSummaryTitle}>
                       <span>💰</span>
                       Tình Hình Thanh Toán
                     </h4>
-                    <div className='payment-stats'>
-                      <div className='stat-item paid'>
-                        <span className='stat-icon'>✅</span>
-                        <span className='stat-label'>Đã trả:</span>
-                        <span className='stat-value'>{paidCount} người</span>
+                    <div className={styles.paymentStats}>
+                      <div className={`${styles.statItem} ${styles.paid}`}>
+                        <span className={styles.statIcon}>✅</span>
+                        <span className={styles.statLabel}>Đã trả:</span>
+                        <span className={styles.statValue}>{paidCount} người</span>
                       </div>
-                      <div className='stat-item unpaid'>
-                        <span className='stat-icon'>⏳</span>
-                        <span className='stat-label'>Chưa trả:</span>
-                        <span className='stat-value'>{unpaidCount} người</span>
+                      <div className={`${styles.statItem} ${styles.unpaid}`}>
+                        <span className={styles.statIcon}>⏳</span>
+                        <span className={styles.statLabel}>Chưa trả:</span>
+                        <span className={styles.statValue}>{unpaidCount} người</span>
                       </div>
-                      <div className='stat-item total'>
-                        <span className='stat-icon'>🧮</span>
-                        <span className='stat-label'>Đã thu:</span>
-                        <span className='stat-value'>
+                      <div className={`${styles.statItem} ${styles.total}`}>
+                        <span className={styles.statIcon}>🧮</span>
+                        <span className={styles.statLabel}>Đã thu:</span>
+                        <span className={styles.statValue}>
                           {totalCollected.toLocaleString("vi-VN")}đ
                         </span>
                       </div>
@@ -946,13 +958,13 @@ const GameForm: React.FC<GameFormProps> = ({
 
                 {/* Pre-pay Error */}
                 {errors.prePay && (
-                  <div className='section-error'>
+                  <div className={styles.sectionError}>
                     <span>😅 {errors.prePay}</span>
                   </div>
                 )}
 
                 {/* Members Grid */}
-                <div className='members-grid-friendly'>
+                <div className={styles.membersGridFriendly}>
                   {filteredMembers.map(member => {
                     const isPaid =
                       memberPaymentStatus[member.id] || member.hasPaid || false
@@ -963,12 +975,12 @@ const GameForm: React.FC<GameFormProps> = ({
                     return (
                       <div
                         key={member.id}
-                        className={`member-card-friendly ${
+                        className={`${styles.memberCardFriendly} ${
                           isSelected ? "selected" : ""
                         } ${isPaid ? "paid" : ""}`}
                       >
                         <label
-                          className='member-selector'
+                          className={styles.memberSelector}
                           onClick={e => {
                             if (isEditing) e.preventDefault()
                           }}
@@ -977,23 +989,23 @@ const GameForm: React.FC<GameFormProps> = ({
                             type='checkbox'
                             checked={isSelected}
                             onChange={() => handleMemberToggle(member.id)}
-                            className='member-checkbox-hidden'
+                            className={styles.memberCheckboxHidden}
                             disabled={isEditing}
                           />
-                          <div className='member-avatar-friendly'>
+                          <div className={styles.memberAvatarFriendly}>
                             {member.name.charAt(0).toUpperCase()}
                           </div>
-                          <div className='member-info-friendly'>
-                            <div className='member-name-friendly'>
+                          <div className={styles.memberInfoFriendly}>
+                            <div className={styles.memberNameFriendly}>
                               {member.name}
                             </div>
                             {member.phone && (
-                              <div className='member-phone-friendly'>
+                              <div className={styles.memberPhoneFriendly}>
                                 📱 {member.phone}
                               </div>
                             )}
                             {isEditing && member.paidAt && (
-                              <div className='payment-timestamp'>
+                              <div className={styles.paymentTimestamp}>
                                 💰{" "}
                                 {new Date(member.paidAt).toLocaleDateString(
                                   "vi-VN",
@@ -1007,21 +1019,21 @@ const GameForm: React.FC<GameFormProps> = ({
                               </div>
                             )}
                           </div>
-                          <div className='member-actions-friendly'>
+                          <div className={styles.memberActionsFriendly}>
                             {isSelected && !isEditing && (
-                              <div className='check-mark'>✓</div>
+                              <div className={styles.checkMark}>✓</div>
                             )}
                           </div>
                         </label>
 
                         {/* ✅ Pre-pay input for selected members */}
                         {isSelected && !isEditing && (
-                          <div className='prepay-section'>
-                            <label className='prepay-label'>
-                              <span className='prepay-icon'>💸</span>
-                              <span className='prepay-text'>Đã trả trước:</span>
+                          <div className={styles.prepaySection}>
+                            <label className={styles.prepayLabel}>
+                              <span className={styles.prepayIcon}>💸</span>
+                              <span className={styles.prepayText}>Đã trả trước:</span>
                             </label>
-                            <div className='prepay-input-wrapper'>
+                            <div className={styles.prepayInputWrapper}>
                               <input
                                 type='number'
                                 value={prePay}
@@ -1031,15 +1043,15 @@ const GameForm: React.FC<GameFormProps> = ({
                                     Number(e.target.value)
                                   )
                                 }
-                                className='prepay-input'
+                                className={styles.prepayInput}
                                 min='0'
                                 max={costPerMember}
                                 placeholder='0'
                               />
-                              <span className='prepay-suffix'>đ</span>
+                              <span className={styles.prepaySuffix}>đ</span>
                             </div>
                             {prePay > 0 && (
-                              <div className='prepay-remaining'>
+                              <div className={styles.prepayRemaining}>
                                 Còn cần trả:{" "}
                                 <strong>
                                   {remaining.toLocaleString("vi-VN")}đ
@@ -1051,32 +1063,53 @@ const GameForm: React.FC<GameFormProps> = ({
 
                         {/* Payment Toggle - Only show in editing mode */}
                         {isEditing && isSelected && (
-                          <div className='payment-toggle-section'>
-                            <button
-                              type='button'
-                              onClick={() => handlePaymentToggle(member.id)}
-                              className={`payment-toggle-btn ${
-                                isPaid ? "paid" : "unpaid"
-                              }`}
-                              title={
-                                isPaid
-                                  ? "Đã thanh toán - Click để đánh dấu chưa trả"
-                                  : "Chưa thanh toán - Click để đánh dấu đã trả"
-                              }
-                            >
-                              <div className='payment-icon'>
-                                {isPaid ? "💰" : "💸"}
+                          <EditableContent
+                            viewContent={
+                              <div className={styles.paymentViewOnly}>
+                                <span className={styles.paymentIcon}>
+                                  {isPaid ? "💰" : "💸"}
+                                </span>
+                                <span className={styles.paymentText}>
+                                  {isPaid ? "Đã trả" : "Chưa trả"}
+                                </span>
+                                <span className={styles.paymentAmount}>
+                                  {remaining > 0
+                                    ? `${remaining.toLocaleString("vi-VN")}đ`
+                                    : "Hoàn thành"}
+                                </span>
+                                <div className={styles.viewOnlyBadge}>
+                                  👁️ Chỉ xem
+                                </div>
                               </div>
-                              <div className='payment-text'>
-                                {isPaid ? "Đã trả" : "Chưa trả"}
-                              </div>
-                              <div className='payment-amount'>
-                                {remaining > 0
-                                  ? `${remaining.toLocaleString("vi-VN")}đ`
-                                  : "Hoàn thành"}
-                              </div>
-                            </button>
-                          </div>
+                            }
+                          >
+                            <div className={styles.paymentToggleSection}>
+                              <button
+                                type='button'
+                                onClick={() => handlePaymentToggle(member.id)}
+                                className={`${styles.paymentToggleBtn} ${
+                                  isPaid ? "paid" : "unpaid"
+                                }`}
+                                title={
+                                  isPaid
+                                    ? "Đã thanh toán - Click để đánh dấu chưa trả"
+                                    : "Chưa thanh toán - Click để đánh dấu đã trả"
+                                }
+                              >
+                                <div className={styles.paymentIcon}>
+                                  {isPaid ? "💰" : "💸"}
+                                </div>
+                                <div className={styles.paymentText}>
+                                  {isPaid ? "Đã trả" : "Chưa trả"}
+                                </div>
+                                <div className={styles.paymentAmount}>
+                                  {remaining > 0
+                                    ? `${remaining.toLocaleString("vi-VN")}đ`
+                                    : "Hoàn thành"}
+                                </div>
+                              </button>
+                            </div>
+                          </EditableContent>
                         )}
                       </div>
                     )
@@ -1084,15 +1117,15 @@ const GameForm: React.FC<GameFormProps> = ({
                 </div>
 
                 {filteredMembers.length === 0 && searchTerm && (
-                  <div className='no-results-card'>
-                    <div className='no-results-icon'>🔍</div>
+                  <div className={styles.noResultsCard}>
+                    <div className={styles.noResultsIcon}>🔍</div>
                     <p>Không tìm thấy ai với tên "{searchTerm}"</p>
                     <p>Thử tìm với từ khóa khác nhé!</p>
                   </div>
                 )}
 
                 {errors.members && (
-                  <div className='section-error'>
+                  <div className={styles.sectionError}>
                     <span>😅 {errors.members}</span>
                   </div>
                 )}
@@ -1103,17 +1136,17 @@ const GameForm: React.FC<GameFormProps> = ({
 
         {/* Submit Section */}
         {members.length > 0 && (
-          <div className='submit-section'>
-            <div className='submit-card'>
-              <div className='submit-summary'>
+          <div className={styles.submitSection}>
+            <div className={styles.submitCard}>
+              <div className={styles.submitSummary}>
                 <h4>
                   🎯{" "}
                   {isEditing
                     ? "Sẵn sàng cập nhật?"
                     : "Sẵn sàng ghi nhận trận đấu?"}
                 </h4>
-                <div className='summary-details'>
-                  <div className='detail-item'>
+                <div className={styles.summaryDetails}>
+                  <div className={styles.detailItem}>
                     <span>📅</span>
                     <span>
                       {new Date(date).toLocaleDateString("vi-VN", {
@@ -1123,21 +1156,21 @@ const GameForm: React.FC<GameFormProps> = ({
                       })}
                     </span>
                   </div>
-                  <div className='detail-item'>
+                  <div className={styles.detailItem}>
                     <span>📍</span>
                     <span>{location || "Chưa nhập địa điểm"}</span>
                   </div>
-                  <div className='detail-item'>
+                  <div className={styles.detailItem}>
                     <span>👥</span>
                     <span>{selectedMembers.length} người tham gia</span>
                   </div>
-                  <div className='detail-item'>
+                  <div className={styles.detailItem}>
                     <span>💰</span>
                     <span>Tổng: {totalCost.toLocaleString("vi-VN")}đ</span>
                   </div>
                   {/* ✅ Show pre-pay summary in submit section */}
                   {getTotalPrePaid() > 0 && (
-                    <div className='detail-item'>
+                    <div className={styles.detailItem}>
                       <span>💸</span>
                       <span>
                         Đã trả trước:{" "}
@@ -1146,7 +1179,7 @@ const GameForm: React.FC<GameFormProps> = ({
                     </div>
                   )}
                   {getTotalRemaining() !== totalCost && (
-                    <div className='detail-item'>
+                    <div className={styles.detailItem}>
                       <span>🎯</span>
                       <span>
                         Còn cần thu:{" "}
@@ -1155,7 +1188,7 @@ const GameForm: React.FC<GameFormProps> = ({
                     </div>
                   )}
                   {isEditing && (
-                    <div className='detail-item'>
+                    <div className={styles.detailItem}>
                       <span>✅</span>
                       <span>
                         Đã thu: {totalCollected.toLocaleString("vi-VN")}đ
@@ -1165,45 +1198,61 @@ const GameForm: React.FC<GameFormProps> = ({
                 </div>
               </div>
 
-              <button
-                type='submit'
-                disabled={
-                  isSubmitting ||
-                  Object.keys(errors).length > 0 ||
-                  selectedMembers.length === 0
+              <EditableContent
+                viewContent={
+                  <div className={styles.submitViewOnly}>
+                    <div className={styles.authViewOnly}>
+                      <span className={styles.authIcon}>👁️</span>
+                      <h3>Chế độ xem</h3>
+                      <p>
+                        Bạn chỉ có quyền xem. Liên hệ quản trị viên để{" "}
+                        {isEditing ? "chỉnh sửa" : "tạo"} trận đấu.
+                      </p>
+                    </div>
+                  </div>
                 }
-                className={`submit-btn-friendly ${
-                  isSubmitting ? "loading" : ""
-                } ${
-                  Object.keys(errors).length > 0 || selectedMembers.length === 0
-                    ? "disabled"
-                    : ""
-                }`}
               >
-                {isSubmitting ? (
-                  <div className='btn-loading'>
-                    <div className='spinner-friendly'></div>
-                    <span>
-                      {isEditing ? "Đang cập nhật..." : "Đang ghi nhận..."}
-                    </span>
-                  </div>
-                ) : (
-                  <div className='btn-content-friendly'>
-                    <span className='btn-emoji'>🎯</span>
-                    <span>
-                      {isEditing ? "Cập nhật trận đấu" : "Ghi nhận trận đấu"}
-                    </span>
-                    <div className='btn-sparkle'>✨</div>
-                  </div>
-                )}
-              </button>
+                <button
+                  type='submit'
+                  disabled={
+                    isSubmitting ||
+                    Object.keys(errors).length > 0 ||
+                    selectedMembers.length === 0
+                  }
+                  className={`${styles.submitBtnFriendly} ${
+                    isSubmitting ? "loading" : ""
+                  } ${
+                    Object.keys(errors).length > 0 ||
+                    selectedMembers.length === 0
+                      ? "disabled"
+                      : ""
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <div className={styles.btnLoading}>
+                      <div className={styles.spinnerFriendly}></div>
+                      <span>
+                        {isEditing ? "Đang cập nhật..." : "Đang ghi nhận..."}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className={styles.btnContentFriendly}>
+                      <span className={styles.btnEmoji}>🎯</span>
+                      <span>
+                        {isEditing ? "Cập nhật trận đấu" : "Ghi nhận trận đấu"}
+                      </span>
+                      <div className={styles.btnSparkle}>✨</div>
+                    </div>
+                  )}
+                </button>
+              </EditableContent>
 
-              <div className='submit-tips'>
-                <div className='tip-item'>
+              <div className={styles.submitTips}>
+                <div className={styles.tipItem}>
                   <span>💡</span>
                   <span>Kiểm tra kỹ thông tin trước khi gửi nhé!</span>
                 </div>
-                <div className='tip-item'>
+                <div className={styles.tipItem}>
                   <span>🔒</span>
                   <span>Dữ liệu của bạn được lưu trữ an toàn</span>
                 </div>
