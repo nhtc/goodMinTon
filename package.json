@@ -4,16 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma db push && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && prisma db push && next build",
+    "vercel-build": "prisma generate && next build",
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed"
   },
   "dependencies": {
-    "@prisma/client": "^5.0.0",
+    "@prisma/client": "^5.8.0",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-slot": "^1.0.2",
@@ -23,9 +23,9 @@
     "clsx": "^2.0.0",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.21",
-    "lucide-react": "^0.294.0",
+    "lucide-react": "^0.460.0",
     "next": "latest",
-    "prisma": "^5.0.0",
+    "prisma": "^5.8.0",
     "react": "latest",
     "react-dom": "latest",
     "tailwind-merge": "^2.0.0"
