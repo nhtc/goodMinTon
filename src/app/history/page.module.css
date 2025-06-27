@@ -399,6 +399,10 @@
 
 .participantInfoSmall {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .participantNameSmall {
@@ -436,25 +440,53 @@
 
 .paymentStatusIcon {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.paidIcon {
+  font-size: 1.2rem;
+  color: #059669;
+  background: #dcfce7;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: checkmarkPulse 0.3s ease-out;
+}
+
+@keyframes checkmarkPulse {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.unpaidIcon {
+  font-size: 1.2rem;
+  color: #d97706;
+  background: #fef3c7;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .paymentSpinner {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border: 2px solid #f3f3f3;
   border-top: 2px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-}
-
-.paidIcon {
-  color: #10b981;
-  font-size: 1.25rem;
-}
-
-.unpaidIcon {
-  color: #f59e0b;
-  font-size: 1.25rem;
 }
 
 .paymentTime {
@@ -462,12 +494,20 @@
   color: #6b7280;
   padding: 0.25rem 0.75rem;
   border-top: 1px solid #f3f4f6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex-shrink: 0;
 }
 
+/* ===== PAYMENT TOTAL STYLES ===== */
 .paymentTotals {
   margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
 }
 
 .paymentTotal {
@@ -475,7 +515,15 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 0;
-  font-size: 0.875rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.paymentTotal:last-child {
+  border-bottom: none;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 2px solid #e5e7eb;
 }
 
 .paymentTotal.prepaid {
@@ -483,68 +531,62 @@
 }
 
 .paymentTotal.collected {
-  color: #10b981;
+  color: #0ea5e9;
 }
 
 .paymentTotal.remaining {
-  color: #f59e0b;
-  font-weight: 600;
+  color: #dc2626;
 }
 
 .totalLabel {
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .totalAmount {
   font-weight: 600;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
 }
 
-/* ===== GAME ACTIONS ===== */
-.gameActions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+/* ===== PAYMENT ANIMATIONS ===== */
+@keyframes paymentSuccess {
+  0% { 
+    background: #dcfce7; 
+    transform: scale(1);
+  }
+  50% { 
+    background: #bbf7d0; 
+    transform: scale(1.02);
+  }
+  100% { 
+    background: #dcfce7; 
+    transform: scale(1);
+  }
 }
 
-.gameActionBtn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border: none;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
+@keyframes paymentPending {
+  0% { 
+    background: #fef3c7; 
+    transform: scale(1);
+  }
+  50% { 
+    background: #fed7aa; 
+    transform: scale(1.02);
+  }
+  100% { 
+    background: #fef3c7; 
+    transform: scale(1);
+  }
 }
 
-.viewBtn {
-  background: #3b82f6;
-  color: white;
+.participantPaymentItem.paid:hover {
+  animation: paymentSuccess 0.6s ease-in-out;
 }
 
-.viewBtn:hover {
-  background: #2563eb;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.cardGlow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
+.participantPaymentItem.unpaid:hover {
+  animation: paymentPending 0.6s ease-in-out;
 }
 
 /* ===== LAZY LOADING STYLES ===== */
@@ -1668,4 +1710,121 @@
     width: 100%;
     justify-content: center;
   }
+}
+
+/* ===== PARTICIPANT PAYMENT STYLES ===== */
+.participantPaymentItem {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  background: white;
+}
+
+.participantPaymentItem.paid {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #bbf7d0;
+}
+
+.participantPaymentItem.unpaid {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-color: #fed7aa;
+}
+
+.participantPaymentBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.participantPaymentBtn:hover:not(.disabled) {
+  background: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.participantPaymentBtn:active:not(.disabled) {
+  transform: translateY(0);
+}
+
+.participantPaymentBtn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== PARTICIPANT PAYMENT TIME STYLES ===== */
+.participantPaymentTime {
+  font-size: 0.625rem;
+  color: #059669;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  display: inline-block;
+}
+
+.participantPaymentTime:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.gameActions{
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.gameActionBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.gameActionBtn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.gameActionBtn:active {
+  transform: translateY(0);
+}
+
+.viewBtn {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.viewBtn:hover {
+  background: #2563eb;
+  border-color: #2563eb;
 }

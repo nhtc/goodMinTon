@@ -658,10 +658,10 @@ const HistoryPage = () => {
                                   }`}
                                   title={
                                     !canEdit
-                                      ? "Bạn không có quyền chỉnh sửa thanh toán"
+                                      ? "⚠️ Bạn không có quyền chỉnh sửa thanh toán"
                                       : participant.hasPaid
-                                      ? "Đã thanh toán - Click để đánh dấu chưa trả"
-                                      : "Chưa thanh toán - Click để đánh dấu đã trả"
+                                      ? `✅ ${participant.name} đã thanh toán - Nhấn để hủy`
+                                      : `💰 ${participant.name} chưa thanh toán - Nhấn để xác nhận đã trả`
                                   }
                                 >
                                   <div
@@ -707,6 +707,17 @@ const HistoryPage = () => {
                                         )}đ`
                                       )}
                                     </div>
+                                    {/* ✅ Move payment time inside participant info */}
+                                    {participant.hasPaid && participant.paidAt && (
+                                      <div className={styles.participantPaymentTime}>
+                                        💰 {new Date(participant.paidAt).toLocaleDateString("vi-VN", {
+                                          day: "2-digit",
+                                          month: "2-digit",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })}
+                                      </div>
+                                    )}
                                   </div>
                                   <div className={styles.paymentStatusIcon}>
                                     {isLoading ? (
@@ -724,19 +735,6 @@ const HistoryPage = () => {
                                     )}
                                   </div>
                                 </button>
-                                {participant.hasPaid && participant.paidAt && (
-                                  <div className={styles.paymentTime}>
-                                    💰{" "}
-                                    {new Date(
-                                      participant.paidAt
-                                    ).toLocaleDateString("vi-VN", {
-                                      day: "2-digit",
-                                      month: "2-digit",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    })}
-                                  </div>
-                                )}
                               </div>
                             )
                           })}
@@ -1017,10 +1015,10 @@ const HistoryPage = () => {
                             } ${!canEdit ? styles.disabled : ""}`}
                             title={
                               !canEdit
-                                ? "Bạn không có quyền chỉnh sửa thanh toán"
+                                ? "⚠️ Bạn không có quyền chỉnh sửa thanh toán"
                                 : participant.hasPaid
-                                ? "Đã thanh toán - Click để đánh dấu chưa trả"
-                                : "Chưa thanh toán - Click để đánh dấu đã trả"
+                                ? `✅ ${participant.name} đã thanh toán - Nhấn để hủy`
+                                : `💰 ${participant.name} chưa thanh toán - Nhấn để xác nhận đã trả`
                             }
                           >
                             {isLoading ? (
