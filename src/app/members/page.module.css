@@ -1010,35 +1010,103 @@
   will-change: transform;
 }
 
-/* Responsive Design */
+/* ===== COMPREHENSIVE RESPONSIVE DESIGN ===== */
+
+/* Large tablets and small desktops */
+@media (max-width: 1024px) {
+  .membersGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  
+  .headerContent {
+    padding: 0 1rem;
+  }
+  
+  .membersListContainer {
+    padding: 2.5rem;
+  }
+}
+
+/* Tablets and mobile landscape */
 @media (max-width: 768px) {
+  .membersPage {
+    padding-bottom: 2rem;
+  }
+  
+  .membersHeader {
+    padding: 1.5rem 0;
+  }
+  
+  .headerContent {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+    padding: 0 1rem;
+  }
+  
   .headerTitle {
     font-size: 2.5rem;
   }
   
-  .membersHeader {
-    padding: 2rem 0;
+  .headerSubtitle {
+    font-size: 1rem;
   }
   
   .headerActions {
     width: 100%;
     justify-content: center;
     flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .actionBtn {
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
   }
   
   .statsGrid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
+    margin-top: 2rem;
+    padding: 0 1rem;
+  }
+  
+  .statCard {
+    padding: 1.75rem;
+    flex-direction: row;
+    gap: 1rem;
+  }
+  
+  .statIcon {
+    font-size: 2.5rem;
+  }
+  
+  .statNumber {
+    font-size: 2rem;
+  }
+  
+  .statLabel {
+    font-size: 0.9rem;
   }
   
   .membersGrid {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 1.5rem;
+    padding: 0 1rem;
   }
   
   .listHeader {
     flex-direction: column;
     text-align: center;
+    gap: 1rem;
+    padding: 0 1rem;
   }
   
   .listTitle {
@@ -1046,83 +1114,84 @@
   }
   
   .searchContainer {
-    margin: 0 1rem;
+    margin: 0;
+    width: 100%;
+    max-width: 400px;
   }
   
   .searchInput {
-    padding: 1.25rem 1.25rem 1.25rem 3.5rem;
+    padding: 1rem 1rem 1rem 3rem;
     font-size: 1rem;
+    width: 100%;
+  }
+  
+  .searchIcon {
+    left: 1rem;
+    font-size: 1.2rem;
+  }
+  
+  .clearSearchBtn {
+    right: 1rem;
   }
   
   .membersListContainer {
-    padding: 2rem;
+    padding: 2rem 1rem;
+    margin: 0;
   }
   
   .memberCard {
-    padding: 2rem;
-  }
-  
-  .avatarCircle {
-    width: 60px;
-    height: 60px;
-    font-size: 1.5rem;
-  }
-  
-  .memberName {
-    font-size: 1.25rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .membersHeader {
-    padding: 1.5rem 0;
-  }
-  
-  .headerTitle {
-    font-size: 2rem;
-  }
-  
-  .statsGrid {
-    margin-top: 2rem;
-  }
-  
-  .statCard {
-    padding: 1.5rem;
+    padding: 1.75rem;
     flex-direction: column;
     text-align: center;
     gap: 1rem;
   }
   
-  .statIcon {
-    font-size: 3rem;
+  .memberInfo {
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: center;
   }
   
-  .statNumber {
-    font-size: 2.25rem;
+  .avatarCircle {
+    width: 70px;
+    height: 70px;
+    font-size: 1.75rem;
+    margin: 0 auto;
   }
   
-  .membersListContainer {
-    padding: 1.5rem;
+  .memberDetails {
+    text-align: center;
   }
   
-  .memberCard {
-    padding: 1.5rem;
+  .memberName {
+    font-size: 1.25rem;
   }
   
-  .searchContainer {
-    margin: 0 0.5rem;
+  .memberPhone {
+    font-size: 0.95rem;
   }
   
-  .formContainer.formOpen {
-    padding: 2rem;
+  .memberActions {
+    width: 100%;
+    justify-content: center;
+    gap: 0.75rem;
   }
   
+  .memberActionBtn {
+    flex: 1;
+    max-width: 120px;
+    justify-content: center;
+    padding: 0.75rem;
+  }
+  
+  /* Empty state mobile */
   .emptyState {
-    padding: 4rem 1rem;
+    padding: 3rem 1.5rem;
+    margin: 2rem 1rem;
   }
   
   .emptyIcon {
-    font-size: 4rem;
+    font-size: 3rem;
   }
   
   .emptyTitle {
@@ -1132,9 +1201,271 @@
   .emptyDescription {
     font-size: 1rem;
   }
+}
+
+/* Mobile portrait */
+@media (max-width: 480px) {
+  .membersHeader {
+    padding: 1rem 0;
+  }
   
-  .emptyActionBtn {
-    padding: 1rem 2rem;
+  .headerContent {
+    padding: 0 0.75rem;
+  }
+  
+  .headerTitle {
+    font-size: 2rem;
+    line-height: 1.2;
+  }
+  
+  .headerSubtitle {
+    font-size: 0.9rem;
+  }
+  
+  .actionBtn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding: 0 0.75rem;
+  }
+  
+  .statCard {
+    padding: 1.5rem;
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .statIcon {
+    font-size: 2.25rem;
+  }
+  
+  .statNumber {
+    font-size: 1.75rem;
+  }
+  
+  .statLabel {
+    font-size: 0.85rem;
+  }
+  
+  .membersGrid {
+    padding: 0 0.75rem;
+    gap: 1.25rem;
+  }
+  
+  .listHeader {
+    padding: 0 0.75rem;
+  }
+  
+  .listTitle {
+    font-size: 1.5rem;
+  }
+  
+  .searchContainer {
+    max-width: none;
+  }
+  
+  .searchInput {
+    padding: 0.875rem 0.875rem 0.875rem 2.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .searchIcon {
+    left: 0.875rem;
+    font-size: 1.1rem;
+  }
+  
+  .clearSearchBtn {
+    right: 0.875rem;
+    width: 32px;
+    height: 32px;
+  }
+  
+  .membersListContainer {
+    padding: 1.5rem 0.75rem;
+  }
+  
+  .memberCard {
+    padding: 1.5rem;
+  }
+  
+  .avatarCircle {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+  
+  .memberName {
+    font-size: 1.1rem;
+  }
+  
+  .memberPhone {
+    font-size: 0.9rem;
+  }
+  
+  .memberActions {
+    gap: 0.5rem;
+  }
+  
+  .memberActionBtn {
+    padding: 0.625rem;
+    font-size: 0.8rem;
+    min-height: 44px;
+  }
+  
+  .emptyState {
+    padding: 2.5rem 1rem;
+    margin: 1.5rem 0.5rem;
+  }
+  
+  .emptyIcon {
+    font-size: 2.5rem;
+  }
+  
+  .emptyTitle {
+    font-size: 1.25rem;
+  }
+  
+  .emptyDescription {
+    font-size: 0.9rem;
+  }
+  
+  .emptyAction {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Extra small mobile */
+@media (max-width: 360px) {
+  .headerContent {
+    padding: 0 0.5rem;
+  }
+  
+  .headerTitle {
+    font-size: 1.75rem;
+  }
+  
+  .statsGrid,
+  .membersGrid {
+    padding: 0 0.5rem;
+  }
+  
+  .listHeader {
+    padding: 0 0.5rem;
+  }
+  
+  .memberCard {
+    padding: 1.25rem;
+  }
+  
+  .avatarCircle {
+    width: 50px;
+    height: 50px;
+    font-size: 1.25rem;
+  }
+  
+  .memberName {
     font-size: 1rem;
+  }
+  
+  .memberPhone {
+    font-size: 0.85rem;
+  }
+  
+  .memberActionBtn {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    min-width: 80px;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .membersHeader {
+    padding: 0.75rem 0;
+  }
+  
+  .headerTitle {
+    font-size: 1.75rem;
+  }
+  
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .memberCard {
+    flex-direction: row;
+    padding: 1rem;
+  }
+  
+  .memberInfo {
+    flex-direction: row;
+  }
+  
+  .avatarCircle {
+    width: 50px;
+    height: 50px;
+    font-size: 1.25rem;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  .memberActionBtn,
+  .actionBtn,
+  .clearSearchBtn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .searchInput {
+    min-height: 48px;
+  }
+  
+  .memberCard {
+    padding: 2rem 1.5rem;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .memberCard {
+    border: 2px solid #e5e7eb;
+  }
+  
+  .statCard {
+    border: 2px solid #e5e7eb;
+  }
+  
+  .memberActionBtn {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .memberCard {
+    transition: none;
+  }
+  
+  .statCard {
+    transition: none;
+  }
+  
+  .memberActionBtn {
+    transition: none;
+  }
+  
+  .avatarCircle {
+    transition: none;
   }
 }

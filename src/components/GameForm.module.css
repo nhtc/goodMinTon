@@ -1605,36 +1605,466 @@
   }
 }
 
-/* Responsive Design */
+/* ===== COMPREHENSIVE RESPONSIVE DESIGN ===== */
+
+/* Large tablets and small desktops */
+@media (max-width: 1024px) {
+  .gameFormContainer {
+    margin: 1.5rem;
+    padding: 2rem;
+  }
+  
+  .formRow {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+  
+  .presetGrid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  
+  .membersGridFriendly {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+/* Tablets and mobile landscape */
 @media (max-width: 768px) {
   .gameFormContainer {
     margin: 1rem;
-    padding: 1.5rem;
+    padding: 1.75rem;
+    border-radius: 16px;
   }
   
-  .headerTitle {
-    font-size: 1.5rem;
+  .formHeader {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
   }
   
   .headerEmoji {
     width: 60px;
     height: 60px;
     font-size: 2rem;
+    margin: 0 auto;
+  }
+  
+  .headerInfo {
+    text-align: center;
+  }
+  
+  .headerTitle {
+    font-size: 1.5rem;
+  }
+  
+  .headerSubtitle {
+    font-size: 0.9rem;
+  }
+  
+  .headerActions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .closeBtn {
+    padding: 0.5rem;
+    width: 40px;
+    height: 40px;
+  }
+  
+  .formContent {
+    gap: 1.5rem;
+  }
+  
+  .formSection {
+    padding: 1.25rem;
+  }
+  
+  .sectionTitle {
+    font-size: 1.1rem;
   }
   
   .formRow {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .formGroup {
+    margin-bottom: 1rem;
+  }
+  
+  .label {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .input,
+  .select,
+  .textarea {
+    padding: 0.75rem;
+    font-size: 0.9rem;
   }
   
   .presetGrid {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .presetCard {
+    padding: 1rem;
+  }
+  
+  .presetTitle {
+    font-size: 0.9rem;
+  }
+  
+  .presetSubtitle {
+    font-size: 0.75rem;
   }
   
   .costBreakdown {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .costItem {
+    padding: 0.75rem;
+  }
+  
+  .costValue {
+    font-size: 1rem;
   }
   
   .membersGridFriendly {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .memberCard {
+    padding: 1rem;
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .memberInfo {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .memberAvatar {
+    width: 50px;
+    height: 50px;
+    font-size: 1.25rem;
+    margin: 0 auto;
+  }
+  
+  .memberName {
+    font-size: 0.95rem;
+  }
+  
+  .memberPhone {
+    font-size: 0.8rem;
+  }
+  
+  .memberActions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .formActions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .submitBtn,
+  .cancelBtn {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Mobile portrait */
+@media (max-width: 480px) {
+  .gameFormContainer {
+    margin: 0.5rem;
+    padding: 1.5rem;
+    border-radius: 12px;
+  }
+  
+  .formHeader {
+    gap: 0.75rem;
+  }
+  
+  .headerEmoji {
+    width: 50px;
+    height: 50px;
+    font-size: 1.75rem;
+  }
+  
+  .headerTitle {
+    font-size: 1.375rem;
+  }
+  
+  .headerSubtitle {
+    font-size: 0.85rem;
+  }
+  
+  .closeBtn {
+    width: 36px;
+    height: 36px;
+    font-size: 1.25rem;
+  }
+  
+  .formContent {
+    gap: 1.25rem;
+  }
+  
+  .formSection {
+    padding: 1rem;
+  }
+  
+  .sectionTitle {
+    font-size: 1rem;
+  }
+  
+  .formGroup {
+    margin-bottom: 0.875rem;
+  }
+  
+  .label {
+    font-size: 0.85rem;
+  }
+  
+  .input,
+  .select,
+  .textarea {
+    padding: 0.625rem;
+    font-size: 0.85rem;
+  }
+  
+  .presetCard {
+    padding: 0.875rem;
+  }
+  
+  .presetTitle {
+    font-size: 0.85rem;
+  }
+  
+  .presetSubtitle {
+    font-size: 0.7rem;
+  }
+  
+  .costItem {
+    padding: 0.625rem;
+    flex-direction: column;
+    text-align: center;
+    gap: 0.25rem;
+  }
+  
+  .costLabel {
+    font-size: 0.8rem;
+  }
+  
+  .costValue {
+    font-size: 0.9rem;
+  }
+  
+  .memberCard {
+    padding: 0.875rem;
+  }
+  
+  .memberAvatar {
+    width: 45px;
+    height: 45px;
+    font-size: 1.125rem;
+  }
+  
+  .memberName {
+    font-size: 0.9rem;
+  }
+  
+  .memberPhone {
+    font-size: 0.75rem;
+  }
+  
+  .addMemberBtn,
+  .removeBtn {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+    min-height: 44px;
+  }
+  
+  .submitBtn,
+  .cancelBtn {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.85rem;
+    min-height: 48px;
+  }
+}
+
+/* Extra small mobile */
+@media (max-width: 360px) {
+  .gameFormContainer {
+    margin: 0.25rem;
+    padding: 1.25rem;
+  }
+  
+  .headerTitle {
+    font-size: 1.25rem;
+  }
+  
+  .headerEmoji {
+    width: 45px;
+    height: 45px;
+    font-size: 1.5rem;
+  }
+  
+  .formSection {
+    padding: 0.875rem;
+  }
+  
+  .input,
+  .select,
+  .textarea {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .presetCard {
+    padding: 0.75rem;
+  }
+  
+  .memberCard {
+    padding: 0.75rem;
+  }
+  
+  .memberAvatar {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .submitBtn,
+  .cancelBtn {
+    padding: 0.625rem 1rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .gameFormContainer {
+    margin: 0.5rem;
+    padding: 1rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .formHeader {
+    flex-direction: row;
+    text-align: left;
+  }
+  
+  .headerEmoji {
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+  }
+  
+  .headerTitle {
+    font-size: 1.25rem;
+  }
+  
+  .formContent {
+    gap: 1rem;
+  }
+  
+  .formRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .presetGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .membersGridFriendly {
+    grid-template-columns: repeat(2, 1fr);
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  
+  .formActions {
+    flex-direction: row;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  .input,
+  .select,
+  .textarea {
+    min-height: 48px;
+    padding: 0.75rem;
+  }
+  
+  .submitBtn,
+  .cancelBtn,
+  .addMemberBtn,
+  .removeBtn,
+  .closeBtn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .presetCard {
+    padding: 1rem;
+  }
+  
+  .memberCard {
+    padding: 1rem;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .gameFormContainer {
+    border: 2px solid #e5e7eb;
+  }
+  
+  .formSection {
+    border: 2px solid #f3f4f6;
+  }
+  
+  .input,
+  .select,
+  .textarea {
+    border: 2px solid #d1d5db;
+  }
+  
+  .presetCard {
+    border: 2px solid #e5e7eb;
+  }
+  
+  .memberCard {
+    border: 2px solid #e5e7eb;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .gameFormContainer {
+    animation: none;
+  }
+  
+  .presetCard,
+  .memberCard,
+  .submitBtn {
+    transition: none;
+  }
+  
+  .floatingParticle {
+    animation: none;
   }
 }

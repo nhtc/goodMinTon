@@ -524,28 +524,306 @@
   }
 }
 
-/* Responsive Design */
+/* ===== COMPREHENSIVE RESPONSIVE DESIGN ===== */
+
+/* Large tablets and small desktops */
+@media (max-width: 1024px) {
+  .memberFormContainer {
+    margin: 1.5rem;
+    padding: 2rem;
+  }
+  
+  .modalContent {
+    margin: 1rem;
+    max-width: 500px;
+  }
+}
+
+/* Tablets and mobile landscape */
 @media (max-width: 768px) {
   .memberFormContainer {
     margin: 1rem;
-    padding: 1.5rem;
+    padding: 1.75rem;
+    border-radius: 16px;
+  }
+  
+  .formHeader {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .headerIcon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+    margin: 0 auto;
+  }
+  
+  .headerInfo {
+    text-align: center;
   }
   
   .formTitle {
     font-size: 1.5rem;
   }
   
+  .formSubtitle {
+    font-size: 0.9rem;
+  }
+  
+  .headerActions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .closeBtn {
+    padding: 0.5rem;
+    width: 40px;
+    height: 40px;
+  }
+  
+  .formContent {
+    gap: 1.5rem;
+  }
+  
+  .formGroup {
+    margin-bottom: 1rem;
+  }
+  
+  .label {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .input,
+  .textarea {
+    padding: 0.875rem;
+    font-size: 0.9rem;
+  }
+  
+  .formActions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .submitBtn,
+  .cancelBtn {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .modalContent {
+    margin: 0.75rem;
+    max-width: none;
+    width: calc(100% - 1.5rem);
+  }
+}
+
+/* Mobile portrait */
+@media (max-width: 480px) {
+  .memberFormContainer {
+    margin: 0.5rem;
+    padding: 1.5rem;
+    border-radius: 12px;
+  }
+  
+  .formHeader {
+    gap: 0.75rem;
+  }
+  
   .headerIcon {
     width: 50px;
     height: 50px;
-    font-size: 20px;
+    font-size: 1.25rem;
   }
   
-  .submitBtn {
-    padding: 1rem 1.5rem;
+  .formTitle {
+    font-size: 1.375rem;
+  }
+  
+  .formSubtitle {
+    font-size: 0.85rem;
+  }
+  
+  .closeBtn {
+    width: 36px;
+    height: 36px;
+    font-size: 1.25rem;
+  }
+  
+  .formContent {
+    gap: 1.25rem;
+  }
+  
+  .formGroup {
+    margin-bottom: 0.875rem;
+  }
+  
+  .label {
+    font-size: 0.85rem;
+  }
+  
+  .input,
+  .textarea {
+    padding: 0.75rem;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+  
+  .textarea {
+    min-height: 80px;
+  }
+  
+  .submitBtn,
+  .cancelBtn {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.85rem;
+    min-height: 48px;
   }
   
   .modalContent {
     margin: 0.5rem;
+    padding: 0;
+    border-radius: 12px;
+  }
+  
+  .modalOverlay {
+    padding: 0.5rem;
+  }
+}
+
+/* Extra small mobile */
+@media (max-width: 360px) {
+  .memberFormContainer {
+    margin: 0.25rem;
+    padding: 1.25rem;
+  }
+  
+  .formTitle {
+    font-size: 1.25rem;
+  }
+  
+  .headerIcon {
+    width: 45px;
+    height: 45px;
+    font-size: 1.125rem;
+  }
+  
+  .input,
+  .textarea {
+    padding: 0.625rem;
+    font-size: 0.8rem;
+  }
+  
+  .submitBtn,
+  .cancelBtn {
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+  }
+  
+  .modalContent {
+    margin: 0.25rem;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .memberFormContainer {
+    margin: 0.5rem;
+    padding: 1rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .formHeader {
+    flex-direction: row;
+    text-align: left;
+  }
+  
+  .headerIcon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+  
+  .formTitle {
+    font-size: 1.25rem;
+  }
+  
+  .formContent {
+    gap: 1rem;
+  }
+  
+  .formActions {
+    flex-direction: row;
+  }
+  
+  .modalContent {
+    max-height: 95vh;
+    overflow-y: auto;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  .input,
+  .textarea {
+    min-height: 48px;
+    padding: 0.875rem;
+  }
+  
+  .submitBtn,
+  .cancelBtn,
+  .closeBtn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .memberFormContainer {
+    padding: 1.75rem;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .memberFormContainer {
+    border: 2px solid #e5e7eb;
+  }
+  
+  .input,
+  .textarea {
+    border: 2px solid #d1d5db;
+  }
+  
+  .input:focus,
+  .textarea:focus {
+    border: 2px solid #3b82f6;
+  }
+  
+  .submitBtn {
+    border: 2px solid #3b82f6;
+  }
+  
+  .cancelBtn {
+    border: 2px solid #6b7280;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .memberFormContainer {
+    animation: none;
+  }
+  
+  .submitBtn,
+  .cancelBtn,
+  .closeBtn {
+    transition: none;
+  }
+  
+  .modalContent {
+    animation: none;
   }
 }

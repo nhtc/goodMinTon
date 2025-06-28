@@ -1,6 +1,6 @@
 /* ===== MODERN BADMINTON MANAGER HOMEPAGE ===== */
 
-/* Performance Optimization */
+/* Performance Optimization - Simplified for better scroll performance */
 .homeGradient,
 .heroSection,
 .featureCard,
@@ -9,12 +9,12 @@
 .ctaContent,
 .ctaButton,
 .quickActionBtn {
+  /* Removed perspective and 3D transforms for better performance */
   transform: translateZ(0);
   backface-visibility: hidden;
-  perspective: 1000px;
 }
 
-/* Stunning Gradient Background */
+/* Stunning Static Gradient Background */
 .homeGradient {
   min-height: 100vh;
   background: linear-gradient(135deg, 
@@ -27,36 +27,25 @@
     #a8edea 90%,
     #fed6e3 100%
   );
-  background-size: 400% 400%;
   position: relative;
   overflow: hidden;
-  animation: dreamyGradientFlow 20s ease infinite;
+  /* Removed performance-heavy animation */
 }
 
-@keyframes dreamyGradientFlow {
-  0% {
-    background-position: 0% 50%;
-    filter: hue-rotate(0deg);
-  }
-  25% {
-    background-position: 100% 50%;
-    filter: hue-rotate(90deg);
-  }
-  50% {
-    background-position: 100% 100%;
-    filter: hue-rotate(180deg);
-  }
-  75% {
-    background-position: 0% 100%;
-    filter: hue-rotate(270deg);
-  }
-  100% {
-    background-position: 0% 50%;
-    filter: hue-rotate(360deg);
-  }
-}
+/* ===== REMOVED PERFORMANCE-HEAVY ANIMATIONS ===== */
+/* The following animations were removed to improve scroll performance:
+   - dreamyGradientFlow (main gradient animation)
+   - magicalParticles (floating particles)
+   - gentleGrid (grid overlay animation)
+   - spectacularTitleGlow (title glow effect)
+   - highlightShimmer (highlight shimmer)
+   - etherealFloat (card floating)
+   - iconPulse (icon pulsing)
+   - tagFloat (tag floating)
+   - ctaFloat (CTA floating)
+*/
 
-/* Advanced Floating Particles */
+/* Minimal Static Particles - Ultra lightweight */
 .homeGradient::before {
   content: '';
   position: absolute;
@@ -65,53 +54,24 @@
   right: 0;
   bottom: 0;
   background-image: 
-    radial-gradient(circle at 15% 85%, rgba(255, 255, 255, 0.3) 3px, transparent 3px),
-    radial-gradient(circle at 85% 15%, rgba(255, 255, 255, 0.2) 2px, transparent 2px),
-    radial-gradient(circle at 35% 65%, rgba(255, 255, 255, 0.25) 4px, transparent 4px),
-    radial-gradient(circle at 75% 35%, rgba(255, 255, 255, 0.15) 2px, transparent 2px),
-    radial-gradient(circle at 55% 25%, rgba(255, 255, 255, 0.2) 3px, transparent 3px);
-  background-size: 100px 100px, 150px 150px, 200px 200px, 120px 120px, 180px 180px;
-  animation: magicalParticles 25s linear infinite;
+    radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    radial-gradient(circle at 40% 60%, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 150px 150px, 200px 200px, 180px 180px;
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.3;
+  /* Minimal design for maximum performance */
 }
 
-@keyframes magicalParticles {
-  0% {
-    transform: translateY(0px) rotate(0deg) scale(1);
-  }
-  50% {
-    transform: translateY(-50px) rotate(180deg) scale(1.1);
-  }
-  100% {
-    transform: translateY(-100px) rotate(360deg) scale(1);
-  }
-}
 
-/* Secondary overlay for depth */
+
+/* Minimal overlay - Removed for maximum performance */
 .homeGradient::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M 12 0 L 0 0 0 12" fill="none" stroke="white" stroke-width="0.3" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-  opacity: 0.2;
-  animation: gentleGrid 8s ease-in-out infinite;
-  z-index: 0;
+  display: none;
+  /* Removed SVG grid pattern for better scroll performance */
 }
 
-@keyframes gentleGrid {
-  0%, 100% {
-    opacity: 0.2;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.3;
-    transform: scale(1.05);
-  }
-}
+
 
 /* ===== HERO SECTION ===== */
 .heroSection {
@@ -142,19 +102,48 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  animation: spectacularTitleGlow 4s ease-in-out infinite;
+  /* Removed performance-heavy title animation */
   position: relative;
+  overflow: hidden;
+  display: inline-block;
+  white-space: nowrap;
+  border-right: 3px solid rgba(255, 255, 255, 0.8);
+  /* Enhanced typewriter effect with staggered animations */
+  animation: 
+    heroTitleFadeIn 0.8s ease-out 0s both,
+    heroTitleTypewriter 2.5s steps(25, end) 0.8s both,
+    heroTitleBlink 1s infinite 3.3s;
 }
 
-@keyframes spectacularTitleGlow {
-  0%, 100% {
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-    transform: translateY(0px) scale(1);
+/* Hero title fade-in animation */
+@keyframes heroTitleFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
   }
-  50% {
-    filter: drop-shadow(0 8px 16px rgba(255, 255, 255, 0.4)) 
-            drop-shadow(0 0 32px rgba(255, 255, 255, 0.2));
-    transform: translateY(-4px) scale(1.02);
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Hero title typewriter animation */
+@keyframes heroTitleTypewriter {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+/* Hero title blink animation for cursor effect */
+@keyframes heroTitleBlink {
+  0%, 50% {
+    border-right-color: transparent;
+  }
+  51%, 100% {
+    border-right-color: rgba(255, 255, 255, 0.8);
   }
 }
 
@@ -172,19 +161,23 @@
   -webkit-text-fill-color: transparent;
   display: inline-block;
   position: relative;
-  animation: highlightShimmer 3s ease-in-out infinite;
+  opacity: 0;
+  transform: translateX(-20px);
+  animation: highlightSlideIn 0.6s ease-out 3.3s both;
 }
 
-@keyframes highlightShimmer {
-  0%, 100% {
-    background-position: 0% 50%;
-    transform: scale(1);
+@keyframes highlightSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
   }
-  50% {
-    background-position: 100% 50%;
-    transform: scale(1.05);
+  100% {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
+
+
 
 .heroHighlight::after {
   content: '🏸';
@@ -193,9 +186,22 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.7em;
-  opacity: 0.9;
-  animation: shuttleDance 3s ease-in-out infinite;
+  opacity: 0;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  animation: 
+    shuttleAppear 0.3s ease-out 3.9s both,
+    shuttleDance 3s ease-in-out 4.2s infinite;
+}
+
+@keyframes shuttleAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(-50%) scale(0);
+  }
+  100% {
+    opacity: 0.9;
+    transform: translateY(-50%) scale(1);
+  }
 }
 
 @keyframes shuttleDance {
@@ -231,18 +237,15 @@
   padding: 3rem;
   text-align: left;
   border: 1px solid rgba(255, 255, 255, 0.8);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Removed backdrop-filter for better scroll performance */
+  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  box-shadow: 
-    0 16px 64px rgba(0, 0, 0, 0.1),
-    0 8px 32px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  /* Simplified box-shadow for better performance */
   transform: translateZ(0);
   will-change: transform;
-  animation: etherealFloat 8s ease-in-out infinite;
+  /* Removed floating animation for better performance */
 }
 
 .featureCard::before {
@@ -277,14 +280,7 @@
   opacity: 1;
 }
 
-@keyframes etherealFloat {
-  0%, 100% {
-    transform: translateZ(0) translateY(0px) rotateX(0deg);
-  }
-  50% {
-    transform: translateZ(0) translateY(-8px) rotateX(1deg);
-  }
-}
+
 
 /* Card Type Variations */
 .primaryCard {
@@ -362,26 +358,17 @@
   font-size: 2rem;
   margin-bottom: 2rem;
   border: 1px solid rgba(99, 102, 241, 0.15);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  /* Removed backdrop-filter for better performance */
   transition: all 0.3s ease;
-  animation: iconPulse 4s ease-in-out infinite;
+  /* Removed icon pulse animation for better performance */
 }
 
-@keyframes iconPulse {
-  0%, 100% {
-    transform: scale(1) rotate(0deg);
-    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.1);
-  }
-  50% {
-    transform: scale(1.05) rotate(2deg);
-    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
-  }
-}
+
 
 .featureCard:hover .featureIcon {
   transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.2);
+  /* Simplified shadow for better performance */
 }
 
 .featureContent {
@@ -419,8 +406,7 @@
   font-size: 0.85rem;
   font-weight: 600;
   border: 1px solid rgba(74, 222, 128, 0.2);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  /* Removed backdrop-filter for better performance */
   text-shadow: none;
 }
 
@@ -440,9 +426,9 @@
   border: 1px solid rgba(99, 102, 241, 0.2);
   font-weight: 600;
   font-size: 1rem;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Removed backdrop-filter for better performance */
+  transition: all 0.3s ease;
+  /* Simplified transition for better performance */
   position: relative;
   overflow: hidden;
   text-shadow: none;
@@ -528,8 +514,7 @@
   border: 1px solid rgba(139, 92, 246, 0.2);
   font-weight: 600;
   font-size: 0.9rem;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  /* Removed backdrop-filter for better performance */
   transition: all 0.3s ease;
   text-shadow: none;
 }
@@ -610,7 +595,7 @@
   /* Performance optimizations with friendly animations */
   transform: translateZ(0);
   backface-visibility: hidden;
-  animation: tagFloat 4s ease-in-out infinite;
+  /* Removed floating animation for better performance */
   position: relative;
   overflow: hidden;
 }
@@ -630,18 +615,7 @@
   left: 100%;
 }
 
-@keyframes tagFloat {
-  0%, 100% {
-    transform: translateZ(0) translateY(0px);
-  }
-  50% {
-    transform: translateZ(0) translateY(-2px);
-  }
-}
 
-.benefitTag:nth-child(1) { animation-delay: 0s; }
-.benefitTag:nth-child(2) { animation-delay: 0.5s; }
-.benefitTag:nth-child(3) { animation-delay: 1s; }
 
 .benefitTag:hover {
   background: rgba(74, 222, 128, 0.2);
@@ -784,22 +758,13 @@
   );
   border-radius: 32px;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  -webkit-backdrop-filter: blur(40px);
-  backdrop-filter: blur(40px);
-  box-shadow: 
-    0 24px 64px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  animation: ctaFloat 6s ease-in-out infinite;
+  /* Removed backdrop-filter for better performance */
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  /* Simplified shadow for better performance */
+  /* Removed floating animation for better performance */
 }
 
-@keyframes ctaFloat {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
+
 
 .ctaTitle {
   font-size: clamp(2rem, 5vw, 3rem);
@@ -866,8 +831,7 @@
   );
   color: white;
   border-color: rgba(255, 255, 255, 0.4);
-  -webkit-backdrop-filter: blur(25px);
-  backdrop-filter: blur(25px);
+  /* Removed backdrop-filter for better performance */
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
@@ -878,14 +842,16 @@
     rgba(255, 255, 255, 0.3) 100%
   );
   border-color: rgba(255, 255, 255, 0.6);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  /* Simplified shadow for better performance */
 }
 
 /* ===== ANIMATION ON SCROLL ===== */
 .animateOnScroll {
   opacity: 0;
-  transform: translateY(30px);
-  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(20px);
+  transition: all 0.6s ease;
+  /* Simplified transition for better performance */
 }
 
 .animateOnScroll.animate {
@@ -893,26 +859,101 @@
   transform: translateY(0px);
 }
 
-/* ===== RESPONSIVE DESIGN ===== */
+/* ===== COMPREHENSIVE RESPONSIVE DESIGN ===== */
+
+/* Large tablets and small desktops */
+@media (max-width: 1024px) {
+  .heroSection {
+    padding: 6rem 0;
+  }
+  
+  .heroTitle {
+    font-size: clamp(2.5rem, 8vw, 4rem);
+  }
+  
+  .featuresGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    margin-top: 4rem;
+  }
+  
+  .featureCard {
+    padding: 2.5rem;
+  }
+  
+  .ctaContent {
+    padding: 4rem 2rem;
+    margin: 0 1rem;
+  }
+}
+
+/* Tablets and mobile landscape */
 @media (max-width: 768px) {
+  .heroSection {
+    padding: 4rem 0;
+  }
+  
   .heroTitle {
     font-size: clamp(2rem, 10vw, 3rem);
     margin-bottom: 1.5rem;
+    line-height: 1.2;
+  }
+  
+  .heroHighlight {
+    display: block;
+    margin-top: 0.5rem;
   }
   
   .featuresGrid {
     grid-template-columns: 1fr;
     gap: 2rem;
     margin-top: 3rem;
+    padding: 0 1rem;
   }
   
   .featureCard {
     padding: 2rem;
+    margin: 0;
+  }
+  
+  .featureIcon {
+    width: 70px;
+    height: 70px;
+    font-size: 2rem;
+  }
+  
+  .featureTitle {
+    font-size: 1.3rem;
+    margin: 1rem 0 0.75rem;
+  }
+  
+  .featureDescription {
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+  
+  .featureButton {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .ctaSection {
+    margin: 4rem 0;
   }
   
   .ctaContent {
     padding: 3rem 1.5rem;
     margin: 0 1rem;
+  }
+  
+  .ctaTitle {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .ctaDescription {
+    font-size: 1rem;
+    margin-bottom: 2rem;
   }
   
   .ctaButtons {
@@ -926,43 +967,248 @@
     width: 100%;
     max-width: 280px;
     justify-content: center;
+    font-size: 1rem;
   }
   
   .quickActions {
     justify-content: center;
+    gap: 1rem;
+    padding: 0 1rem;
+  }
+  
+  .quickActionBtn {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
   }
 }
 
+/* Mobile portrait */
 @media (max-width: 480px) {
   .heroSection {
-    padding: 4rem 0;
+    padding: 3rem 0;
+  }
+  
+  .heroTitle {
+    font-size: clamp(1.75rem, 12vw, 2.5rem);
+    margin-bottom: 1rem;
+    line-height: 1.1;
   }
   
   .homeGradient::before {
     background-size: 60px 60px, 90px 90px, 120px 120px;
   }
   
+  .featuresGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-top: 2rem;
+    padding: 0 0.75rem;
+  }
+  
   .featureCard {
     padding: 1.5rem;
+    text-align: center;
   }
   
   .featureIcon {
     width: 60px;
     height: 60px;
+    font-size: 1.75rem;
+    margin: 0 auto 1rem;
+  }
+  
+  .featureTitle {
+    font-size: 1.2rem;
+    margin: 0 0 0.75rem;
+  }
+  
+  .featureDescription {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+  }
+  
+  .featureButton {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.85rem;
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  .ctaContent {
+    padding: 2.5rem 1rem;
+    margin: 0 0.5rem;
+  }
+  
+  .ctaTitle {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
+  }
+  
+  .ctaDescription {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  
+  .ctaButton {
+    padding: 0.875rem 1.5rem;
+    font-size: 0.9rem;
+    width: 100%;
+    max-width: 250px;
+  }
+  
+  .quickActions {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0 0.75rem;
+  }
+  
+  .quickActionBtn {
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+  }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 360px) {
+  .heroSection {
+    padding: 2.5rem 0;
+  }
+  
+  .heroTitle {
+    font-size: clamp(1.5rem, 14vw, 2rem);
+  }
+  
+  .featuresGrid {
+    padding: 0 0.5rem;
+    gap: 1.25rem;
+  }
+  
+  .featureCard {
+    padding: 1.25rem;
+  }
+  
+  .featureIcon {
+    width: 50px;
+    height: 50px;
     font-size: 1.5rem;
   }
   
   .featureTitle {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
+  }
+  
+  .featureDescription {
+    font-size: 0.85rem;
+  }
+  
+  .ctaContent {
+    padding: 2rem 0.75rem;
+    margin: 0 0.25rem;
   }
   
   .ctaTitle {
-    font-size: 1.75rem;
+    font-size: 1.375rem;
   }
   
-  .ctaDescription {
-    font-size: 1rem;
+  .ctaButton {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.85rem;
   }
+  
+  .quickActionBtn {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .heroSection {
+    padding: 2rem 0;
+  }
+  
+  .heroTitle {
+    font-size: clamp(1.5rem, 8vw, 2.5rem);
+    margin-bottom: 0.75rem;
+  }
+  
+  .featuresGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+  
+  .featureCard {
+    padding: 1.25rem;
+  }
+  
+  .ctaContent {
+    padding: 2rem 1.5rem;
+  }
+  
+  .ctaButtons {
+    flex-direction: row;
+    gap: 1rem;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  .featureButton,
+  .ctaButton,
+  .quickActionBtn {
+    min-height: 44px;
+    padding: 0.75rem 1.5rem;
+  }
+  
+  .featureCard {
+    padding: 2rem;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .featureCard {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .featureButton,
+  .ctaButton {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .homeGradient,
+  .featureCard,
+  .ctaContent,
+  .featureIcon,
+  .benefitTag,
+  .heroHighlight::after {
+    animation: none !important;
+  }
+  
+  .featureCard,
+  .featureIcon,
+  .ctaButton,
+  .featureButton {
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+  
+  .animateOnScroll {
+    animation: none;
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+
 }
 
 /* ===== PERFORMANCE LOADING STATES ===== */
@@ -985,10 +1231,43 @@
 
 /* ===== ACCESSIBILITY IMPROVEMENTS ===== */
 @media (prefers-reduced-motion: reduce) {
-
   .animateOnScroll {
     transform: none;
     opacity: 1;
+  }
+  
+  .featureCard,
+  .ctaContent {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ===== MOBILE PERFORMANCE OPTIMIZATIONS ===== */
+@media (max-width: 768px) {
+  /* Disable expensive effects on mobile for better performance */
+  .homeGradient::before {
+    display: none;
+  }
+  
+  .featureCard {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.2s ease;
+  }
+  
+  .featureCard:hover {
+    transform: none;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  }
+  
+  .featureIcon:hover {
+    transform: scale(1.02) !important;
+  }
+  
+  .ctaButton:hover,
+  .featureButton:hover {
+    transform: none;
   }
 }
 
@@ -1002,3 +1281,104 @@
     border: 1px solid;
   }
 }
+
+@keyframes titleGlow {
+  0%, 100% {
+    text-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.3),
+      0 0 20px rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    text-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.3),
+      0 0 30px rgba(255, 255, 255, 0.2),
+      0 0 40px rgba(74, 222, 128, 0.1);
+  }
+}
+
+/* Add glow effect after all animations complete */
+.heroTitle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: titleGlow 4s ease-in-out 5s infinite;
+  z-index: -1;
+}
+
+@keyframes shuttleAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(-50%) scale(0);
+  }
+  100% {
+    opacity: 0.9;
+    transform: translateY(-50%) scale(1);
+  }
+}
+
+@keyframes shuttleDance {
+  0%, 100% {
+    transform: translateY(-50%) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translateY(-60%) rotate(10deg) scale(1.1);
+  }
+  50% {
+    transform: translateY(-40%) rotate(-5deg) scale(0.9);
+  }
+  75% {
+    transform: translateY(-55%) rotate(8deg) scale(1.05);
+  }
+}
+
+/* Mobile optimization for hero title animations */
+@media (max-width: 768px) {
+  .heroTitle {
+    white-space: normal; /* Allow text wrapping on mobile */
+    border-right: none; /* Remove cursor on mobile */
+    animation: heroTitleFadeIn 0.6s ease-out 0s both; /* Simpler animation on mobile */
+  }
+  
+  .heroHighlight {
+    animation: highlightSlideIn 0.4s ease-out 0.6s both; /* Faster on mobile */
+  }
+  
+  .heroHighlight::after {
+    animation: 
+      shuttleAppear 0.2s ease-out 1s both,
+      shuttleDance 2s ease-in-out 1.2s infinite; /* Faster and simpler on mobile */
+  }
+}
+
+/* Disable hero animations for reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .heroTitle {
+    animation: none;
+    opacity: 1;
+    border-right: none;
+  }
+  
+  .heroHighlight {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  
+  .heroHighlight::after {
+    animation: none;
+    opacity: 0.9;
+  }
+  
+  .heroTitle::before {
+    animation: none;
+  }
+}
+
+/* ===== FEATURE CARDS SECTION ===== */

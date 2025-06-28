@@ -1828,3 +1828,482 @@
   background: #2563eb;
   border-color: #2563eb;
 }
+
+/* ===== COMPREHENSIVE RESPONSIVE DESIGN ===== */
+
+/* Tablet and Small Desktop */
+@media (max-width: 1024px) {
+  .gamesGrid {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.25rem;
+    padding: 0 0.75rem;
+  }
+  
+  .headerContent {
+    padding: 0 1rem;
+    gap: 1rem;
+  }
+  
+  .headerTitle {
+    font-size: 2rem;
+  }
+  
+  .headerSubtitle {
+    font-size: 1rem;
+  }
+}
+
+/* Mobile Landscape and Small Tablets */
+@media (max-width: 768px) {
+  .historyPage {
+    padding-bottom: 2rem;
+  }
+  
+  .historyHeader {
+    padding: 1.5rem 0;
+  }
+  
+  .headerContent {
+    flex-direction: column;
+    text-align: center;
+    padding: 0 1rem;
+    gap: 1.5rem;
+  }
+  
+  .headerInfo {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .headerIcon {
+    font-size: 2.5rem;
+  }
+  
+  .headerTitle {
+    font-size: 1.75rem;
+  }
+  
+  .headerSubtitle {
+    font-size: 0.95rem;
+  }
+  
+  .headerActions {
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .actionBtn {
+    flex: 1;
+    max-width: 200px;
+    justify-content: center;
+  }
+  
+  .gamesGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0 0.75rem;
+  }
+  
+  .gameCard {
+    padding: 1.25rem;
+  }
+  
+  .gameHeader {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .gameDateInfo {
+    align-self: center;
+    min-width: 80px;
+  }
+  
+  .gameStats {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .statItem {
+    min-width: auto;
+    padding: 0.875rem;
+  }
+  
+  .paymentStatusCard {
+    padding: 1rem;
+  }
+  
+  .paymentHeader {
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: center;
+  }
+  
+  .paymentSummary {
+    justify-content: center;
+  }
+  
+  .participantPaymentItem {
+    padding: 1rem;
+  }
+  
+  .participantPaymentBtn {
+    gap: 1rem;
+  }
+  
+  .participantAvatarSmall {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .participantInfoSmall {
+    gap: 0.375rem;
+  }
+  
+  .participantNameSmall {
+    font-size: 0.95rem;
+  }
+  
+  .participantAmount {
+    font-size: 0.8rem;
+  }
+  
+  .participantPaymentTime {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    margin-top: 0.375rem;
+  }
+  
+  .gameActions {
+    justify-content: center;
+    gap: 0.75rem;
+  }
+  
+  .gameActionBtn {
+    flex: 1;
+    justify-content: center;
+    padding: 0.75rem 1rem;
+  }
+  
+  /* Modal improvements for mobile */
+  .modalOverlay {
+    padding: 0.5rem;
+  }
+  
+  .modalContent {
+    width: 100%;
+    max-width: none;
+    max-height: 95vh;
+  }
+  
+  .modalHeader {
+    padding: 1rem;
+  }
+  
+  .modalTitle {
+    font-size: 1.25rem;
+  }
+  
+  .modalBody {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+  
+  .participantItemModal {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .participantInfoWrapper {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .paymentToggleModal {
+    min-width: 120px;
+    padding: 1rem;
+  }
+}
+
+/* Mobile Portrait */
+@media (max-width: 480px) {
+  .historyHeader {
+    padding: 1rem 0;
+  }
+  
+  .headerContent {
+    padding: 0 0.75rem;
+  }
+  
+  .headerIcon {
+    font-size: 2rem;
+  }
+  
+  .headerTitle {
+    font-size: 1.5rem;
+  }
+  
+  .headerSubtitle {
+    font-size: 0.9rem;
+  }
+  
+  .actionBtn {
+    padding: 0.625rem 1rem;
+    font-size: 0.85rem;
+  }
+  
+  .gamesGrid {
+    padding: 0 0.5rem;
+  }
+  
+  .gameCard {
+    padding: 1rem;
+  }
+  
+  .gameDateInfo {
+    min-width: 70px;
+    padding: 0.75rem;
+  }
+  
+  .gameDate {
+    font-size: 1.25rem;
+  }
+  
+  .gameMonth {
+    font-size: 0.7rem;
+  }
+  
+  .gameTitle {
+    font-size: 1.1rem;
+  }
+  
+  .gameSubtitle {
+    font-size: 0.8rem;
+  }
+  
+  .statItem {
+    padding: 0.75rem;
+  }
+  
+  .statValueSmall {
+    font-size: 0.85rem;
+  }
+  
+  .statLabelSmall {
+    font-size: 0.75rem;
+  }
+  
+  .paymentBadge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .participantPaymentItem {
+    padding: 0.875rem;
+  }
+  
+  .participantPaymentBtn {
+    gap: 0.75rem;
+    padding: 0.5rem;
+  }
+  
+  .participantAvatarSmall {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+  
+  .participantNameSmall {
+    font-size: 0.9rem;
+  }
+  
+  .participantAmount {
+    font-size: 0.75rem;
+  }
+  
+  .participantPaymentTime {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.4rem;
+  }
+  
+  .gameActionBtn {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8rem;
+  }
+  
+  .btnIcon {
+    font-size: 0.9rem;
+  }
+  
+  .paymentTotals {
+    padding: 0.875rem;
+  }
+  
+  .paymentTotal {
+    padding: 0.375rem 0;
+    font-size: 0.85rem;
+  }
+  
+  .totalAmount {
+    font-size: 0.85rem;
+  }
+  
+  /* Search section mobile improvements */
+  .searchSection {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+  
+  .searchInput {
+    padding: 0.875rem 0.875rem 0.875rem 2.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .searchIcon {
+    left: 0.875rem;
+    font-size: 1.1rem;
+  }
+  
+  .searchClear {
+    right: 0.875rem;
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 360px) {
+  .gamesGrid {
+    padding: 0 0.25rem;
+  }
+  
+  .gameCard {
+    padding: 0.875rem;
+  }
+  
+  .headerContent {
+    padding: 0 0.5rem;
+  }
+  
+  .headerTitle {
+    font-size: 1.375rem;
+  }
+  
+  .participantPaymentBtn {
+    gap: 0.5rem;
+  }
+  
+  .participantAvatarSmall {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+  }
+  
+  .participantNameSmall {
+    font-size: 0.85rem;
+  }
+  
+  .participantAmount,
+  .participantPaymentTime {
+    font-size: 0.7rem;
+  }
+  
+  .gameActionBtn {
+    padding: 0.5rem;
+    gap: 0.375rem;
+  }
+  
+  .actionBtn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+  .historyHeader {
+    padding: 0.75rem 0;
+  }
+  
+  .headerTitle {
+    font-size: 1.5rem;
+  }
+  
+  .headerSubtitle {
+    font-size: 0.9rem;
+  }
+  
+  .modalContent {
+    max-height: 85vh;
+  }
+  
+  .modalHeader {
+    padding: 0.75rem 1rem;
+  }
+  
+  .modalBody {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  .participantPaymentBtn,
+  .gameActionBtn,
+  .actionBtn {
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+  }
+  
+  .paymentBadge {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .searchClear {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* High contrast mode improvements */
+@media (prefers-contrast: high) {
+  .participantPaymentItem.paid {
+    border-width: 2px;
+    border-color: #059669;
+  }
+  
+  .participantPaymentItem.unpaid {
+    border-width: 2px;
+    border-color: #d97706;
+  }
+  
+  .paymentBadge.paid {
+    border-width: 2px;
+  }
+  
+  .paymentBadge.unpaid {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .gameCard {
+    animation: none;
+  }
+  
+  .participantPaymentItem.paid:hover,
+  .participantPaymentItem.unpaid:hover {
+    animation: none;
+  }
+  
+  .pulse,
+  .iconGlow {
+    animation: none;
+  }
+}
