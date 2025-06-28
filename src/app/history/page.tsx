@@ -7,6 +7,7 @@ import {
   EditableContent,
   usePermissions,
 } from "../../components/AuthorizedComponent"
+import { capitalize } from "lodash"
 
 // Lazy load heavy components for better performance
 const GameForm = lazy(() => import("../../components/GameForm"))
@@ -307,12 +308,12 @@ const HistoryPage = () => {
               <div className={`${styles.permissionBadge} ${styles[userRole]}`}>
                 <span>
                   {userRole === "admin"
-                    ? "👑"
+                    ? "👑 "
                     : userRole === "editor"
-                    ? "✏️"
-                    : "👁️"}
+                    ? "✏️ "
+                    : "👁️ "}
                 </span>
-                <span>{userRole}</span>
+                <span>{capitalize(userRole)}</span>
               </div>
 
               {/* Edit-only: Add Game Button */}
@@ -708,16 +709,24 @@ const HistoryPage = () => {
                                       )}
                                     </div>
                                     {/* ✅ Move payment time inside participant info */}
-                                    {participant.hasPaid && participant.paidAt && (
-                                      <div className={styles.participantPaymentTime}>
-                                        💰 {new Date(participant.paidAt).toLocaleDateString("vi-VN", {
-                                          day: "2-digit",
-                                          month: "2-digit",
-                                          hour: "2-digit",
-                                          minute: "2-digit",
-                                        })}
-                                      </div>
-                                    )}
+                                    {participant.hasPaid &&
+                                      participant.paidAt && (
+                                        <div
+                                          className={
+                                            styles.participantPaymentTime
+                                          }
+                                        >
+                                          💰{" "}
+                                          {new Date(
+                                            participant.paidAt
+                                          ).toLocaleDateString("vi-VN", {
+                                            day: "2-digit",
+                                            month: "2-digit",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                          })}
+                                        </div>
+                                      )}
                                   </div>
                                   <div className={styles.paymentStatusIcon}>
                                     {isLoading ? (

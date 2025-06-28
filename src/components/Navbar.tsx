@@ -13,13 +13,9 @@ const Navbar = () => {
   const { userRole, canEdit } = usePermissions()
 
   const navigation = [
-    { name: "Home", href: "/", icon: "🏠" },
-    { name: "Members", href: "/members", icon: "👥" },
-    { name: "Game History", href: "/history", icon: "📅" },
-    // Show Admin link only for non-authenticated users
-    ...(!isAuthenticated
-      ? [{ name: "Admin", href: "/login", icon: "🔐" }]
-      : []),
+    { name: "Nhà", href: "/", icon: "🏠" },
+    { name: "Thành Viên", href: "/members", icon: "👥" },
+    { name: "Lịch sử trận", href: "/history", icon: "📅" },
   ]
 
   const isActive = (href: string) => {
@@ -92,7 +88,7 @@ const Navbar = () => {
           ) : (
             <div className={styles.navbarGuest}>
               <div className={styles.guestInfo}>
-                <span className={styles.guestRole}>👁️ Chế độ xem</span>
+                <span className={styles.guestRole}>👁️Chỉ xem</span>
               </div>
               <Link href='/login' className={styles.loginBtn}>
                 <span>🔐</span>
