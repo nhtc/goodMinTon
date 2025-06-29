@@ -2162,3 +2162,17 @@
     height: 18px;
   }
 }
+
+/* Payment button styles */
+.paymentBtn {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: white !important;
+  border: 2px solid rgba(16, 185, 129, 0.2) !important;
+}
+
+.paymentBtn:hover {
+  background: linear-gradient(135deg, #059669, #047857) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3) !important;
+}

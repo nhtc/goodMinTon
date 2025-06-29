@@ -1,5 +1,6 @@
 "use client"
 import React, { useEffect, useState, lazy, Suspense } from "react"
+import Link from "next/link"
 import styles from "./page.module.css"
 import { apiService } from "../../lib/api"
 import {
@@ -807,6 +808,18 @@ const HistoryPage = () => {
                           <span className={styles.btnIcon}>👁️</span>
                           <span>Chi tiết</span>
                         </button>
+                        
+                        <Link
+                          href={`/payment?amount=${getMemberRemainingAmount(
+                            game.participants[0] || { prePaid: 0 },
+                            game.costPerMember
+                          )}&content=CL ${game.id.slice(-4)}&gameId=${game.id}`}
+                          className={`${styles.gameActionBtn} ${styles.paymentBtn}`}
+                          title='QR thanh toán'
+                        >
+                          <span className={styles.btnIcon}>💳</span>
+                          <span>QR Pay</span>
+                        </Link>
                       </div>
 
                       {/* Game Card Glow Effect */}
