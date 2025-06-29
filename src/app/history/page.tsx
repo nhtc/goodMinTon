@@ -992,7 +992,6 @@ const HistoryPage = () => {
                                   selectedGame.costPerMember
                                 ) > 0
                             )
-                            .slice(0, 4) // Show max 4 members to avoid cluttering
                             .map(participant => {
                               const remainingAmount = getMemberRemainingAmount(
                                 participant,
@@ -1030,28 +1029,6 @@ const HistoryPage = () => {
                               )
                             })}
                         </div>
-                        {selectedGame.participants.filter(
-                          p =>
-                            !p.hasPaid &&
-                            getMemberRemainingAmount(
-                              p,
-                              selectedGame.costPerMember
-                            ) > 0
-                        ).length > 4 && (
-                          <Link
-                            href={`/payment?gameId=${selectedGame.id}`}
-                            className={styles.viewAllQrBtn}
-                            onClick={handleCloseModal}
-                          >
-                            <span className={styles.viewAllIcon}>👥</span>
-                            <span>
-                              Xem tất cả (
-                              {selectedGame.participants.filter(p => !p.hasPaid)
-                                .length - 4}{" "}
-                              thành viên khác)
-                            </span>
-                          </Link>
-                        )}
                       </div>
                     </div>
                   </div>

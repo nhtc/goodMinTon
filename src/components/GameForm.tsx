@@ -278,23 +278,59 @@ const GameForm: React.FC<GameFormProps> = ({
     }
 
     setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    return { isValid: Object.keys(newErrors).length === 0, errors: newErrors }
+  }
+
+  // Function to scroll to first error and show validation errors
+  const scrollToFirstError = () => {
+    // First validate to get latest errors
+    const validation = validateForm()
+
+    // Wait a bit for errors to be set, then scroll
+    setTimeout(() => {
+      let firstErrorElement: HTMLElement | null = null
+
+      // Check for totalCost error specifically and scroll to cost summary
+      if (validation.errors.totalCost) {
+        const costSummaryElement = document.querySelector(
+          `.${styles.costSummaryCard}`
+        ) as HTMLElement
+        if (costSummaryElement) {
+          firstErrorElement = costSummaryElement
+        }
+      }
+
+      // If no totalCost error or cost summary not found, look for other error elements
+      if (!firstErrorElement) {
+        firstErrorElement = document.querySelector(
+          '[class*="fieldError"], [class*="sectionError"]'
+        ) as HTMLElement
+      }
+
+      if (firstErrorElement) {
+        firstErrorElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        })
+
+        // Add a slight shake animation to draw attention
+        firstErrorElement.style.animation = "shake 0.6s ease-in-out"
+        setTimeout(() => {
+          if (firstErrorElement && firstErrorElement.style) {
+            firstErrorElement.style.animation = ""
+          }
+        }, 600)
+      }
+    }, 100)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSuccess("")
 
-    if (!validateForm()) {
-      const firstErrorElement = document.querySelector(
-        ".field-error, .section-error"
-      )
-      if (firstErrorElement) {
-        firstErrorElement.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        })
-      }
+    const validation = validateForm()
+    if (!validation.isValid) {
+      scrollToFirstError()
       return
     }
 
@@ -474,7 +510,10 @@ const GameForm: React.FC<GameFormProps> = ({
               </div>
 
               <div className={styles.fieldGroup}>
-                <label htmlFor='location' className={`${styles.fieldLabel} ${styles.friendly}`}>
+                <label
+                  htmlFor='location'
+                  className={`${styles.fieldLabel} ${styles.friendly}`}
+                >
                   <span className={styles.labelIcon}>📍</span>
                   <span className={styles.labelText}>Địa điểm chơi</span>
                   <span className={styles.requiredStar}>*</span>
@@ -496,7 +535,9 @@ const GameForm: React.FC<GameFormProps> = ({
                     maxLength={100}
                   />
                   <div className={styles.inputGlow}></div>
-                  {location.trim() && <div className={styles.inputCheck}>✓</div>}
+                  {location.trim() && (
+                    <div className={styles.inputCheck}>✓</div>
+                  )}
                 </div>
                 {errors.location && (
                   <div className={`${styles.fieldError} ${styles.friendly}`}>
@@ -554,27 +595,36 @@ const GameForm: React.FC<GameFormProps> = ({
               </div>
 
               <div className={styles.fieldGroup}>
-                <label htmlFor='yardCost' className={`${styles.fieldLabel} ${styles.friendly}`}>
-                  <span className={styles.labelText}>Hoặc nhập số tiền khác</span>
+                <label
+                  htmlFor='yardCost'
+                  className={`${styles.fieldLabel} ${styles.friendly}`}
+                >
+                  <span className={styles.labelText}>
+                    Hoặc nhập số tiền khác
+                  </span>
                 </label>
                 <div className={`${styles.inputWrapper} ${styles.money}`}>
                   <input
-                    type='number'
+                    type='text'
                     id='yardCost'
-                    value={yardCost}
+                    value={yardCost === 0 ? "" : yardCost.toString()}
+                    onFocus={e => e.target.select()}
                     onChange={e => {
-                      setYardCost(Number(e.target.value))
+                      const value = e.target.value.replace(/[^0-9]/g, "") // Only allow numbers
+                      setYardCost(value === "" ? 0 : Number(value))
                       if (errors.yardCost)
                         setErrors(prev => _.omit(prev, "yardCost"))
                     }}
-                    className={`${styles.formInput} ${styles.friendly} ${styles.money} ${
-                      errors.yardCost ? "error" : ""
-                    } ${yardCost > 0 ? "filled" : ""}`}
-                    min='0'
-                    max='1000000'
+                    className={`${styles.formInput} ${styles.friendly} ${
+                      styles.money
+                    } ${errors.yardCost ? "error" : ""} ${
+                      yardCost > 0 ? "filled" : ""
+                    }`}
                     placeholder='0'
                   />
-                  <div className={`${styles.inputSuffix} ${styles.money}`}>đ</div>
+                  <div className={`${styles.inputSuffix} ${styles.money}`}>
+                    đ
+                  </div>
                   <div className={styles.inputGlow}></div>
                 </div>
                 {errors.yardCost && (
@@ -639,19 +689,23 @@ const GameForm: React.FC<GameFormProps> = ({
                   </label>
                   <div className={styles.inputWrapper}>
                     <input
-                      type='number'
+                      type='text'
                       id='shuttleCockQuantity'
-                      value={shuttleCockQuantity}
+                      value={
+                        shuttleCockQuantity === 0
+                          ? ""
+                          : shuttleCockQuantity.toString()
+                      }
+                      onFocus={e => e.target.select()}
                       onChange={e => {
-                        setShuttleCockQuantity(Number(e.target.value))
+                        const value = e.target.value.replace(/[^0-9]/g, "") // Only allow numbers
+                        setShuttleCockQuantity(value === "" ? 0 : Number(value))
                         if (errors.shuttleCockQuantity)
                           setErrors(prev => _.omit(prev, "shuttleCockQuantity"))
                       }}
                       className={`${styles.formInput} ${styles.friendly} ${
                         errors.shuttleCockQuantity ? "error" : ""
                       }`}
-                      min='0'
-                      max='20'
                       placeholder='0'
                     />
                     <div className={styles.inputSuffix}>quả</div>
@@ -674,22 +728,28 @@ const GameForm: React.FC<GameFormProps> = ({
                   </label>
                   <div className={`${styles.inputWrapper} ${styles.money}`}>
                     <input
-                      type='number'
+                      type='text'
                       id='shuttleCockPrice'
-                      value={shuttleCockPrice}
+                      value={
+                        shuttleCockPrice === 0
+                          ? ""
+                          : shuttleCockPrice.toString()
+                      }
+                      onFocus={e => e.target.select()}
                       onChange={e => {
-                        setShuttleCockPrice(Number(e.target.value))
+                        const value = e.target.value.replace(/[^0-9]/g, "") // Only allow numbers
+                        setShuttleCockPrice(value === "" ? 0 : Number(value))
                         if (errors.shuttleCockPrice)
                           setErrors(prev => _.omit(prev, "shuttleCockPrice"))
                       }}
-                      className={`${styles.formInput} ${styles.friendly} ${styles.money} ${
-                        errors.shuttleCockPrice ? "error" : ""
-                      }`}
-                      min='0'
-                      max='100000'
+                      className={`${styles.formInput} ${styles.friendly} ${
+                        styles.money
+                      } ${errors.shuttleCockPrice ? "error" : ""}`}
                       placeholder='15000'
                     />
-                    <div className={`${styles.inputSuffix} ${styles.money}`}>đ</div>
+                    <div className={`${styles.inputSuffix} ${styles.money}`}>
+                      đ
+                    </div>
                     <div className={styles.inputGlow}></div>
                   </div>
                   {errors.shuttleCockPrice && (
@@ -715,26 +775,31 @@ const GameForm: React.FC<GameFormProps> = ({
 
             {/* Other Fees */}
             <div className={styles.fieldGroup}>
-              <label htmlFor='otherFees' className={`${styles.fieldLabel} ${styles.friendly}`}>
+              <label
+                htmlFor='otherFees'
+                className={`${styles.fieldLabel} ${styles.friendly}`}
+              >
                 <span className={styles.labelIcon}>📋</span>
                 <span className={styles.labelText}>Chi phí khác</span>
                 <span className={styles.optionalBadge}>không bắt buộc</span>
               </label>
               <div className={`${styles.inputWrapper} ${styles.money}`}>
                 <input
-                  type='number'
+                  type='text'
                   id='otherFees'
-                  value={otherFees}
+                  value={otherFees === 0 ? "" : otherFees.toString()}
+                  onFocus={e => e.target.select()}
                   onChange={e => {
-                    setOtherFees(Number(e.target.value))
+                    const value = e.target.value.replace(/[^0-9]/g, "") // Only allow numbers
+                    setOtherFees(value === "" ? 0 : Number(value))
                     if (errors.otherFees)
                       setErrors(prev => _.omit(prev, "otherFees"))
                   }}
-                  className={`${styles.formInput} ${styles.friendly} ${styles.money} ${
-                    errors.otherFees ? "error" : ""
-                  } ${otherFees > 0 ? "filled" : ""}`}
-                  min='0'
-                  max='500000'
+                  className={`${styles.formInput} ${styles.friendly} ${
+                    styles.money
+                  } ${errors.otherFees ? "error" : ""} ${
+                    otherFees > 0 ? "filled" : ""
+                  }`}
                   placeholder='0'
                 />
                 <div className={`${styles.inputSuffix} ${styles.money}`}>đ</div>
@@ -752,7 +817,11 @@ const GameForm: React.FC<GameFormProps> = ({
 
             {/* Cost Summary */}
             {totalCost > 0 && (
-              <div className={styles.costSummaryCard}>
+              <div
+                className={`${styles.costSummaryCard} ${
+                  errors.totalCost ? styles.errorHighlight : ""
+                }`}
+              >
                 <h4 className={styles.summaryTitle}>
                   <span>💳</span>
                   Tổng quan chi phí
@@ -938,12 +1007,16 @@ const GameForm: React.FC<GameFormProps> = ({
                       <div className={`${styles.statItem} ${styles.paid}`}>
                         <span className={styles.statIcon}>✅</span>
                         <span className={styles.statLabel}>Đã trả:</span>
-                        <span className={styles.statValue}>{paidCount} người</span>
+                        <span className={styles.statValue}>
+                          {paidCount} người
+                        </span>
                       </div>
                       <div className={`${styles.statItem} ${styles.unpaid}`}>
                         <span className={styles.statIcon}>⏳</span>
                         <span className={styles.statLabel}>Chưa trả:</span>
-                        <span className={styles.statValue}>{unpaidCount} người</span>
+                        <span className={styles.statValue}>
+                          {unpaidCount} người
+                        </span>
                       </div>
                       <div className={`${styles.statItem} ${styles.total}`}>
                         <span className={styles.statIcon}>🧮</span>
@@ -977,21 +1050,24 @@ const GameForm: React.FC<GameFormProps> = ({
                         key={member.id}
                         className={`${styles.memberCardFriendly} ${
                           isSelected ? "selected" : ""
-                        } ${isPaid ? "paid" : ""}`}
+                        } ${isPaid ? "paid" : ""} ${
+                          isEditing ? styles.viewOnly : styles.clickable
+                        }`}
+                        onClick={() => {
+                          if (!isEditing) {
+                            handleMemberToggle(member.id)
+                          }
+                        }}
                       >
-                        <label
-                          className={styles.memberSelector}
-                          onClick={e => {
-                            if (isEditing) e.preventDefault()
-                          }}
-                        >
-                          <input
-                            type='checkbox'
-                            checked={isSelected}
-                            onChange={() => handleMemberToggle(member.id)}
-                            className={styles.memberCheckboxHidden}
-                            disabled={isEditing}
-                          />
+                        <input
+                          type='checkbox'
+                          checked={isSelected}
+                          onChange={() => handleMemberToggle(member.id)}
+                          className={styles.memberCheckboxHidden}
+                          disabled={isEditing}
+                          aria-label={`Select ${member.name}`}
+                        />
+                        <div className={styles.memberSelector}>
                           <div className={styles.memberAvatarFriendly}>
                             {member.name.charAt(0).toUpperCase()}
                           </div>
@@ -1024,28 +1100,36 @@ const GameForm: React.FC<GameFormProps> = ({
                               <div className={styles.checkMark}>✓</div>
                             )}
                           </div>
-                        </label>
+                        </div>
 
                         {/* ✅ Pre-pay input for selected members */}
                         {isSelected && !isEditing && (
-                          <div className={styles.prepaySection}>
+                          <div
+                            className={styles.prepaySection}
+                            onClick={e => e.stopPropagation()} // Prevent card click
+                          >
                             <label className={styles.prepayLabel}>
                               <span className={styles.prepayIcon}>💸</span>
-                              <span className={styles.prepayText}>Đã trả trước:</span>
+                              <span className={styles.prepayText}>
+                                Đã trả trước:
+                              </span>
                             </label>
                             <div className={styles.prepayInputWrapper}>
                               <input
-                                type='number'
-                                value={prePay}
-                                onChange={e =>
+                                type='text'
+                                value={prePay === 0 ? "" : prePay.toString()}
+                                onFocus={e => e.target.select()}
+                                onChange={e => {
+                                  const value = e.target.value.replace(
+                                    /[^0-9]/g,
+                                    ""
+                                  ) // Only allow numbers
                                   handlePrePayChange(
                                     member.id,
-                                    Number(e.target.value)
+                                    value === "" ? 0 : Number(value)
                                   )
-                                }
+                                }}
                                 className={styles.prepayInput}
-                                min='0'
-                                max={costPerMember}
                                 placeholder='0'
                               />
                               <span className={styles.prepaySuffix}>đ</span>
@@ -1063,53 +1147,57 @@ const GameForm: React.FC<GameFormProps> = ({
 
                         {/* Payment Toggle - Only show in editing mode */}
                         {isEditing && isSelected && (
-                          <EditableContent
-                            viewContent={
-                              <div className={styles.paymentViewOnly}>
-                                <span className={styles.paymentIcon}>
-                                  {isPaid ? "💰" : "💸"}
-                                </span>
-                                <span className={styles.paymentText}>
-                                  {isPaid ? "Đã trả" : "Chưa trả"}
-                                </span>
-                                <span className={styles.paymentAmount}>
-                                  {remaining > 0
-                                    ? `${remaining.toLocaleString("vi-VN")}đ`
-                                    : "Hoàn thành"}
-                                </span>
-                                <div className={styles.viewOnlyBadge}>
-                                  👁️ Chỉ xem
+                          <div onClick={e => e.stopPropagation()}>
+                            {" "}
+                            {/* Prevent card click */}
+                            <EditableContent
+                              viewContent={
+                                <div className={styles.paymentViewOnly}>
+                                  <span className={styles.paymentIcon}>
+                                    {isPaid ? "💰" : "💸"}
+                                  </span>
+                                  <span className={styles.paymentText}>
+                                    {isPaid ? "Đã trả" : "Chưa trả"}
+                                  </span>
+                                  <span className={styles.paymentAmount}>
+                                    {remaining > 0
+                                      ? `${remaining.toLocaleString("vi-VN")}đ`
+                                      : "Hoàn thành"}
+                                  </span>
+                                  <div className={styles.viewOnlyBadge}>
+                                    👁️ Chỉ xem
+                                  </div>
                                 </div>
+                              }
+                            >
+                              <div className={styles.paymentToggleSection}>
+                                <button
+                                  type='button'
+                                  onClick={() => handlePaymentToggle(member.id)}
+                                  className={`${styles.paymentToggleBtn} ${
+                                    isPaid ? "paid" : "unpaid"
+                                  }`}
+                                  title={
+                                    isPaid
+                                      ? "Đã thanh toán - Click để đánh dấu chưa trả"
+                                      : "Chưa thanh toán - Click để đánh dấu đã trả"
+                                  }
+                                >
+                                  <div className={styles.paymentIcon}>
+                                    {isPaid ? "💰" : "💸"}
+                                  </div>
+                                  <div className={styles.paymentText}>
+                                    {isPaid ? "Đã trả" : "Chưa trả"}
+                                  </div>
+                                  <div className={styles.paymentAmount}>
+                                    {remaining > 0
+                                      ? `${remaining.toLocaleString("vi-VN")}đ`
+                                      : "Hoàn thành"}
+                                  </div>
+                                </button>
                               </div>
-                            }
-                          >
-                            <div className={styles.paymentToggleSection}>
-                              <button
-                                type='button'
-                                onClick={() => handlePaymentToggle(member.id)}
-                                className={`${styles.paymentToggleBtn} ${
-                                  isPaid ? "paid" : "unpaid"
-                                }`}
-                                title={
-                                  isPaid
-                                    ? "Đã thanh toán - Click để đánh dấu chưa trả"
-                                    : "Chưa thanh toán - Click để đánh dấu đã trả"
-                                }
-                              >
-                                <div className={styles.paymentIcon}>
-                                  {isPaid ? "💰" : "💸"}
-                                </div>
-                                <div className={styles.paymentText}>
-                                  {isPaid ? "Đã trả" : "Chưa trả"}
-                                </div>
-                                <div className={styles.paymentAmount}>
-                                  {remaining > 0
-                                    ? `${remaining.toLocaleString("vi-VN")}đ`
-                                    : "Hoàn thành"}
-                                </div>
-                              </button>
-                            </div>
-                          </EditableContent>
+                            </EditableContent>
+                          </div>
                         )}
                       </div>
                     )
@@ -1219,6 +1307,17 @@ const GameForm: React.FC<GameFormProps> = ({
                     Object.keys(errors).length > 0 ||
                     selectedMembers.length === 0
                   }
+                  onClick={e => {
+                    // If button is disabled due to errors, show validation and scroll to first error
+                    const hasErrors =
+                      Object.keys(errors).length > 0 ||
+                      selectedMembers.length === 0
+                    if (hasErrors && !isSubmitting) {
+                      e.preventDefault()
+                      scrollToFirstError()
+                      return
+                    }
+                  }}
                   className={`${styles.submitBtnFriendly} ${
                     isSubmitting ? "loading" : ""
                   } ${
@@ -1245,6 +1344,33 @@ const GameForm: React.FC<GameFormProps> = ({
                     </div>
                   )}
                 </button>
+
+                {/* Show validation errors summary when button is disabled */}
+                {(Object.keys(errors).length > 0 ||
+                  selectedMembers.length === 0) &&
+                  !isSubmitting && (
+                    <div className={styles.validationSummary}>
+                      <div className={styles.validationTitle}>
+                        <span>⚠️</span>
+                        Vui lòng kiểm tra các lỗi sau:
+                      </div>
+                      <ul className={styles.validationList}>
+                        {selectedMembers.length === 0 && (
+                          <li>Chưa chọn thành viên tham gia</li>
+                        )}
+                        {Object.entries(errors).map(([field, message]) => (
+                          <li key={field}>{message}</li>
+                        ))}
+                      </ul>
+                      <button
+                        type='button'
+                        onClick={scrollToFirstError}
+                        className={styles.goToErrorBtn}
+                      >
+                        📍 Đi đến lỗi đầu tiên
+                      </button>
+                    </div>
+                  )}
               </EditableContent>
 
               <div className={styles.submitTips}>
