@@ -10,6 +10,27 @@
   overflow: hidden;
 }
 
+/* Global emoji styling for consistent rendering */
+.paymentPage span[class*="Icon"],
+.paymentPage .icon,
+.paymentPage .sectionIcon,
+.paymentPage .memberIcon,
+.paymentPage .phoneIcon,
+.paymentPage .amountIcon,
+.paymentPage .selectIcon,
+.paymentPage .infoIcon,
+.paymentPage .notesIcon,
+.paymentPage .contactIcon,
+.paymentPage .noteIcon,
+.paymentPage .errorIcon {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", system-ui, sans-serif !important;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-variant-emoji: emoji;
+  line-height: 1;
+}
+
 .backgroundPattern {
   position: absolute;
   inset: 0;
@@ -129,14 +150,26 @@
 
 /* Payment Card */
 .paymentCard {
-  background: rgba(255, 255, 255, 0.95);
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
-  border-radius: 24px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.98);
+  -webkit-backdrop-filter: blur(32px);
+  backdrop-filter: blur(32px);
+  border-radius: 32px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 25px 80px rgba(0, 0, 0, 0.1),
+    0 10px 30px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
   overflow: hidden;
   position: relative;
+  transition: all 0.3s ease;
+}
+
+.paymentCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 30px 100px rgba(0, 0, 0, 0.15),
+    0 15px 40px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .paymentCard::before {
@@ -145,57 +178,134 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 6px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4, #10b981);
-  border-radius: 24px 24px 0 0;
+  height: 8px;
+  background: linear-gradient(90deg, 
+    #3b82f6 0%, 
+    #8b5cf6 25%, 
+    #06b6d4 50%, 
+    #10b981 75%, 
+    #f59e0b 100%
+  );
+  border-radius: 32px 32px 0 0;
+}
+
+.paymentCard::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.05) 50%, 
+    rgba(255, 255, 255, 0) 100%
+  );
+  border-radius: 32px;
+  pointer-events: none;
 }
 
 /* Header */
 .header {
   text-align: center;
-  padding: 3rem 2rem 2rem;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
+  padding: 4rem 2.5rem 3rem;
+  background: linear-gradient(135deg, 
+    rgba(59, 130, 246, 0.08) 0%, 
+    rgba(139, 92, 246, 0.08) 50%, 
+    rgba(16, 185, 129, 0.08) 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 50%, 
+    rgba(59, 130, 246, 0.05) 0%, 
+    transparent 70%
+  );
+  pointer-events: none;
 }
 
 .iconContainer {
   margin-bottom: 1.5rem;
+  position: relative;
 }
 
 .icon {
   font-size: 4rem;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.3));
-  animation: pulse 3s ease-in-out infinite;
+  line-height: 1;
+  display: inline-block;
+  position: relative;
+  /* Remove gradient effects that can hide emojis */
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  -webkit-text-fill-color: unset;
+  /* Add shadow and animation */
+  filter: drop-shadow(0 4px 12px rgba(59, 130, 246, 0.2));
+  animation: iconFloat 3s ease-in-out infinite;
+  /* Ensure proper emoji rendering */
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
-@keyframes pulse {
+.icon::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+  border-radius: 50%;
+  z-index: -1;
+  animation: iconGlow 3s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
   0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.05);
+  }
+}
+
+@keyframes iconGlow {
+  0%, 100% {
+    opacity: 0.3;
     transform: scale(1);
   }
   50% {
-    transform: scale(1.05);
+    opacity: 0.6;
+    transform: scale(1.1);
   }
 }
 
 .title {
-  font-size: 2.5rem;
-  font-weight: 800;
-  margin-bottom: 1rem;
-  background: linear-gradient(135deg, #1e293b, #475569);
+  font-size: 2.75rem;
+  font-weight: 900;
+  margin-bottom: 1.25rem;
+  background: linear-gradient(135deg, #1e293b 0%, #475569 50%, #334155 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  position: relative;
+  z-index: 1;
 }
 
 .subtitle {
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   color: #64748b;
-  line-height: 1.6;
-  max-width: 400px;
+  line-height: 1.7;
+  max-width: 480px;
   margin: 0 auto;
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
 }
 
 /* Member Selection Section */
@@ -217,10 +327,17 @@
 
 .sectionIcon {
   font-size: 1.5rem;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  line-height: 1;
+  /* Remove gradient effects for emojis */
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  -webkit-text-fill-color: unset;
+  /* Ensure proper emoji rendering */
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
 }
 
 .loadingState, .errorState {
@@ -310,10 +427,17 @@
 
 .memberIcon {
   font-size: 1.5rem;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  line-height: 1;
+  /* Remove gradient effects for emojis */  
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  -webkit-text-fill-color: unset;
+  /* Ensure proper emoji rendering */
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.15));
 }
 
 .memberPhone {
@@ -326,6 +450,11 @@
 
 .phoneIcon {
   font-size: 1.125rem;
+  line-height: 1;
+  /* Ensure proper emoji rendering */
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 .memberAmount {
@@ -341,6 +470,11 @@
 
 .amountIcon {
   font-size: 1.25rem;
+  line-height: 1;
+  /* Ensure proper emoji rendering */
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 .amountLabel {
@@ -409,6 +543,11 @@
 
 .selectIcon {
   font-size: 2.5rem;
+  line-height: 1;
+  /* Ensure proper emoji rendering */
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
   animation: bounce 2s infinite;
 }
 

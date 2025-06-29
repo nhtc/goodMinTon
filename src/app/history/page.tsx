@@ -808,12 +808,9 @@ const HistoryPage = () => {
                           <span className={styles.btnIcon}>👁️</span>
                           <span>Chi tiết</span>
                         </button>
-                        
+
                         <Link
-                          href={`/payment?amount=${getMemberRemainingAmount(
-                            game.participants[0] || { prePaid: 0 },
-                            game.costPerMember
-                          )}&content=CL ${game.id.slice(-4)}&gameId=${game.id}`}
+                          href={`/payment`}
                           className={`${styles.gameActionBtn} ${styles.paymentBtn}`}
                           title='QR thanh toán'
                         >
@@ -930,6 +927,133 @@ const HistoryPage = () => {
                         </div>
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* QR Payment Section */}
+                <div className={styles.modalSection}>
+                  <h4 className={styles.sectionTitle}>
+                    <span className={styles.sectionIcon}>💳</span>
+                    Thanh Toán QR
+                  </h4>
+                  <div className={styles.qrPaymentSection}>
+                    <div className={styles.qrPaymentInfo}>
+                      <div className={styles.qrPaymentDescription}>
+                        <p>
+                          <span className={styles.qrIcon}>📱</span>
+                          Sử dụng mã QR để thanh toán nhanh chóng và tiện lợi
+                        </p>
+                        <div className={styles.qrFeatures}>
+                          <div className={styles.qrFeature}>
+                            <span className={styles.featureIcon}>⚡</span>
+                            <span>Thanh toán tức thì</span>
+                          </div>
+                          <div className={styles.qrFeature}>
+                            <span className={styles.featureIcon}>🔐</span>
+                            <span>An toàn & bảo mật</span>
+                          </div>
+                          <div className={styles.qrFeature}>
+                            <span className={styles.featureIcon}>📊</span>
+                            <span>Tự động đối soát</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className={styles.qrPaymentActions}>
+                      <Link
+                        href={`/payment`}
+                        className={styles.qrPaymentBtn}
+                        onClick={handleCloseModal}
+                        title='Mở trang thanh toán QR'
+                      >
+                        <span className={styles.qrBtnIcon}>💳</span>
+                        <div className={styles.qrBtnContent}>
+                          <div className={styles.qrBtnText}>Thanh Toán QR</div>
+                          <div className={styles.qrBtnSubtext}>
+                            Chọn thành viên & quét mã
+                          </div>
+                        </div>
+                        <span className={styles.qrBtnArrow}>→</span>
+                      </Link>
+
+                      {/* Individual Member QR Pay buttons */}
+                      <div className={styles.memberQrButtons}>
+                        <p className={styles.memberQrTitle}>
+                          <span className={styles.memberQrIcon}>👥</span>
+                          Thanh toán cho từng thành viên:
+                        </p>
+                        <div className={styles.memberQrGrid}>
+                          {selectedGame.participants
+                            .filter(
+                              p =>
+                                !p.hasPaid &&
+                                getMemberRemainingAmount(
+                                  p,
+                                  selectedGame.costPerMember
+                                ) > 0
+                            )
+                            .slice(0, 4) // Show max 4 members to avoid cluttering
+                            .map(participant => {
+                              const remainingAmount = getMemberRemainingAmount(
+                                participant,
+                                selectedGame.costPerMember
+                              )
+                              return (
+                                <Link
+                                  key={participant.id}
+                                  href={`/payment?gameId=${
+                                    selectedGame.id
+                                  }&memberName=${encodeURIComponent(
+                                    participant.name
+                                  )}&amount=${remainingAmount}&content=${encodeURIComponent(
+                                    participant.name.toUpperCase()
+                                  )} TRA TIEN CAU LONG`}
+                                  className={styles.memberQrBtn}
+                                  onClick={handleCloseModal}
+                                  title={`QR thanh toán cho ${participant.name}`}
+                                >
+                                  <div className={styles.memberQrAvatar}>
+                                    {participant.name.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className={styles.memberQrInfo}>
+                                    <div className={styles.memberQrName}>
+                                      {participant.name}
+                                    </div>
+                                    <div className={styles.memberQrAmount}>
+                                      {remainingAmount.toLocaleString("vi-VN")}đ
+                                    </div>
+                                  </div>
+                                  <span className={styles.memberQrIcon}>
+                                    💳
+                                  </span>
+                                </Link>
+                              )
+                            })}
+                        </div>
+                        {selectedGame.participants.filter(
+                          p =>
+                            !p.hasPaid &&
+                            getMemberRemainingAmount(
+                              p,
+                              selectedGame.costPerMember
+                            ) > 0
+                        ).length > 4 && (
+                          <Link
+                            href={`/payment?gameId=${selectedGame.id}`}
+                            className={styles.viewAllQrBtn}
+                            onClick={handleCloseModal}
+                          >
+                            <span className={styles.viewAllIcon}>👥</span>
+                            <span>
+                              Xem tất cả (
+                              {selectedGame.participants.filter(p => !p.hasPaid)
+                                .length - 4}{" "}
+                              thành viên khác)
+                            </span>
+                          </Link>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 

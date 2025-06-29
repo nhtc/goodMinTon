@@ -118,7 +118,7 @@ const PaymentPage = () => {
       setPaymentInfo(prev => ({
         ...prev,
         amount: memberOutstandingAmount,
-        content: `${selectedMember.name.toUpperCase()} TRA TIEN CAU LONG`,
+        content: `${selectedMember.name.toUpperCase()} TRA TIEN CAU LONG NHE`,
       }))
     }
   }, [selectedMember, memberOutstandingAmount])
@@ -215,7 +215,9 @@ const PaymentPage = () => {
           {/* Header */}
           <div className={styles.header}>
             <div className={styles.iconContainer}>
-              <span className={styles.icon}>💳</span>
+              <span className={styles.icon} title='Payment QR Code'>
+                💳
+              </span>
             </div>
             <h1 className={styles.title}>Thanh Toán QR</h1>
             <p className={styles.subtitle}>
