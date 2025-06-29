@@ -318,11 +318,7 @@ const HistoryPage = () => {
 
               {/* Edit-only: Add Game Button */}
               <EditableContent
-                viewContent={
-                  <div className={styles.viewOnlyIndicator}>
-                    <span>👁️ Chế độ xem</span>
-                  </div>
-                }
+                viewContent={<div className={styles.viewOnlyIndicator}></div>}
               >
                 <button
                   onClick={() => setShowForm(!showForm)}

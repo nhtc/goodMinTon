@@ -1,9 +1,10 @@
 "use client"
-import React, { createContext, useContext, useState, useEffect } from "react"
+
+import { createContext, useContext, useState, useEffect } from "react"
 
 interface User {
   id: string
-  email: string
+  username: string
   name: string
   role: "admin" | "editor" | "viewer"
 }
@@ -12,8 +13,8 @@ interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
   isAuthorized: boolean
-  login: (email: string, password: string) => Promise<boolean>
-  logout: () => void
+  login: (username: string, password: string) => Promise<boolean>
+  logout: () => Promise<void>
   loading: boolean
 }
 
@@ -94,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }
 
-  const logout = () => {
+  const logout = async () => {
     setUser(null)
     localStorage.removeItem("auth_token")
   }

@@ -231,13 +231,8 @@ const LoginPage = () => {
 
           {/* Security Notice */}
           <div className={styles.securityNotice}>
-            <div className={styles.securityIcon}>🛡️</div>
-            <div className={styles.securityText}>
-              <p className={styles.securityTitle}>Secure Login</p>
-              <p className={styles.securityDescription}>
-                Your credentials are encrypted and stored securely
-              </p>
-            </div>
+            <span>�</span>
+            <span>Secure Login</span>
           </div>
 
           {/* Footer */}
@@ -270,26 +265,35 @@ const LoginPage = () => {
 
         {/* Help Section */}
         <div className={styles.helpSection}>
-          <details className={styles.helpDetails}>
-            <summary className={styles.helpSummary}>
-              <span>❓</span>
-              Need Help?
-            </summary>
-            <div className={styles.helpContent}>
+          <div className={styles.helpCard}>
+            <div className={styles.helpHeader}>
+              <span className={styles.helpIcon}>💡</span>
+              <h3 className={styles.helpTitle}>Quick Help</h3>
+            </div>
+            <div className={styles.helpGrid}>
               <div className={styles.helpItem}>
-                <strong>🔐 Demo Access:</strong>
-                <p>Use the credentials above for a quick demo</p>
+                <span className={styles.itemIcon}>🔐</span>
+                <div className={styles.itemContent}>
+                  <strong>Demo Access</strong>
+                  <p>Username: admin, Password: password123</p>
+                </div>
               </div>
               <div className={styles.helpItem}>
-                <strong>🔄 Forgot Password:</strong>
-                <p>Contact your administrator for password reset</p>
+                <span className={styles.itemIcon}>🔄</span>
+                <div className={styles.itemContent}>
+                  <strong>Forgot Password?</strong>
+                  <p>Contact your administrator</p>
+                </div>
               </div>
               <div className={styles.helpItem}>
-                <strong>⚡ Features:</strong>
-                <p>Manage members, track games, and view statistics</p>
+                <span className={styles.itemIcon}>⚡</span>
+                <div className={styles.itemContent}>
+                  <strong>Features</strong>
+                  <p>Manage members, track games & stats</p>
+                </div>
               </div>
             </div>
-          </details>
+          </div>
         </div>
       </div>
     </div>
