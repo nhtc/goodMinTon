@@ -39,6 +39,14 @@ export const apiService = {
       return response.json()
     },
 
+    async getById(id: string) {
+      const response = await fetch(`/api/games/${id}`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch game')
+      }
+      return response.json()
+    },
+
     async create(gameData: {
       date: string
       location: string
@@ -97,7 +105,7 @@ export const apiService = {
     },
 
     async delete(id: string) {
-      const response = await fetch(`/api/games?id=${id}`, {
+      const response = await fetch(`/api/games/${id}`, {
         method: 'DELETE',
       })
 

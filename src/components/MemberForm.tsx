@@ -3,21 +3,42 @@ import { withAuth } from "@/components/AuthorizedComponent"
 import React, { useState, useEffect, useRef } from "react"
 import styles from "./MemberForm.module.css"
 
-interface MemberFormProps {
-  onUpdate: () => void
+interface Member {
+  id: string
+  name: string
+  email?: string
+  phone?: string
+  createdAt: string
 }
 
-const MemberForm: React.FC<MemberFormProps> = ({ onUpdate }) => {
-  const [name, setName] = useState("")
-  const [phone, setPhone] = useState("")
+interface MemberFormProps {
+  onUpdate: () => void
+  editingMember?: Member | null
+}
+
+const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
+  const [name, setName] = useState(editingMember?.name || "")
+  const [phone, setPhone] = useState(editingMember?.phone || "")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCheckingName, setIsCheckingName] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [nameExists, setNameExists] = useState(false)
+  const isEditing = !!editingMember
 
   // Use useRef to store the timeout ID
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editingMember) {
+      setName(editingMember.name)
+      setPhone(editingMember.phone || "")
+      setError("")
+      setSuccess("")
+      setNameExists(false)
+    }
+  }, [editingMember])
 
   // Check if name exists as user types
   const checkNameExists = async (nameValue: string) => {
@@ -97,22 +118,25 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate }) => {
       return
     }
 
-    // Final check for name existence before submitting
+    // Final check for name existence before submitting (skip for editing with same name)
     if (isCheckingName) {
       setError("Vui lòng đợi kiểm tra tên hoàn tất")
       setIsSubmitting(false)
       return
     }
 
-    if (nameExists) {
+    if (nameExists && (!isEditing || name.trim() !== editingMember?.name)) {
       setError("Tên này đã được sử dụng. Vui lòng chọn tên khác.")
       setIsSubmitting(false)
       return
     }
 
     try {
-      const response = await fetch("/api/members", {
-        method: "POST",
+      const url = isEditing ? `/api/members/${editingMember!.id}` : "/api/members"
+      const method = isEditing ? "PUT" : "POST"
+      
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -125,23 +149,25 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate }) => {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create member")
+        throw new Error(data.error || `Failed to ${isEditing ? 'update' : 'create'} member`)
       }
 
       // Success
-      setName("")
-      setPhone("")
-      setNameExists(false)
-      setSuccess("🎉 Thêm thành viên thành công!")
+      if (!isEditing) {
+        setName("")
+        setPhone("")
+        setNameExists(false)
+      }
+      setSuccess(isEditing ? "🎉 Cập nhật thành viên thành công!" : "🎉 Thêm thành viên thành công!")
       onUpdate()
 
       setTimeout(() => setSuccess(""), 4000)
     } catch (error) {
-      console.error("Error creating member:", error)
+      console.error(`Error ${isEditing ? 'updating' : 'creating'} member:`, error)
       setError(
         error instanceof Error
           ? error.message
-          : "Không thể thêm thành viên. Vui lòng thử lại!"
+          : `Không thể ${isEditing ? 'cập nhật' : 'thêm'} thành viên. Vui lòng thử lại!`
       )
     } finally {
       setIsSubmitting(false)
@@ -159,9 +185,14 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate }) => {
           <div className={styles.iconPulse}></div>
         </div>
         <div className={styles.headerContent}>
-          <h2 className={styles.formTitle}>Thêm Thành viên Mới</h2>
+          <h2 className={styles.formTitle}>
+            {isEditing ? "Chỉnh Sửa Thành Viên" : "Thêm Thành viên Mới"}
+          </h2>
           <p className={styles.formSubtitle}>
-            Mời thêm thành viên mới vào câu lạc bộ cầu lông của bạn
+            {isEditing 
+              ? "Cập nhật thông tin thành viên câu lạc bộ cầu lông"
+              : "Mời thêm thành viên mới vào câu lạc bộ cầu lông của bạn"
+            }
           </p>
         </div>
       </div>
@@ -327,12 +358,12 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate }) => {
               {isSubmitting ? (
                 <>
                   <div className={styles.btnSpinner}></div>
-                  <span>Đang thêm thành viên...</span>
+                  <span>{isEditing ? "Đang cập nhật..." : "Đang thêm thành viên..."}</span>
                 </>
               ) : (
                 <>
-                  <span className={styles.btnIcon}>➕</span>
-                  <span>Thêm thành viên</span>
+                  <span className={styles.btnIcon}>{isEditing ? "✏️" : "➕"}</span>
+                  <span>{isEditing ? "Cập nhật thành viên" : "Thêm thành viên"}</span>
                 </>
               )}
             </span>

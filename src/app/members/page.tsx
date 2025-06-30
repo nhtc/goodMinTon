@@ -3,6 +3,7 @@ import React, { useEffect, useState, lazy, Suspense } from "react"
 import Link from "next/link"
 import styles from "./page.module.css"
 import Modal from "../../components/Modal"
+import ConfirmationModal from "../../components/ConfirmationModal"
 import {
   AuthorizedComponent,
   EditableContent,
@@ -26,6 +27,9 @@ const MembersPage = () => {
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [showModal, setShowModal] = useState(false)
+  const [editingMember, setEditingMember] = useState<Member | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [memberToDelete, setMemberToDelete] = useState<{id: string, name: string} | null>(null)
   const { canEdit, userRole } = usePermissions()
 
   const fetchMembers = async () => {
@@ -49,6 +53,12 @@ const MembersPage = () => {
   const handleMemberUpdate = async () => {
     await fetchMembers()
     setShowModal(false)
+    setEditingMember(null)
+  }
+
+  const handleEditMember = (member: Member) => {
+    setEditingMember(member)
+    setShowModal(true)
   }
 
   const handleMemberSubmit = async (
@@ -74,20 +84,46 @@ const MembersPage = () => {
     }
   }
 
-  const handleDeleteMember = async (id: string, name: string) => {
-    if (confirm(`Bạn có chắc muốn xóa thành viên "${name}" không?`)) {
-      try {
-        setDeleteLoading(id)
-        const response = await fetch(`/api/members/${id}`, { method: "DELETE" })
-        if (!response.ok) throw new Error("Failed to delete member")
-        await fetchMembers()
-      } catch (error) {
-        console.error("Error deleting member:", error)
-        alert("Có lỗi xảy ra khi xóa thành viên!")
-      } finally {
-        setDeleteLoading(null)
+  const handleDeleteMember = (id: string, name: string) => {
+    setMemberToDelete({ id, name })
+    setShowDeleteConfirm(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!memberToDelete) return
+
+    try {
+      setDeleteLoading(memberToDelete.id)
+      const response = await fetch(`/api/members/${memberToDelete.id}`, { 
+        method: "DELETE" 
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        if (response.status === 400 && data.gameCount) {
+          // Member is in games, show error message
+          alert(`❌ Không thể xóa ${memberToDelete.name}\n\n${data.message}`)
+        } else {
+          throw new Error(data.error || "Failed to delete member")
+        }
+        return
       }
+      
+      await fetchMembers()
+      setShowDeleteConfirm(false)
+      setMemberToDelete(null)
+    } catch (error) {
+      console.error("Error deleting member:", error)
+      alert("Có lỗi xảy ra khi xóa thành viên!")
+    } finally {
+      setDeleteLoading(null)
     }
+  }
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false)
+    setMemberToDelete(null)
   }
 
   // Filter members based on search term
@@ -367,6 +403,13 @@ const MembersPage = () => {
                       >
                         <div className={styles.actionButtons}>
                           <button
+                            onClick={() => handleEditMember(member)}
+                            className={`${styles.actionBtn} ${styles.editBtn}`}
+                            title='Chỉnh sửa thành viên'
+                          >
+                            <span>✏️</span>
+                          </button>
+                          <button
                             onClick={() =>
                               handleDeleteMember(member.id, member.name)
                             }
@@ -425,15 +468,35 @@ const MembersPage = () => {
         </div>
 
         {/* Modal for Member Form */}
-        <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
+        <Modal
+          isOpen={showModal}
+          onClose={() => {
+            setShowModal(false)
+            setEditingMember(null)
+          }}
+          showHeader={false}
+        >
           <Suspense
             fallback={
               <div className={styles.loadingFallback}>Đang tải form...</div>
             }
           >
-            <MemberForm onUpdate={handleMemberUpdate} />
+            <MemberForm onUpdate={handleMemberUpdate} editingMember={editingMember} />
           </Suspense>
         </Modal>
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={showDeleteConfirm}
+          onClose={handleCancelDelete}
+          onConfirm={handleConfirmDelete}
+          title="Xóa thành viên"
+          message={memberToDelete ? `Bạn có chắc muốn xóa thành viên "${memberToDelete.name}" không? Hành động này không thể hoàn tác.` : ""}
+          confirmText="Xóa thành viên"
+          cancelText="Hủy bỏ"
+          type="danger"
+          isLoading={deleteLoading === memberToDelete?.id}
+        />
       </div>
     </AuthorizedComponent>
   )

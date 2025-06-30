@@ -9,6 +9,8 @@ import {
   usePermissions,
 } from "../../components/AuthorizedComponent"
 import { capitalize } from "lodash"
+import Modal from "../../components/Modal"
+import ConfirmationModal from "../../components/ConfirmationModal"
 
 // Lazy load heavy components for better performance
 const GameForm = lazy(() => import("../../components/GameForm"))
@@ -44,7 +46,10 @@ const HistoryPage = () => {
   const [error, setError] = useState<string>("")
   const [showForm, setShowForm] = useState(false)
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
+  const [editingGame, setEditingGame] = useState<Game | null>(null)
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [gameToDelete, setGameToDelete] = useState<{id: string, date: string} | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [paymentLoading, setPaymentLoading] = useState<string | null>(null)
   const { canEdit, userRole } = usePermissions()
@@ -111,26 +116,68 @@ const HistoryPage = () => {
   const handleGameCreated = async () => {
     await fetchGames()
     setShowForm(false)
+    setEditingGame(null)
   }
 
-  const handleDeleteGame = async (id: string) => {
-    if (!confirm("Bạn có chắc muốn xóa trận đấu này không?")) {
-      return
-    }
+  const handleDeleteGame = (game: Game) => {
+    setGameToDelete({ 
+      id: game.id, 
+      date: new Date(game.date).toLocaleDateString("vi-VN") 
+    })
+    setShowDeleteConfirm(true)
+  }
+
+  const handleConfirmDeleteGame = async () => {
+    if (!gameToDelete) return
 
     try {
-      setDeleteLoading(id)
-      await apiService.games.delete(id)
+      setDeleteLoading(gameToDelete.id)
+      await apiService.games.delete(gameToDelete.id)
       await fetchGames()
 
-      if (selectedGame?.id === id) {
+      if (selectedGame?.id === gameToDelete.id) {
         setSelectedGame(null)
       }
+      
+      setShowDeleteConfirm(false)
+      setGameToDelete(null)
     } catch (error) {
       console.error("Error deleting game:", error)
       alert(error instanceof Error ? error.message : "Không thể xóa trận đấu")
     } finally {
       setDeleteLoading(null)
+    }
+  }
+
+  const handleCancelDeleteGame = () => {
+    setShowDeleteConfirm(false)
+    setGameToDelete(null)
+  }
+
+  const handleEditGame = (game: Game) => {
+    setEditingGame(game)
+    setShowForm(true)
+  }
+
+  const handleCloseEditGame = () => {
+    setEditingGame(null)
+    setShowForm(false)
+  }
+
+  const handleGameUpdated = async () => {
+    await fetchGames()
+    setShowForm(false)
+    setEditingGame(null)
+    // Also update selectedGame if it was the one being edited
+    if (selectedGame && editingGame && selectedGame.id === editingGame.id) {
+      // Fetch the updated game data
+      try {
+        const updatedGame = await apiService.games.getById(selectedGame.id)
+        setSelectedGame(updatedGame)
+      } catch (error) {
+        console.error("Error fetching updated game:", error)
+        setSelectedGame(null)
+      }
     }
   }
 
@@ -415,13 +462,13 @@ const HistoryPage = () => {
             </div>
           </div>
 
-          {/* Game Form */}
+          {/* Game Form Modal */}
           {showForm && (
-            <div className={styles.formSection}>
-              <div className={styles.formHeader}>
-                <h2>🆕 Thêm Trận Đấu Mới</h2>
-                <p>Ghi lại thông tin trận đấu và chi phí</p>
-              </div>
+            <Modal
+              isOpen={showForm}
+              onClose={handleCloseEditGame}
+              title={editingGame ? "Chỉnh Sửa Trận Đấu" : "Thêm Trận Đấu Mới"}
+            >
               <EditableContent
                 viewContent={
                   <div className={styles.authViewOnly}>
@@ -444,11 +491,13 @@ const HistoryPage = () => {
                 >
                   <GameForm
                     members={members}
-                    onGameCreated={handleGameCreated}
+                    onGameCreated={editingGame ? handleGameUpdated : handleGameCreated}
+                    gameData={editingGame}
+                    isEditing={!!editingGame}
                   />
                 </Suspense>
               </EditableContent>
-            </div>
+            </Modal>
           )}
 
           {/* Search and Filter */}
@@ -817,6 +866,39 @@ const HistoryPage = () => {
                           <span className={styles.btnIcon}>💳</span>
                           <span>QR Pay</span>
                         </Link>
+
+                        {/* Admin-only Edit and Delete buttons */}
+                        {canEdit && (
+                          <>
+                            <button
+                              onClick={() => handleEditGame(game)}
+                              className={`${styles.gameActionBtn} ${styles.editBtn}`}
+                              title='Chỉnh sửa trận đấu'
+                            >
+                              <span className={styles.btnIcon}>✏️</span>
+                              <span>Sửa</span>
+                            </button>
+                            
+                            <button
+                              onClick={() => handleDeleteGame(game)}
+                              className={`${styles.gameActionBtn} ${styles.deleteBtn}`}
+                              title='Xóa trận đấu'
+                              disabled={deleteLoading === game.id}
+                            >
+                              {deleteLoading === game.id ? (
+                                <>
+                                  <div className={styles.btnSpinner}></div>
+                                  <span>Đang xóa...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className={styles.btnIcon}>🗑️</span>
+                                  <span>Xóa</span>
+                                </>
+                              )}
+                            </button>
+                          </>
+                        )}
                       </div>
 
                       {/* Game Card Glow Effect */}
@@ -1290,6 +1372,19 @@ const HistoryPage = () => {
             </div>
           </div>
         )}
+
+        {/* Delete Game Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={showDeleteConfirm}
+          onClose={handleCancelDeleteGame}
+          onConfirm={handleConfirmDeleteGame}
+          title="Xóa trận đấu"
+          message={gameToDelete ? `Bạn có chắc muốn xóa trận đấu ngày ${gameToDelete.date} không? Tất cả dữ liệu thanh toán sẽ bị mất và không thể khôi phục.` : ""}
+          confirmText="Xóa trận đấu"
+          cancelText="Hủy bỏ"
+          type="danger"
+          isLoading={deleteLoading === gameToDelete?.id}
+        />
       </div>
     </AuthorizedComponent>
   )

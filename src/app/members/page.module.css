@@ -1010,6 +1010,19 @@
   background: #f3f4f6;
 }
 
+.editBtn {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #d97706;
+  border: 2px solid #fcd34d;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
+}
+
+.editBtn:hover {
+  background: linear-gradient(135deg, #fde68a, #fbbf24);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(217, 119, 6, 0.3);
+}
+
 .viewOnlyActions {
   text-align: center;
   padding: 1.25rem;
@@ -1229,6 +1242,19 @@
   background: #f3f4f6;
 }
 
+.editBtn {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #d97706;
+  border: 2px solid #fcd34d;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
+}
+
+.editBtn:hover {
+  background: linear-gradient(135deg, #fde68a, #fbbf24);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(217, 119, 6, 0.3);
+}
+
 .viewOnlyActions {
   text-align: center;
   padding: 1.25rem;
@@ -1237,9 +1263,11 @@
   border: 2px solid #e2e8f0;
   box-shadow: 0 4px 12px rgba(156, 163, 175, 0.1);
   will-change: box-shadow;
+  /* Removed infinite glow animation for better performance */
 }
 
-.viewOnlyActions:hover {
+/* Add hover effect instead */
+.viewOnlyMessage:hover {
   box-shadow: 0 8px 20px rgba(156, 163, 175, 0.2);
   transition: box-shadow 0.3s ease;
 }
@@ -1252,7 +1280,7 @@
   letter-spacing: 0.05em;
 }
 
-/* ===== MEMBER BADGE ===== */
+/* Member Badge */
 .memberBadge {
   position: absolute;
   top: 1.5rem;
