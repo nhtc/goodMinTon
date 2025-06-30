@@ -2103,6 +2103,108 @@
   .memberCard {
     padding: 1rem;
   }
+  
+  .quantityPresets {
+    gap: 6px;
+  }
+  
+  .quantityBtn {
+    padding: 8px 10px;
+    font-size: 13px;
+    min-width: 36px;
+  }
+
+  .inputPrefix {
+    font-size: 10px;
+    padding: 1px 4px;
+    left: 8px;
+  }
+
+  .inputWrapper.money .formInput {
+    padding-left: 50px;
+  }
+
+  .prepayInputWrapper .inputPrefix {
+    font-size: 9px;
+    padding: 1px 3px;
+    left: 6px;
+  }
+
+  .prepayInputWrapper .prepayInput {
+    padding-left: 42px;
+  }
+}
+
+/* Quick quantity selection buttons */
+.quantityPresets {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.quantityBtn {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  background: #f9f9f9;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.2s ease;
+  min-width: 40px;
+  text-align: center;
+}
+
+.quantityBtn:hover {
+  background: #e9ecef;
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.quantityBtn.selected {
+  background: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.quantityBtn:active {
+  transform: translateY(1px);
+}
+
+/* Input prefix for money fields */
+.inputPrefix {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-weight: 600;
+  color: #007bff;
+  background: rgba(0, 123, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.inputWrapper.money .formInput {
+  padding-left: 60px;
+}
+
+.prepayInputWrapper {
+  position: relative;
+}
+
+.prepayInputWrapper .inputPrefix {
+  left: 8px;
+  font-size: 10px;
+  padding: 1px 4px;
+}
+
+.prepayInputWrapper .prepayInput {
+  padding-left: 50px;
 }
 
 /* High contrast mode */

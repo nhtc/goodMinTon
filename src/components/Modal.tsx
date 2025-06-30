@@ -1,76 +1,84 @@
 import React, { useEffect } from "react"
-import styles from "./MemberForm.module.css"
+import * as Dialog from "@radix-ui/react-dialog"
+import styles from "./Modal.module.css"
 
 interface ModalProps {
   isOpen: boolean
   onClose: () => void
   children: React.ReactNode
+  title?: string
+  showHeader?: boolean
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
-  // Handle ESC key press
+const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  children,
+  title,
+  showHeader = true,
+}) => {
+  // Prevent body scroll when modal is open
   useEffect(() => {
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose()
-      }
-    }
-
     if (isOpen) {
-      document.addEventListener("keydown", handleEsc)
-      // Prevent body scroll when modal is open and preserve scroll position
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-      document.body.style.overflow = "hidden"
+      // Save current scroll position
+      const scrollY = window.scrollY
       document.body.style.position = "fixed"
-      document.body.style.top = `-${scrollTop}px`
+      document.body.style.top = `-${scrollY}px`
       document.body.style.width = "100%"
     } else {
       // Restore scroll position
-      const scrollTop = parseInt(document.body.style.top || "0") * -1
-      document.body.style.overflow = ""
+      const scrollY = document.body.style.top
       document.body.style.position = ""
       document.body.style.top = ""
       document.body.style.width = ""
-      if (scrollTop > 0) {
-        window.scrollTo(0, scrollTop)
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || "0", 10) * -1)
       }
     }
 
+    // Cleanup function
     return () => {
-      document.removeEventListener("keydown", handleEsc)
-      // Cleanup on unmount
-      document.body.style.overflow = ""
       document.body.style.position = ""
       document.body.style.top = ""
       document.body.style.width = ""
     }
-  }, [isOpen, onClose])
+  }, [isOpen])
 
-  if (!isOpen) return null
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      onClose()
+    }
+  }
 
   return (
-    <div
-      className={styles.modalOverlay}
-      onClick={e => {
-        // Close modal when clicking on overlay (not the content)
-        if (e.target === e.currentTarget) {
-          onClose()
-        }
-      }}
-    >
-      <div className={styles.modalContent}>
-        <div className={styles.modalHeader}>
-          <button
-            onClick={onClose}
-            className={styles.modalCloseBtn}
-            aria-label='Close modal'
-          >
-            ✕
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
+    <Dialog.Root open={isOpen} onOpenChange={handleOpenChange}>
+      <Dialog.Portal>
+        <Dialog.Overlay className={styles.overlay} />
+        <Dialog.Content className={styles.content}>
+          {/* Always render close button outside of scrollable content */}
+          <Dialog.Close asChild>
+            <button
+              className={styles.floatingCloseButton}
+              aria-label='Close modal'
+            >
+              ✕
+            </button>
+          </Dialog.Close>
+
+          {showHeader && (
+            <div className={styles.header}>
+              {title && (
+                <Dialog.Title className={styles.title}>{title}</Dialog.Title>
+              )}
+            </div>
+          )}
+
+          <div className={showHeader ? styles.body : styles.bodyFullHeight}>
+            {children}
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   )
 }
 

@@ -40,13 +40,6 @@ export async function DELETE(
     const params = await context.params
     const { id } = params
 
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Member ID is required' },
-        { status: 400 }
-      )
-    }
-
     // Check if member exists
     const existingMember = await prisma.member.findUnique({
       where: { id }
@@ -59,15 +52,31 @@ export async function DELETE(
       )
     }
 
+    // Check if member is in any games
+    const participantCount = await prisma.gameParticipant.count({
+      where: { memberId: id }
+    })
+
+    if (participantCount > 0) {
+      return NextResponse.json(
+        { 
+          error: 'Cannot delete member', 
+          message: `Cannot delete ${existingMember.name} because they have participated in ${participantCount} game(s). Please remove them from all games first.`,
+          gameCount: participantCount
+        },
+        { status: 400 }
+      )
+    }
+
     // Delete the member
     await prisma.member.delete({
       where: { id }
     })
 
-    return NextResponse.json(
-      { message: 'Member deleted successfully' },
-      { status: 200 }
-    )
+    return NextResponse.json({ 
+      message: 'Member deleted successfully',
+      deletedMember: existingMember 
+    })
   } catch (error) {
     console.error('Error deleting member:', error)
     return NextResponse.json(
