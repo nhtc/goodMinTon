@@ -24,10 +24,44 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [nameExists, setNameExists] = useState(false)
+  const [phoneError, setPhoneError] = useState("")
   const isEditing = !!editingMember
 
   // Use useRef to store the timeout ID
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Vietnamese phone number validation
+  const validateVietnamesePhone = (phoneNumber: string): { isValid: boolean; message: string } => {
+    if (!phoneNumber.trim()) {
+      return { isValid: true, message: "" } // Phone is optional
+    }
+
+    // Remove all non-digit characters
+    const cleanPhone = phoneNumber.replace(/\D/g, "")
+    
+    // Vietnamese phone number patterns
+    const patterns = [
+      /^(84|0)(3[2-9]|5[689]|7[06-9]|8[1-9]|9[0-9])\d{7}$/, // Mobile numbers
+      /^(84|0)(2[0-9])\d{8}$/, // Landline numbers (area code 2X)
+      /^(84|0)(2[0-9])\d{7}$/, // Some landline numbers (shorter)
+    ]
+
+    const isValid = patterns.some(pattern => pattern.test(cleanPhone))
+    
+    if (!isValid) {
+      if (cleanPhone.length < 9) {
+        return { isValid: false, message: "Số điện thoại quá ngắn" }
+      } else if (cleanPhone.length > 11) {
+        return { isValid: false, message: "Số điện thoại quá dài" }
+      } else if (!cleanPhone.startsWith('84') && !cleanPhone.startsWith('0')) {
+        return { isValid: false, message: "Số điện thoại phải bắt đầu bằng 0 hoặc 84" }
+      } else {
+        return { isValid: false, message: "Số điện thoại không hợp lệ" }
+      }
+    }
+
+    return { isValid: true, message: "Số điện thoại hợp lệ" }
+  }
 
   // Populate form when editing
   useEffect(() => {
@@ -37,8 +71,24 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
       setError("")
       setSuccess("")
       setNameExists(false)
+      setPhoneError("")
     }
   }, [editingMember])
+
+  // Handle phone number changes with validation
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setPhone(value)
+    
+    // Clear general error when user starts typing
+    if (error && error.includes("điện thoại")) {
+      setError("")
+    }
+    
+    // Validate phone number
+    const validation = validateVietnamesePhone(value)
+    setPhoneError(validation.isValid ? "" : validation.message)
+  }
 
   // Check if name exists as user types
   const checkNameExists = async (nameValue: string) => {
@@ -129,6 +179,16 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
       setError("Tên này đã được sử dụng. Vui lòng chọn tên khác.")
       setIsSubmitting(false)
       return
+    }
+
+    // Validate phone number if provided
+    if (phone.trim()) {
+      const phoneValidation = validateVietnamesePhone(phone.trim())
+      if (!phoneValidation.isValid) {
+        setError(`Số điện thoại không hợp lệ: ${phoneValidation.message}`)
+        setIsSubmitting(false)
+        return
+      }
     }
 
     try {
@@ -311,24 +371,50 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
                 type='tel'
                 id='phone'
                 value={phone}
-                onChange={e => setPhone(e.target.value)}
+                onChange={handlePhoneChange}
                 className={`${styles.formInput} ${
-                  phone.trim() ? styles.filled : ""
+                  phoneError ? styles.error : ""
+                } ${
+                  phone.trim() && !phoneError ? styles.filled : ""
                 }`}
-                placeholder='Nhập số điện thoại...'
+                placeholder='VD: 0912345678 hoặc 84912345678'
                 disabled={isSubmitting}
                 maxLength={15}
               />
               <div className={styles.inputBorder}></div>
-              {phone.trim() && (
+              
+              {/* Phone validation icons */}
+              {phoneError && (
+                <div className={`${styles.inputIcon} ${styles.error}`}>
+                  <span>✕</span>
+                </div>
+              )}
+              
+              {phone.trim() && !phoneError && (
                 <div className={`${styles.inputIcon} ${styles.success}`}>
                   <span>✓</span>
                 </div>
               )}
             </div>
-            <div className={styles.fieldHelp}>
-              <span>💡 Số điện thoại giúp liên lạc dễ dàng hơn</span>
-            </div>
+
+            {/* Phone validation messages */}
+            {phoneError && (
+              <div className={`${styles.fieldHelp} ${styles.error}`}>
+                <span>❌ {phoneError}</span>
+              </div>
+            )}
+
+            {phone.trim() && !phoneError && (
+              <div className={`${styles.fieldHelp} ${styles.success}`}>
+                <span>✓ Số điện thoại hợp lệ</span>
+              </div>
+            )}
+
+            {!phone.trim() && (
+              <div className={styles.fieldHelp}>
+                <span>💡 VD: 0912345678, +84912345678, 02812345678</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -341,7 +427,8 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
               !name.trim() ||
               name.trim().length < 2 ||
               nameExists ||
-              isCheckingName
+              isCheckingName ||
+              phoneError !== ""
             }
             className={`${styles.submitBtn} ${
               isSubmitting ? styles.loading : ""
@@ -349,7 +436,8 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
               !name.trim() ||
               name.trim().length < 2 ||
               nameExists ||
-              isCheckingName
+              isCheckingName ||
+              phoneError !== ""
                 ? styles.disabled
                 : ""
             }`}
@@ -381,7 +469,11 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
               <span>Hệ thống sẽ kiểm tra tên tự động</span>
             </div>
             <div className={styles.tipItem}>
-              <span className={styles.tipIcon}>🔒</span>
+              <span className={styles.tipIcon}>�</span>
+              <span>Số điện thoại hỗ trợ định dạng Việt Nam</span>
+            </div>
+            <div className={styles.tipItem}>
+              <span className={styles.tipIcon}>�🔒</span>
               <span>Thông tin của bạn được bảo mật tuyệt đối</span>
             </div>
           </div>
