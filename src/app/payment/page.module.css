@@ -909,6 +909,149 @@
   }
 }
 
+/* Banking App Section */
+.bankingAppSection {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.orDivider {
+  text-align: center;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.orDivider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
+}
+
+.orText {
+  background: #ffffff;
+  padding: 0 1rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 500;
+  position: relative;
+}
+
+.bankingAppBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 4px 12px rgba(59, 130, 246, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.bankingAppBtn:hover {
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 20px rgba(59, 130, 246, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.bankingAppBtn:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 4px 12px rgba(59, 130, 246, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.bankAppIcon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.bankAppContent {
+  flex: 1;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.bankAppTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.bankAppSubtitle {
+  font-size: 0.875rem;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+.bankAppArrow {
+  font-size: 1.25rem;
+  opacity: 0.8;
+  transition: transform 0.3s ease;
+}
+
+.bankingAppBtn:hover .bankAppArrow {
+  transform: translateX(4px);
+}
+
+.bankAppHint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+/* Responsive adjustments for banking app button */
+@media (max-width: 480px) {
+  .bankingAppBtn {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9rem;
+  }
+  
+  .bankAppIcon {
+    font-size: 1.25rem;
+  }
+  
+  .bankAppTitle {
+    font-size: 0.9rem;
+  }
+  
+  .bankAppSubtitle {
+    font-size: 0.8rem;
+  }
+  
+  .bankAppHint {
+    padding: 0.625rem;
+  }
+  
+  .hintText {
+    font-size: 0.75rem;
+  }
+}
+
 /* Mobile Responsive */
 @media (max-width: 640px) {
   .container {

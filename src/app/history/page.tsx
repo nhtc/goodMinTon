@@ -23,6 +23,7 @@ interface Member {
   hasPaid?: boolean // Payment status
   paidAt?: string // Payment timestamp
   prePaid?: number // ✅ Add pre-paid amount
+  prePaidCategory?: string // ✅ Add pre-paid category
 }
 
 interface Game {
@@ -49,18 +50,35 @@ const HistoryPage = () => {
   const [editingGame, setEditingGame] = useState<Game | null>(null)
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [gameToDelete, setGameToDelete] = useState<{id: string, date: string} | null>(null)
+  const [gameToDelete, setGameToDelete] = useState<{
+    id: string
+    date: string
+  } | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [paymentLoading, setPaymentLoading] = useState<string | null>(null)
   const { canEdit, userRole } = usePermissions()
 
-  // ✅ Helper function to calculate remaining amount for a participant
+  // ✅ Helper function to get category icon
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "Sân":
+        return "🏟️"
+      case "Cầu":
+        return "🏸"
+      case "Nước":
+        return "💧"
+      default:
+        return "💸"
+    }
+  }
+
+  // ✅ Helper function to calculate remaining amount for a participant (can be negative if overpaid)
   const getMemberRemainingAmount = (
     participant: Member,
     costPerMember: number
   ) => {
     const prePaid = participant.prePaid || 0
-    return Math.max(0, costPerMember - prePaid)
+    return costPerMember - prePaid // Allow negative values for overpayment
   }
 
   // ✅ Helper function to get total pre-paid for a game
@@ -75,6 +93,21 @@ const HistoryPage = () => {
     return game.participants.reduce((sum, participant) => {
       return sum + getMemberRemainingAmount(participant, game.costPerMember)
     }, 0)
+  }
+
+  // ✅ Helper function to get pre-paid breakdown by category
+  const getPrePaidByCategory = (game: Game) => {
+    const categoryBreakdown: { [key: string]: number } = {}
+
+    game.participants.forEach(participant => {
+      if (participant.prePaid && participant.prePaid > 0) {
+        const category = participant.prePaidCategory || "Khác"
+        categoryBreakdown[category] =
+          (categoryBreakdown[category] || 0) + participant.prePaid
+      }
+    })
+
+    return categoryBreakdown
   }
 
   const fetchGames = async () => {
@@ -120,9 +153,9 @@ const HistoryPage = () => {
   }
 
   const handleDeleteGame = (game: Game) => {
-    setGameToDelete({ 
-      id: game.id, 
-      date: new Date(game.date).toLocaleDateString("vi-VN") 
+    setGameToDelete({
+      id: game.id,
+      date: new Date(game.date).toLocaleDateString("vi-VN"),
     })
     setShowDeleteConfirm(true)
   }
@@ -138,7 +171,7 @@ const HistoryPage = () => {
       if (selectedGame?.id === gameToDelete.id) {
         setSelectedGame(null)
       }
-      
+
       setShowDeleteConfirm(false)
       setGameToDelete(null)
     } catch (error) {
@@ -468,6 +501,7 @@ const HistoryPage = () => {
               isOpen={showForm}
               onClose={handleCloseEditGame}
               title={editingGame ? "Chỉnh Sửa Trận Đấu" : "Thêm Trận Đấu Mới"}
+              size='large'
             >
               <EditableContent
                 viewContent={
@@ -485,13 +519,15 @@ const HistoryPage = () => {
                   fallback={
                     <div className={styles.loadingForm}>
                       <div className={styles.loadingSpinner}></div>
-                      <p>Đang tải form tạo game...</p>
+                      <p>Đang tải form tạo trận đấu...</p>
                     </div>
                   }
                 >
                   <GameForm
                     members={members}
-                    onGameCreated={editingGame ? handleGameUpdated : handleGameCreated}
+                    onGameCreated={
+                      editingGame ? handleGameUpdated : handleGameCreated
+                    }
                     gameData={editingGame}
                     isEditing={!!editingGame}
                   />
@@ -849,56 +885,62 @@ const HistoryPage = () => {
 
                       {/* Game Actions */}
                       <div className={styles.gameActions}>
-                        <button
-                          onClick={() => setSelectedGame(game)}
-                          className={`${styles.gameActionBtn} ${styles.viewBtn}`}
-                          title='Xem chi tiết'
-                        >
-                          <span className={styles.btnIcon}>👁️</span>
-                          <span>Chi tiết</span>
-                        </button>
+                        {/* Primary Action - Chi tiết button (full width) */}
+                        <div className={styles.gameActionsPrimary}>
+                          <button
+                            onClick={() => setSelectedGame(game)}
+                            className={`${styles.gameActionBtn} ${styles.viewBtn} ${styles.primary}`}
+                            title='Xem chi tiết trận đấu'
+                          >
+                            <span className={styles.btnIcon}>👁️</span>
+                            <span>Chi tiết trận đấu</span>
+                          </button>
+                        </div>
 
-                        <Link
-                          href={`/payment`}
-                          className={`${styles.gameActionBtn} ${styles.paymentBtn}`}
-                          title='QR thanh toán'
-                        >
-                          <span className={styles.btnIcon}>💳</span>
-                          <span>QR Pay</span>
-                        </Link>
+                        {/* Secondary Actions - Other buttons in row */}
+                        <div className={styles.gameActionsSecondary}>
+                          <Link
+                            href={`/payment`}
+                            className={`${styles.gameActionBtn} ${styles.paymentBtn} ${styles.secondary}`}
+                            title='QR thanh toán'
+                          >
+                            <span className={styles.btnIcon}>💳</span>
+                            <span>QR Pay</span>
+                          </Link>
 
-                        {/* Admin-only Edit and Delete buttons */}
-                        {canEdit && (
-                          <>
-                            <button
-                              onClick={() => handleEditGame(game)}
-                              className={`${styles.gameActionBtn} ${styles.editBtn}`}
-                              title='Chỉnh sửa trận đấu'
-                            >
-                              <span className={styles.btnIcon}>✏️</span>
-                              <span>Sửa</span>
-                            </button>
-                            
-                            <button
-                              onClick={() => handleDeleteGame(game)}
-                              className={`${styles.gameActionBtn} ${styles.deleteBtn}`}
-                              title='Xóa trận đấu'
-                              disabled={deleteLoading === game.id}
-                            >
-                              {deleteLoading === game.id ? (
-                                <>
-                                  <div className={styles.btnSpinner}></div>
-                                  <span>Đang xóa...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <span className={styles.btnIcon}>🗑️</span>
-                                  <span>Xóa</span>
-                                </>
-                              )}
-                            </button>
-                          </>
-                        )}
+                          {/* Admin-only Edit and Delete buttons */}
+                          {canEdit && (
+                            <>
+                              <button
+                                onClick={() => handleEditGame(game)}
+                                className={`${styles.gameActionBtn} ${styles.editBtn} ${styles.secondary}`}
+                                title='Chỉnh sửa trận đấu'
+                              >
+                                <span className={styles.btnIcon}>✏️</span>
+                                <span>Sửa</span>
+                              </button>
+
+                              <button
+                                onClick={() => handleDeleteGame(game)}
+                                className={`${styles.gameActionBtn} ${styles.deleteBtn} ${styles.secondary}`}
+                                title='Xóa trận đấu'
+                                disabled={deleteLoading === game.id}
+                              >
+                                {deleteLoading === game.id ? (
+                                  <>
+                                    <div className={styles.btnSpinner}></div>
+                                    <span>Xóa...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className={styles.btnIcon}>🗑️</span>
+                                    <span>Xóa</span>
+                                  </>
+                                )}
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
 
                       {/* Game Card Glow Effect */}
@@ -994,6 +1036,24 @@ const HistoryPage = () => {
                             đ
                           </span>
                         </div>
+
+                        {/* Category breakdown */}
+                        {Object.entries(getPrePaidByCategory(selectedGame)).map(
+                          ([category, amount]) => (
+                            <div
+                              key={category}
+                              className={`${styles.costItem} ${styles.categoryBreakdown}`}
+                            >
+                              <span className={styles.costLabel}>
+                                {getCategoryIcon(category)} {category}:
+                              </span>
+                              <span className={styles.costValue}>
+                                -{amount.toLocaleString("vi-VN")}đ
+                              </span>
+                            </div>
+                          )
+                        )}
+
                         <div
                           className={`${styles.costItem} ${styles.remaining}`}
                         >
@@ -1172,17 +1232,52 @@ const HistoryPage = () => {
                                     <span>
                                       💸 Đã trả trước:{" "}
                                       {prePaid.toLocaleString("vi-VN")}đ
+                                      {participant.prePaidCategory && (
+                                        <span
+                                          className={styles.prepaidCategory}
+                                        >
+                                          {" "}
+                                          (
+                                          {getCategoryIcon(
+                                            participant.prePaidCategory
+                                          )}{" "}
+                                          {participant.prePaidCategory})
+                                        </span>
+                                      )}
                                     </span>
                                   </div>
                                 )}
                                 <div
-                                  className={`${styles.breakdownItem} ${styles.remaining}`}
+                                  className={`${styles.breakdownItem} ${
+                                    remainingAmount >= 0
+                                      ? styles.remaining
+                                      : styles.overpaid
+                                  }`}
                                 >
                                   <span>
-                                    ⏳ Còn cần trả:{" "}
-                                    <strong>
-                                      {remainingAmount.toLocaleString("vi-VN")}đ
-                                    </strong>
+                                    {!participant.hasPaid ? (
+                                      remainingAmount >= 0 ? (
+                                        <>
+                                          ⏳ Còn cần trả:{" "}
+                                          <strong>
+                                            {remainingAmount.toLocaleString(
+                                              "vi-VN"
+                                            )}
+                                            đ
+                                          </strong>
+                                        </>
+                                      ) : (
+                                        <>
+                                          🎉 Trả thừa:{" "}
+                                          <strong>
+                                            {Math.abs(
+                                              remainingAmount
+                                            ).toLocaleString("vi-VN")}
+                                            đ
+                                          </strong>
+                                        </>
+                                      )
+                                    ) : null}
                                   </span>
                                 </div>
                               </div>
@@ -1378,11 +1473,15 @@ const HistoryPage = () => {
           isOpen={showDeleteConfirm}
           onClose={handleCancelDeleteGame}
           onConfirm={handleConfirmDeleteGame}
-          title="Xóa trận đấu"
-          message={gameToDelete ? `Bạn có chắc muốn xóa trận đấu ngày ${gameToDelete.date} không? Tất cả dữ liệu thanh toán sẽ bị mất và không thể khôi phục.` : ""}
-          confirmText="Xóa trận đấu"
-          cancelText="Hủy bỏ"
-          type="danger"
+          title='Xóa trận đấu'
+          message={
+            gameToDelete
+              ? `Bạn có chắc muốn xóa trận đấu ngày ${gameToDelete.date} không? Tất cả dữ liệu thanh toán sẽ bị mất và không thể khôi phục.`
+              : ""
+          }
+          confirmText='Xóa trận đấu'
+          cancelText='Hủy bỏ'
+          type='danger'
           isLoading={deleteLoading === gameToDelete?.id}
         />
       </div>

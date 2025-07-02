@@ -174,6 +174,87 @@ const PaymentPageContent = () => {
     generateQRCode()
   }, [paymentInfo])
 
+  // Generate banking app URL for direct payment
+  const generateBankingAppUrl = () => {
+    if (!selectedMember || memberOutstandingAmount === 0) return "#"
+
+    // VietQR universal banking URL format
+    const amount = memberOutstandingAmount
+    const content = `Thanh toan cau long - ${selectedMember.name}`
+
+    // VietQR format that works with most Vietnamese banking apps
+    const vietQRUrl = `https://qr.sepay.vn/img?acc=${
+      paymentInfo.accountNumber
+    }&bank=970436&amount=${amount}&des=${encodeURIComponent(content)}`
+
+    // Try to detect the user's banking app and use deep linking
+    // For mobile devices, we can use intent URLs that will open the banking app
+    const userAgent = navigator.userAgent.toLowerCase()
+    const isMobile = /android|iphone|ipad|ipod|mobile/.test(userAgent)
+
+    if (isMobile) {
+      // For mobile, use intent URL that will prompt to open banking app
+      return `intent://payment?bank=970436&account=${
+        paymentInfo.accountNumber
+      }&amount=${amount}&content=${encodeURIComponent(
+        content
+      )}#Intent;scheme=vietqr;package=com.vietcombank.mobile;end`
+    }
+
+    return vietQRUrl
+  }
+
+  const openBankingApp = () => {
+    if (!selectedMember || memberOutstandingAmount === 0) {
+      alert("Vui lòng chọn thành viên và đảm bảo có số tiền cần thanh toán")
+      return
+    }
+
+    const bankingUrl = generateBankingAppUrl()
+    const userAgent = navigator.userAgent.toLowerCase()
+    const isMobile = /android|iphone|ipad|ipod|mobile/.test(userAgent)
+
+    try {
+      if (isMobile) {
+        // For mobile, try to open banking app first, fallback to browser
+        window.location.href = bankingUrl
+
+        // Fallback: If banking app is not installed, open browser after delay
+        setTimeout(() => {
+          const fallbackUrl = `https://qr.sepay.vn/img?acc=${
+            paymentInfo.accountNumber
+          }&bank=970436&amount=${memberOutstandingAmount}&des=${encodeURIComponent(
+            `Thanh toan cau long - ${selectedMember.name}`
+          )}`
+          window.open(fallbackUrl, "_blank")
+        }, 1500)
+      } else {
+        // For desktop, open QR page in new tab
+        const fallbackUrl = `https://qr.sepay.vn/img?acc=${
+          paymentInfo.accountNumber
+        }&bank=970436&amount=${memberOutstandingAmount}&des=${encodeURIComponent(
+          `Thanh toan cau long - ${selectedMember.name}`
+        )}`
+        window.open(fallbackUrl, "_blank")
+      }
+    } catch (error) {
+      console.error("Error opening banking app:", error)
+      // Final fallback - copy payment info to clipboard
+      const paymentDetails = `
+Ngân hàng: ${paymentInfo.bankName}
+Số tài khoản: ${paymentInfo.accountNumber}
+Chủ tài khoản: ${paymentInfo.accountHolder}
+Số tiền: ${formatCurrency(memberOutstandingAmount)}
+Nội dung: Thanh toan cau long - ${selectedMember.name}
+      `.trim()
+
+      copyToClipboard(paymentDetails, "paymentDetails")
+      alert(
+        "Không thể mở ứng dụng ngân hàng. Thông tin thanh toán đã được sao chép vào clipboard."
+      )
+    }
+  }
+
   const copyToClipboard = async (text: string, type: string) => {
     try {
       await navigator.clipboard.writeText(text)
@@ -331,6 +412,37 @@ const PaymentPageContent = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Banking App Button Moved Outside qrWrapper */}
+              {selectedMember && memberOutstandingAmount > 0 && (
+                <div className={styles.bankingAppSection}>
+                  <div className={styles.orDivider}>
+                    <span className={styles.orText}>hoặc</span>
+                  </div>
+                  <button
+                    onClick={openBankingApp}
+                    className={styles.bankingAppBtn}
+                    title='Mở ứng dụng ngân hàng để thanh toán'
+                  >
+                    <span className={styles.bankAppIcon}>🏦</span>
+                    <div className={styles.bankAppContent}>
+                      <span className={styles.bankAppTitle}>
+                        Mở App Ngân Hàng
+                      </span>
+                      <span className={styles.bankAppSubtitle}>
+                        Thanh toán nhanh chóng
+                      </span>
+                    </div>
+                    <span className={styles.bankAppArrow}>→</span>
+                  </button>
+                  <div className={styles.bankAppHint}>
+                    <span className={styles.hintIcon}>💡</span>
+                    <span className={styles.hintText}>
+                      Nhấn để mở app ngân hàng với thông tin đã điền sẵn
+                    </span>
+                  </div>
+                </div>
+              )}
 
               <div className={styles.qrInstructions}>
                 <h3>📱 Cách thanh toán:</h3>

@@ -2,22 +2,20 @@
 
 /* Main Container */
 .gameFormContainer {
-  max-width: 900px;
-  margin: 0 auto;
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #3b82f6 100%);
-  border-radius: 24px;
-  padding: 2.5rem;
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #8b5fbf 100%);
+  border-radius: 0 0 24px 24px;
+  padding: 1.5rem 2rem 2rem 2rem;
   box-shadow: 
-    0 25px 50px rgba(30, 60, 114, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 20px 40px rgba(102, 126, 234, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
   position: relative;
   overflow: hidden;
-  /* Performance optimizations */
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-  will-change: transform;
+  /* Smooth transitions for better UX */
+  transition: all 0.3s ease;
 }
 
 .gameFormContainer::before {
@@ -28,9 +26,9 @@
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(255, 177, 153, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(59, 130, 246, 0.2) 0%, transparent 50%);
+    radial-gradient(circle at 20% 80%, rgba(167, 243, 208, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(254, 202, 202, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(196, 181, 253, 0.15) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -99,15 +97,20 @@
 }
 
 .successAlert {
-  background: linear-gradient(135deg, #4caf50, #45a049);
+  background: linear-gradient(135deg, #34d399, #10b981);
   color: white;
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 3px 12px rgba(52, 211, 153, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .errorAlert {
-  background: linear-gradient(135deg, #f44336, #d32f2f);
+  background: linear-gradient(135deg, #ff3742, #ff4757);
   color: white;
-  box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+  box-shadow: 
+    0 4px 20px rgba(255, 55, 66, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .alertIcon {
@@ -169,19 +172,29 @@
 
 .formSection {
   background: 
-    linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.08) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 24px;
-  padding: 2.5rem;
-  margin-bottom: 2rem;
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.12) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
   box-shadow: 
-    0 10px 40px rgba(0, 0, 0, 0.15),
-    inset 0 2px 0 rgba(255, 255, 255, 0.25),
-    0 0 0 1px rgba(255, 255, 255, 0.1);
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.15);
   position: relative;
   overflow: hidden;
+  /* Smooth hover effect */
+  transition: all 0.3s ease;
+}
+
+.formSection:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
 .formSection::before {
@@ -192,8 +205,8 @@
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 10% 20%, rgba(34, 211, 238, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+    radial-gradient(circle at 10% 20%, rgba(34, 211, 238, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -205,19 +218,26 @@
 }
 
 .sectionIcon {
-  font-size: 2.5rem;
-  background: linear-gradient(135deg, #10b981, #059669, #047857);
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #34d399, #10b981, #059669);
   border-radius: 50%;
-  width: 70px;
-  height: 70px;
+  width: 60px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 
-    0 6px 20px rgba(16, 185, 129, 0.4),
-    0 0 0 3px rgba(255, 255, 255, 0.2);
-  will-change: transform;
-  /* Removed infinite pulse animation for better performance */
+    0 4px 16px rgba(52, 211, 153, 0.3),
+    0 0 0 2px rgba(255, 255, 255, 0.3);
+  /* Smooth hover effect instead of animations */
+  transition: all 0.3s ease;
+}
+
+.sectionIcon:hover {
+  transform: scale(1.05);
+  box-shadow: 
+    0 6px 20px rgba(52, 211, 153, 0.4),
+    0 0 0 3px rgba(255, 255, 255, 0.4);
 }
 
 .sectionTitle h3 {
@@ -299,51 +319,61 @@
 
 .formInput {
   width: 100%;
-  padding: 1.25rem 1.5rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.15);
+  padding: 1rem 1.25rem;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.18);
   color: #ffffff;
   font-size: 1rem;
   font-weight: 500;
   transition: all 0.3s ease;
-  -webkit-backdrop-filter: blur(15px);
-  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .formInput::placeholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.65);
   font-weight: 400;
 }
 
 .formInput:focus {
   outline: none;
-  border-color: #22d3ee;
-  background: rgba(255, 255, 255, 0.25);
+  border-color: #60a5fa;
+  background: rgba(255, 255, 255, 0.28);
   box-shadow: 
-    0 0 0 4px rgba(34, 211, 238, 0.2),
-    0 4px 20px rgba(34, 211, 238, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    0 0 0 3px rgba(96, 165, 250, 0.15),
+    0 4px 16px rgba(96, 165, 250, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
   transform: translateY(-1px);
 }
 
 .formInput.filled {
-  border-color: #10b981;
-  background: rgba(16, 185, 129, 0.15);
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
   box-shadow: 
     0 4px 12px rgba(16, 185, 129, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .formInput.error {
-  border-color: #f87171;
-  background: rgba(248, 113, 113, 0.15);
+  border-color: #ff3742;
+  background: linear-gradient(135deg, rgba(255, 55, 66, 0.2), rgba(255, 71, 87, 0.15));
+  color: #ff3742;
   box-shadow: 
-    0 4px 12px rgba(248, 113, 113, 0.3),
+    0 4px 12px rgba(255, 55, 66, 0.4),
+    0 0 0 3px rgba(255, 55, 66, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  animation: shakeError 0.5s ease-in-out;
+}
+
+/* Shake animation for error inputs */
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
 }
 
 .inputGlow {
@@ -369,33 +399,90 @@
   pointer-events: none;
 }
 
-/* Field Errors */
+/* Enhanced Field Errors with better visibility */
 .fieldError {
-  color: #ff6b6b;
-  font-size: 0.85rem;
+  color: #ff4757; /* Brighter, more visible red */
+  background: linear-gradient(135deg, rgba(255, 71, 87, 0.15), rgba(255, 107, 107, 0.1));
+  border: 1px solid rgba(255, 71, 87, 0.3);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 0.25rem;
+  margin-top: 0.5rem;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 2px 8px rgba(255, 71, 87, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  animation: slideInError 0.3s ease-out;
+}
+
+/* Add slide-in animation for errors */
+@keyframes slideInError {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced friendly version for better UX */
+.fieldError.friendly {
+  background: linear-gradient(135deg, rgba(255, 71, 87, 0.2), rgba(255, 107, 107, 0.15));
+  border: 2px solid rgba(255, 71, 87, 0.4);
+  color: #ff3742; /* Even brighter for better contrast */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  font-weight: 700;
 }
 
 .sectionError {
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid #ff6b6b;
-  color: #ff6b6b;
-  padding: 1rem;
+  background: linear-gradient(135deg, rgba(255, 71, 87, 0.2), rgba(255, 107, 107, 0.15));
+  border: 2px solid rgba(255, 71, 87, 0.4);
+  color: #ff3742; /* Brighter, more visible red */
+  padding: 1.25rem 1.5rem;
   border-radius: 12px;
   margin-bottom: 1rem;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 4px 16px rgba(255, 71, 87, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  animation: slideInError 0.3s ease-out;
 }
 
 .errorHighlight {
-  border: 2px solid #ff6b6b !important;
-  background: rgba(255, 107, 107, 0.05) !important;
-  box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.1) !important;
+  border: 2px solid #ff3742 !important;
+  background: linear-gradient(135deg, rgba(255, 55, 66, 0.2), rgba(255, 71, 87, 0.1)) !important;
+  box-shadow: 
+    0 0 0 4px rgba(255, 55, 66, 0.2) !important,
+    0 4px 16px rgba(255, 55, 66, 0.3) !important;
+  animation: pulseError 2s infinite;
+}
+
+/* Pulsing animation for error highlights */
+@keyframes pulseError {
+  0%, 100% {
+    box-shadow: 
+      0 0 0 4px rgba(255, 55, 66, 0.2),
+      0 4px 16px rgba(255, 55, 66, 0.3);
+  }
+  50% {
+    box-shadow: 
+      0 0 0 4px rgba(255, 55, 66, 0.4),
+      0 4px 16px rgba(255, 55, 66, 0.5);
+  }
 }
 
 .fieldTip {
@@ -432,55 +519,40 @@
 }
 
 .presetCard {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 16px;
-  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.12));
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  padding: 1.25rem;
   cursor: pointer;
   transition: all 0.3s ease;
   text-align: center;
   color: #ffffff;
-  -webkit-backdrop-filter: blur(15px);
-  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 2px 12px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
   position: relative;
   overflow: hidden;
 }
 
-.presetCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s ease;
-}
-
 .presetCard:hover {
-  border-color: #22d3ee;
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.2), rgba(6, 182, 212, 0.15));
-  transform: translateY(-4px) scale(1.02);
+  border-color: #60a5fa;
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.18), rgba(59, 130, 246, 0.12));
+  transform: translateY(-2px) scale(1.02);
   box-shadow: 
-    0 8px 25px rgba(34, 211, 238, 0.3),
+    0 6px 20px rgba(96, 165, 250, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
-.presetCard:hover::before {
-  left: 100%;
 }
 
 .presetCard.selected {
-  border-color: #10b981;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.2));
+  border-color: #34d399;
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.25), rgba(16, 185, 129, 0.18));
   box-shadow: 
-    0 8px 25px rgba(16, 185, 129, 0.4),
-    0 0 0 4px rgba(16, 185, 129, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
+    0 6px 20px rgba(52, 211, 153, 0.3),
+    0 0 0 3px rgba(52, 211, 153, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transform: scale(1.03);
 }
 
 .presetIcon {
@@ -978,26 +1050,54 @@
 
 .membersGridFriendly {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1rem;
-  max-height: 500px;
+  max-height: 600px; /* Increased height for expanded cards */
   overflow-y: auto;
   padding: 0.5rem;
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+  /* Better scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.5) rgba(255, 255, 255, 0.1);
+}
+
+/* Webkit scrollbar styling */
+.membersGridFriendly::-webkit-scrollbar {
+  width: 8px;
+}
+
+.membersGridFriendly::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.membersGridFriendly::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.5);
+  border-radius: 4px;
+}
+
+.membersGridFriendly::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.7);
 }
 
 .memberCardFriendly {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 16px;
-  padding: 1.5rem;
-  transition: all 0.3s ease;
-  -webkit-backdrop-filter: blur(15px);
-  backdrop-filter: blur(15px);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 2px 12px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
   position: relative;
-  overflow: hidden;
+  overflow: visible; /* Changed from hidden to visible */
+  display: flex;
+  flex-direction: column;
+  min-height: fit-content; /* Ensure card expands with content */
+  width: 100%;
 }
 
 .memberCardFriendly.clickable {
@@ -1008,53 +1108,39 @@
   cursor: default;
 }
 
-.memberCardFriendly::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transition: left 0.5s ease;
-}
-
 .memberCardFriendly:hover {
-  border-color: #22d3ee;
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.2), rgba(6, 182, 212, 0.1));
-  transform: translateY(-2px) scale(1.02);
+  border-color: #60a5fa;
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(59, 130, 246, 0.08));
+  transform: translateY(-1px) scale(1.01);
   box-shadow: 
-    0 8px 25px rgba(34, 211, 238, 0.3),
+    0 6px 20px rgba(96, 165, 250, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
-.memberCardFriendly:hover::before {
-  left: 100%;
 }
 
 .memberCardFriendly.selected {
-  border-color: #10b981;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.2));
+  border-color: #34d399;
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.22), rgba(16, 185, 129, 0.15));
   box-shadow: 
-    0 8px 25px rgba(16, 185, 129, 0.4),
-    0 0 0 4px rgba(16, 185, 129, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
+    0 6px 20px rgba(52, 211, 153, 0.3),
+    0 0 0 3px rgba(52, 211, 153, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transform: scale(1.02);
 }
 
 .memberCardFriendly.paid {
-  border-color: #f59e0b;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(217, 119, 6, 0.2));
+  border-color: #fbbf24;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.22), rgba(245, 158, 11, 0.15));
   box-shadow: 
-    0 6px 20px rgba(245, 158, 11, 0.3),
+    0 4px 16px rgba(251, 191, 36, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .memberSelector {
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* Changed from center to flex-start */
   gap: 1rem;
   width: 100%;
+  flex-shrink: 0; /* Prevent shrinking */
 }
 
 .memberCheckboxHidden {
@@ -1126,8 +1212,10 @@
 
 .memberActionsFriendly {
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* Changed to align with new memberSelector alignment */
   gap: 0.5rem;
+  flex-shrink: 0;
+  padding-top: 0.25rem; /* Add small padding to align with member info */
 }
 
 .checkMark {
@@ -1155,6 +1243,24 @@
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
+  width: 100%;
+  flex-shrink: 0;
+  /* Ensure proper spacing and visibility */
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Slide-in animation for prepay section */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 500px;
+  }
 }
 
 .prepayLabel {
@@ -1178,17 +1284,35 @@
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
+  margin-top: 0.5rem;
 }
 
 .prepayInput {
   width: 100%;
-  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  padding: 0.75rem 3rem 0.75rem 48px; /* Adjusted padding for prefix */
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.1);
   color: white;
   font-size: 0.9rem;
   transition: all 0.3s ease;
+  outline: none;
+}
+
+.prepayInput:focus {
+  border-color: rgba(99, 102, 241, 0.6);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.prepaySuffix {
+  position: absolute;
+  right: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  font-weight: 500;
+  pointer-events: none;
 }
 
 .prepayInput:focus {
@@ -1342,11 +1466,9 @@
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top: 2px solid white;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  /* Hardware acceleration for smooth spinner */
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  will-change: transform;
+  /* Removed infinite spin animation for better performance */
+  /* Use a simple pulsing effect instead */
+  animation: pulse 1.5s ease-in-out alternate;
   flex-shrink: 0; /* Prevent shrinking */
 }
 
@@ -1379,6 +1501,49 @@
   color: #4caf50;
   font-weight: 700;
   font-size: 1.1rem;
+}
+
+/* Better form button spacing */
+.formActions {
+  padding-top: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Improved submit button in modal context */
+.submitButton {
+  min-width: 200px;
+  font-size: 1.1rem;
+  padding: 0.875rem 2rem;
+}
+
+/* Better field group spacing */
+.fieldGroup {
+  margin-bottom: 1.25rem;
+}
+
+/* Optimize cost summary display */
+.costSummary {
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Standalone classes for CSS modules */
+.paid {
+  border-color: rgba(76, 175, 80, 0.6) !important;
+  background: rgba(76, 175, 80, 0.1) !important;
+}
+
+.unpaid {
+  border-color: rgba(255, 193, 7, 0.6) !important;
+  background: rgba(255, 193, 7, 0.1) !important;
 }
 
 /* Additional animations */
@@ -1459,59 +1624,44 @@
 
 .submitBtnFriendly {
   width: 100%;
-  background: linear-gradient(135deg, #10b981, #059669, #047857);
+  background: linear-gradient(135deg, #34d399, #10b981, #059669);
   color: white;
   border: none;
-  padding: 1.75rem 2rem;
-  border-radius: 16px;
-  font-size: 1.2rem;
-  font-weight: 800;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
   margin-bottom: 1.5rem;
   box-shadow: 
-    0 8px 25px rgba(16, 185, 129, 0.4),
-    0 0 0 2px rgba(255, 255, 255, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.submitBtnFriendly::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.6s ease;
+    0 6px 20px rgba(52, 211, 153, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .submitBtnFriendly:hover:not(.disabled):not(.loading) {
-  transform: translateY(-3px) scale(1.02);
+  transform: translateY(-2px) scale(1.01);
   box-shadow: 
-    0 12px 35px rgba(16, 185, 129, 0.5),
-    0 0 0 4px rgba(16, 185, 129, 0.2),
+    0 8px 25px rgba(52, 211, 153, 0.4),
+    0 0 0 2px rgba(52, 211, 153, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  background: linear-gradient(135deg, #059669, #047857, #065f46);
-}
-
-.submitBtnFriendly:hover::before {
-  left: 100%;
+  background: linear-gradient(135deg, #10b981, #059669, #047857);
 }
 
 .submitBtnFriendly.disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
   transform: none;
-  background: linear-gradient(135deg, #6b7280, #4b5563);
+  background: linear-gradient(135deg, #9ca3af, #6b7280);
 }
 
 .submitBtnFriendly.loading {
   cursor: wait;
-  background: linear-gradient(135deg, #0891b2, #0e7490);
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
 }
 
 /* Validation Summary */
@@ -1546,24 +1696,32 @@
 }
 
 .goToErrorBtn {
-  background: rgba(255, 107, 107, 0.2);
-  border: 1px solid rgba(255, 107, 107, 0.4);
-  color: #ff6b6b;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(255, 55, 66, 0.2), rgba(255, 71, 87, 0.15));
+  border: 2px solid rgba(255, 55, 66, 0.4);
+  color: #ff3742;
+  padding: 0.875rem 1.25rem;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 
+    0 2px 8px rgba(255, 55, 66, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .goToErrorBtn:hover {
-  background: rgba(255, 107, 107, 0.3);
-  border-color: rgba(255, 107, 107, 0.6);
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, rgba(255, 55, 66, 0.3), rgba(255, 71, 87, 0.25));
+  border-color: rgba(255, 55, 66, 0.6);
+  color: #ff2832;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    0 4px 16px rgba(255, 55, 66, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .submitTips {
@@ -1688,8 +1846,8 @@
 /* Large tablets and small desktops */
 @media (max-width: 1024px) {
   .gameFormContainer {
-    margin: 1.5rem;
-    padding: 2rem;
+    margin: 0;
+    padding: 1.5rem;
   }
   
   .formRow {
@@ -1709,9 +1867,9 @@
 /* Tablets and mobile landscape */
 @media (max-width: 768px) {
   .gameFormContainer {
-    margin: 1rem;
-    padding: 1.75rem;
-    border-radius: 16px;
+    margin: 0;
+    padding: 1.25rem;
+    border-radius: 0 0 16px 16px;
   }
   
   .formHeader {
@@ -2078,6 +2236,84 @@
   }
 }
 
+/* ===== QUANTITY BUTTON STYLES ===== */
+.quantityPresets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 1rem;
+}
+
+/* Clean quantity button styles - using proper CSS specificity */
+.quantityPresets .quantityBtn {
+  /* Reset button appearance */
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+  
+  /* Custom button styling */
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%);
+  border: 2px solid rgba(99, 102, 241, 0.3);
+  color: #4f46e5;
+  
+  /* Layout */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Sizing */
+  padding: 12px 16px;
+  min-width: 44px;
+  height: 44px;
+    
+  /* Typography */
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  
+  /* Visual effects */
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Shadows */
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.quantityPresets .quantityBtn:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #3730a3;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 
+    0 8px 25px rgba(99, 102, 241, 0.2),
+    0 3px 10px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.quantityPresets .quantityBtn:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 
+    0 2px 5px rgba(99, 102, 241, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.quantityPresets .quantityBtn.selected {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(139, 92, 246, 0.25) 100%);
+  border-color: rgba(99, 102, 241, 0.7);
+  color: #3730a3;
+  font-weight: 700;
+  box-shadow: 
+    0 0 0 3px rgba(99, 102, 241, 0.4),
+    0 4px 12px rgba(99, 102, 241, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
 /* Touch-friendly improvements */
 @media (hover: none) and (pointer: coarse) {
   .input,
@@ -2104,147 +2340,246 @@
     padding: 1rem;
   }
   
-  .quantityPresets {
-    gap: 6px;
-  }
-  
   .quantityBtn {
-    padding: 8px 10px;
-    font-size: 13px;
-    min-width: 36px;
-  }
-
-  .inputPrefix {
-    font-size: 10px;
-    padding: 1px 4px;
-    left: 8px;
-  }
-
-  .inputWrapper.money .formInput {
-    padding-left: 50px;
-  }
-
-  .prepayInputWrapper .inputPrefix {
-    font-size: 9px;
-    padding: 1px 3px;
-    left: 6px;
-  }
-
-  .prepayInputWrapper .prepayInput {
-    padding-left: 42px;
+    min-height: 48px;
+    min-width: 48px;
+    padding: 12px 18px;
   }
 }
 
-/* Quick quantity selection buttons */
-.quantityPresets {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
-}
-
-.quantityBtn {
-  padding: 6px 12px;
-  border: 1px solid #ddd;
-  background: #f9f9f9;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  color: #666;
-  transition: all 0.2s ease;
-  min-width: 40px;
-  text-align: center;
-}
-
-.quantityBtn:hover {
-  background: #e9ecef;
-  border-color: #007bff;
-  color: #007bff;
-}
-
-.quantityBtn.selected {
-  background: #007bff;
-  border-color: #007bff;
-  color: white;
-}
-
-.quantityBtn:active {
-  transform: translateY(1px);
-}
-
-/* Input prefix for money fields */
+/* Enhanced input prefix styling */
 .inputPrefix {
   position: absolute;
-  left: 12px;
   top: 50%;
+  left: 12px;
   transform: translateY(-50%);
-  font-size: 12px;
+  
+  /* Typography */
+  font-size: 11px;
   font-weight: 600;
-  color: #007bff;
-  background: rgba(0, 123, 255, 0.1);
-  padding: 2px 6px;
-  border-radius: 3px;
-  z-index: 2;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1;
+  
+  /* Colors and styling */
+  color: #6366f1;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  
+  /* Layout */
+  padding: 4px 6px;
+  border-radius: 6px;
+  
+  /* Visual effects */
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 1px 3px rgba(99, 102, 241, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  
+  /* Animation */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* User interaction */
   pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+  z-index: 2;
 }
 
+/* Enhanced hover effect when parent input is focused */
+.inputWrapper.money:focus-within .inputPrefix {
+  color: #4f46e5;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 
+    0 2px 8px rgba(99, 102, 241, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transform: translateY(-50%) scale(1.05);
+}
+
+/* Ensure proper spacing for money inputs */
 .inputWrapper.money .formInput {
-  padding-left: 60px;
+  padding-left: 64px;
 }
 
-.prepayInputWrapper {
-  position: relative;
-}
-
+/* Smaller variant for prepay inputs */
 .prepayInputWrapper .inputPrefix {
   left: 8px;
   font-size: 10px;
-  padding: 1px 4px;
+  padding: 3px 5px;
+  border-radius: 4px;
 }
 
 .prepayInputWrapper .prepayInput {
-  padding-left: 50px;
+  padding-left: 44px;
 }
 
-/* High contrast mode */
-@media (prefers-contrast: high) {
-  .gameFormContainer {
-    border: 2px solid #e5e7eb;
-  }
-  
-  .formSection {
-    border: 2px solid #f3f4f6;
-  }
-  
-  .input,
-  .select,
-  .textarea {
-    border: 2px solid #d1d5db;
-  }
-  
-  .presetCard {
-    border: 2px solid #e5e7eb;
-  }
-  
-  .memberCard {
-    border: 2px solid #e5e7eb;
-  }
+.prepayInputWrapper .prepayInput {
+  padding-left: 55px;
 }
 
-/* Reduced motion preferences */
-@media (prefers-reduced-motion: reduce) {
-  .gameFormContainer {
-    animation: none;
-  }
+/* Enhanced prepay category buttons */
+.prepayCategoryButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 0.75rem;
+  padding: 2px;
+}
+
+.categoryBtn {
+  /* Reset button styles */
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
   
-  .presetCard,
-  .memberCard,
-  .submitBtn {
-    transition: none;
-  }
+  /* Custom styling */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   
-  .floatingParticle {
-    animation: none;
-  }
+  /* Size and spacing */
+  min-height: 28px;
+  min-width: 50px;
+  padding: 6px 10px;
+  
+  /* Typography */
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  
+  /* Colors */
+  color: #6b7280;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.85) 100%);
+  border: 1.5px solid rgba(156, 163, 175, 0.3);
+  
+  /* Visual effects */
+  border-radius: 8px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  
+  /* User interaction */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.categoryBtn:hover {
+  color: #4f46e5;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.03) 100%);
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 
+    0 2px 6px rgba(99, 102, 241, 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.categoryBtn:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 
+    0 1px 2px rgba(99, 102, 241, 0.2),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.categoryBtn.selected {
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9) 0%, rgba(139, 92, 246, 0.8) 100%);
+  border-color: rgba(99, 102, 241, 0.8);
+  box-shadow: 
+    0 0 0 2px rgba(99, 102, 241, 0.3),
+    0 3px 8px rgba(99, 102, 241, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.categoryBtn.selected:hover {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.95) 0%, rgba(124, 58, 237, 0.85) 100%);
+  box-shadow: 
+    0 0 0 2px rgba(99, 102, 241, 0.4),
+    0 4px 12px rgba(99, 102, 241, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px) scale(1.06);
+}
+
+/* Emoji styling within category buttons */
+.categoryBtn span:first-child {
+  font-size: 12px;
+  margin-right: 2px;
+}
+
+.categoryBtn span:last-child {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.prepayInfo {
+  font-size: 10px;
+}
+
+/* ===== MODAL CONTEXT OPTIMIZATIONS ===== */
+
+/* Improve section spacing in modal */
+.formSection {
+  margin-bottom: 1.5rem;
+}
+
+.formSection:last-child {
+  margin-bottom: 1rem;
+}
+
+/* Better header spacing in modal */
+.formHeaderFriendly {
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+/* Optimize preset buttons for modal width */
+.presetGrid {
+  gap: 0.75rem;
+}
+
+/* Better member grid spacing */
+.membersGridFriendly {
+  gap: 0.875rem;
+}
+
+/* Smoother transitions for better UX */
+/* Note: Global scrollbar styling removed for CSS Modules compatibility */
+
+/* Better form button spacing */
+.formActions {
+  padding-top: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Improved submit button in modal context */
+.submitButton {
+  min-width: 200px;
+  font-size: 1.1rem;
+  padding: 0.875rem 2rem;
+}
+
+/* Better field group spacing */
+.fieldGroup {
+  margin-bottom: 1.25rem;
+}
+
+/* Optimize cost summary display */
+.costSummary {
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }

@@ -57,7 +57,7 @@ export const apiService = {
       totalCost: number
       memberIds: string[]
       costPerMember: number
-      memberPrePays?: { [key: string]: number } // ✅ Add pre-pays
+      memberPrePays?: { [key: string]: { amount: number; category: string } } // ✅ Fix pre-pays structure
     }) {
       const response = await fetch('/api/games', {
         method: 'POST',
@@ -86,7 +86,7 @@ export const apiService = {
       totalCost: number
       memberIds: string[]
       costPerMember: number
-      memberPrePays?: { [key: string]: number }
+      memberPrePays?: { [key: string]: { amount: number; category: string } }
     }) {
       const response = await fetch(`/api/games/${gameId}`, {
         method: 'PUT',

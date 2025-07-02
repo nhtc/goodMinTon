@@ -1,10 +1,8 @@
 /* Member Form Styles */
 .memberFormContainer {
-  max-width: 500px;
   margin: 0;
   padding: 2rem;
   padding-top: 1rem;
-  padding-right: 0rem;
   padding-bottom: 2rem;
   background: #ffffff;
   border-radius: 0 0 20px 20px;
@@ -22,7 +20,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem; /* Reduced from 2rem */
   position: relative;
   z-index: 1;
 }
@@ -35,14 +33,14 @@
 }
 
 .headerIcon {
-  width: 60px;
-  height: 60px;
+  width: 50px; /* Reduced from 60px */
+  height: 50px; /* Reduced from 60px */
   background: linear-gradient(45deg, #ff6b6b, #feca57);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 20px; /* Reduced from 24px */
   box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
   /* Removed infinite float animation for better performance */
   transform: translateZ(0);
@@ -67,10 +65,10 @@
 }
 
 .formTitle {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem; /* Reduced from 1.8rem */
+  font-weight: 600; /* Reduced from 700 */
+  color: #6b7280; /* Lighter color */
+  margin: 0 0 0.25rem 0; /* Reduced bottom margin */
   text-shadow: none;
 }
 

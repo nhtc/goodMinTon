@@ -36,7 +36,8 @@ export async function GET(
         participantId: p.id,
         hasPaid: p.hasPaid,
         paidAt: p.paidAt,
-        prePaid: p.prePaid
+        prePaid: p.prePaid,
+        prePaidCategory: p.prePaidCategory
       }))
     }
 
@@ -129,7 +130,8 @@ export async function PUT(
             gameId,
             memberId,
             hasPaid: false,
-            prePaid: memberPrePays && memberPrePays[memberId] ? memberPrePays[memberId] : 0
+            prePaid: memberPrePays && memberPrePays[memberId] ? (memberPrePays[memberId].amount || 0) : 0,
+            prePaidCategory: memberPrePays && memberPrePays[memberId] ? (memberPrePays[memberId].category || "") : ""
           }))
         })
       }
@@ -155,7 +157,8 @@ export async function PUT(
         participantId: p.id,
         hasPaid: p.hasPaid,
         paidAt: p.paidAt,
-        prePaid: p.prePaid
+        prePaid: p.prePaid,
+        prePaidCategory: p.prePaidCategory
       }))
     }
 

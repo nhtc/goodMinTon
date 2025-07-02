@@ -37,6 +37,58 @@
   will-change: transform;
 }
 
+/* Large Modal Content */
+.contentLarge {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: 950px;
+  max-height: 95vh;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 
+    0 25px 80px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 101;
+  /* Prevent content from affecting layout */
+  contain: layout style paint;
+  /* Ensure the modal doesn't cause layout shifts */
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* Extra Large Modal Content */
+.contentXL {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 95vw;
+  max-width: 1000px;
+  max-height: 90vh;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 
+    0 25px 80px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 101;
+  /* Prevent content from affecting layout */
+  contain: layout style paint;
+  /* Ensure the modal doesn't cause layout shifts */
+  transform-origin: center center;
+  will-change: transform;
+}
+
 /* Modal Header */
 .header {
   display: flex;
@@ -154,12 +206,7 @@
   background: rgba(0, 0, 0, 0.3);
 }
 
-/* Firefox scrollbar for modal body */
-.body,
-.bodyFullHeight {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
-}
+/* Note: scrollbar styling removed for compatibility */
 
 /* Animations */
 @keyframes fadeIn {
@@ -193,9 +240,21 @@
   outline-offset: 2px;
 }
 
+@media (max-width: 1024px) {
+  .contentLarge {
+    max-width: 95vw;
+  }
+  
+  .contentXL {
+    max-width: 90vw;
+  }
+}
+
 /* Responsive design */
 @media (max-width: 640px) {
-  .content {
+  .content,
+  .contentLarge,
+  .contentXL {
     width: 95vw;
     max-height: 90vh;
   }

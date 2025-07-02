@@ -29,7 +29,10 @@ const MembersPage = () => {
   const [showModal, setShowModal] = useState(false)
   const [editingMember, setEditingMember] = useState<Member | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [memberToDelete, setMemberToDelete] = useState<{id: string, name: string} | null>(null)
+  const [memberToDelete, setMemberToDelete] = useState<{
+    id: string
+    name: string
+  } | null>(null)
   const { canEdit, userRole } = usePermissions()
 
   const fetchMembers = async () => {
@@ -94,12 +97,12 @@ const MembersPage = () => {
 
     try {
       setDeleteLoading(memberToDelete.id)
-      const response = await fetch(`/api/members/${memberToDelete.id}`, { 
-        method: "DELETE" 
+      const response = await fetch(`/api/members/${memberToDelete.id}`, {
+        method: "DELETE",
       })
-      
+
       const data = await response.json()
-      
+
       if (!response.ok) {
         if (response.status === 400 && data.gameCount) {
           // Member is in games, show error message
@@ -109,7 +112,7 @@ const MembersPage = () => {
         }
         return
       }
-      
+
       await fetchMembers()
       setShowDeleteConfirm(false)
       setMemberToDelete(null)
@@ -474,14 +477,18 @@ const MembersPage = () => {
             setShowModal(false)
             setEditingMember(null)
           }}
-          showHeader={false}
+          showHeader={true}
+          title={editingMember ? "Chỉnh Sửa Thành Viên" : "Thêm Thành Viên Mới"}
         >
           <Suspense
             fallback={
               <div className={styles.loadingFallback}>Đang tải form...</div>
             }
           >
-            <MemberForm onUpdate={handleMemberUpdate} editingMember={editingMember} />
+            <MemberForm
+              onUpdate={handleMemberUpdate}
+              editingMember={editingMember}
+            />
           </Suspense>
         </Modal>
 
@@ -490,11 +497,15 @@ const MembersPage = () => {
           isOpen={showDeleteConfirm}
           onClose={handleCancelDelete}
           onConfirm={handleConfirmDelete}
-          title="Xóa thành viên"
-          message={memberToDelete ? `Bạn có chắc muốn xóa thành viên "${memberToDelete.name}" không? Hành động này không thể hoàn tác.` : ""}
-          confirmText="Xóa thành viên"
-          cancelText="Hủy bỏ"
-          type="danger"
+          title='Xóa thành viên'
+          message={
+            memberToDelete
+              ? `Bạn có chắc muốn xóa thành viên "${memberToDelete.name}" không? Hành động này không thể hoàn tác.`
+              : ""
+          }
+          confirmText='Xóa thành viên'
+          cancelText='Hủy bỏ'
+          type='danger'
           isLoading={deleteLoading === memberToDelete?.id}
         />
       </div>

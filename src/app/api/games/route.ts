@@ -12,9 +12,14 @@ export async function GET() {
           }
         }
       },
-      orderBy: {
-        date: 'desc'
-      }
+      orderBy: [
+        {
+          createdAt: 'desc'
+        },
+        {
+          date: 'desc'
+        }
+      ]
     })
 
     // Transform the response to include payment and pre-pay data
@@ -25,7 +30,8 @@ export async function GET() {
         participantId: p.id,
         hasPaid: p.hasPaid,
         paidAt: p.paidAt,
-        prePaid: p.prePaid
+        prePaid: p.prePaid,
+        prePaidCategory: p.prePaidCategory
       }))
     }))
 
@@ -81,7 +87,8 @@ export async function POST(request: NextRequest) {
             member: {
               connect: { id: memberId }
             },
-            prePaid: Number(memberPrePays[memberId]) || 0
+            prePaid: Number(memberPrePays[memberId]?.amount) || 0,
+            prePaidCategory: memberPrePays[memberId]?.category || ""
           }))
         }
       },
@@ -102,7 +109,8 @@ export async function POST(request: NextRequest) {
         participantId: p.id,
         hasPaid: p.hasPaid,
         paidAt: p.paidAt,
-        prePaid: p.prePaid
+        prePaid: p.prePaid,
+        prePaidCategory: p.prePaidCategory
       }))
     }
 

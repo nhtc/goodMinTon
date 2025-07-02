@@ -34,9 +34,9 @@ const GameForm: React.FC<GameFormProps> = ({
   const [shuttleCockPrice, setShuttleCockPrice] = useState<number>(15000)
   const [otherFees, setOtherFees] = useState<number>(0)
   const [selectedMembers, setSelectedMembers] = useState<string[]>([])
-  const [memberPrePays, setMemberPrePays] = useState<{ [key: string]: number }>(
-    {}
-  ) // ✅ New state for pre-pays
+  const [memberPrePays, setMemberPrePays] = useState<{
+    [key: string]: { amount: number; category: string }
+  }>({}) // ✅ New state for pre-pays
   const [totalCost, setTotalCost] = useState<number>(0)
   const [costPerMember, setCostPerMember] = useState<number>(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -82,10 +82,15 @@ const GameForm: React.FC<GameFormProps> = ({
         setSelectedMembers(memberIds)
 
         const paymentMap: { [key: string]: boolean } = {}
-        const prePayMap: { [key: string]: number } = {}
+        const prePayMap: {
+          [key: string]: { amount: number; category: string }
+        } = {}
         gameData.participants.forEach((participant: any) => {
           paymentMap[participant.id] = participant.hasPaid || false
-          prePayMap[participant.id] = participant.prePaid || 0 // ✅ Load pre-pays
+          prePayMap[participant.id] = {
+            amount: participant.prePaid || 0,
+            category: participant.prePaidCategory || "",
+          }
         })
         setMemberPaymentStatus(paymentMap)
         setMemberPrePays(prePayMap)
@@ -127,10 +132,18 @@ const GameForm: React.FC<GameFormProps> = ({
   }
 
   // ✅ Handle pre-pay input changes
-  const handlePrePayChange = (memberId: string, amount: number) => {
+  const handlePrePayChange = (
+    memberId: string,
+    amount: number,
+    category?: string
+  ) => {
     setMemberPrePays(prev => ({
       ...prev,
-      [memberId]: Math.max(0, amount), // Ensure non-negative
+      [memberId]: {
+        amount: Math.max(0, amount),
+        category:
+          category !== undefined ? category : prev[memberId]?.category || "",
+      },
     }))
   }
 
@@ -180,16 +193,16 @@ const GameForm: React.FC<GameFormProps> = ({
     selectedMembers,
   ])
 
-  // ✅ Calculate remaining amounts for each member
+  // ✅ Calculate remaining amounts for each member (can be negative if overpaid)
   const getMemberRemainingAmount = (memberId: string) => {
-    const prePay = memberPrePays[memberId] || 0
-    return Math.max(0, costPerMember - prePay)
+    const prePay = memberPrePays[memberId]?.amount || 0
+    return costPerMember - prePay // Allow negative values for overpayment
   }
 
   // ✅ Calculate total pre-paid amount
   const getTotalPrePaid = () => {
     return selectedMembers.reduce((sum, memberId) => {
-      return sum + (memberPrePays[memberId] || 0)
+      return sum + (memberPrePays[memberId]?.amount || 0)
     }, 0)
   }
 
@@ -245,8 +258,9 @@ const GameForm: React.FC<GameFormProps> = ({
       newErrors.shuttleCockPrice = "Giá cầu quá cao (tối đa 100,000đ/quả)"
     }
 
-    if (otherFees < 0) {
-      newErrors.otherFees = "Chi phí khác không được âm"
+    // Validate other fees - now required
+    if (otherFees <= 0) {
+      newErrors.otherFees = "Chi phí khác là bắt buộc"
     }
     if (otherFees > 500000) {
       newErrors.otherFees = "Chi phí khác quá cao (tối đa 500,000đ)"
@@ -259,19 +273,6 @@ const GameForm: React.FC<GameFormProps> = ({
     if (selectedMembers.length > 20) {
       newErrors.members = "Số lượng thành viên quá nhiều (tối đa 20 người)"
     }
-
-    // ✅ Validate pre-pays
-    selectedMembers.forEach(memberId => {
-      const prePay = memberPrePays[memberId] || 0
-      if (prePay > costPerMember) {
-        const member = members.find(m => m.id === memberId)
-        newErrors.prePay = `${
-          member?.name
-        } đã trả trước quá nhiều (${prePay.toLocaleString(
-          "vi-VN"
-        )}đ > ${costPerMember.toLocaleString("vi-VN")}đ)`
-      }
-    })
 
     // Validate total cost
     if (totalCost <= 0) {
@@ -339,6 +340,15 @@ const GameForm: React.FC<GameFormProps> = ({
 
     try {
       if (isEditing && gameData) {
+        // Transform memberPrePays to the format expected by API
+        const apiPrePays: { [key: string]: { amount: number; category: string } } = {}
+        Object.entries(memberPrePays).forEach(([memberId, prePayData]) => {
+          apiPrePays[memberId] = {
+            amount: prePayData.amount,
+            category: prePayData.category
+          }
+        })
+
         // Update existing game
         await apiService.games.update(gameData.id, {
           date,
@@ -350,10 +360,19 @@ const GameForm: React.FC<GameFormProps> = ({
           totalCost,
           memberIds: selectedMembers,
           costPerMember,
-          memberPrePays, // ✅ Include pre-pays
+          memberPrePays: apiPrePays,
         })
         setSuccess("🎉 Cập nhật trận đấu thành công!")
       } else {
+        // Transform memberPrePays to the format expected by API
+        const apiPrePays: { [key: string]: { amount: number; category: string } } = {}
+        Object.entries(memberPrePays).forEach(([memberId, prePayData]) => {
+          apiPrePays[memberId] = {
+            amount: prePayData.amount,
+            category: prePayData.category
+          }
+        })
+
         // Create new game
         await apiService.games.create({
           date,
@@ -365,7 +384,7 @@ const GameForm: React.FC<GameFormProps> = ({
           totalCost,
           memberIds: selectedMembers,
           costPerMember,
-          memberPrePays, // ✅ Include pre-pays
+          memberPrePays: apiPrePays, // ✅ Include pre-pays in correct format
         })
 
         // Reset form for new game
@@ -413,23 +432,6 @@ const GameForm: React.FC<GameFormProps> = ({
 
   return (
     <div className={styles.gameFormContainer}>
-      {/* Friendly Header */}
-      <div className={styles.formHeaderFriendly}>
-        <div className={styles.headerContent}>
-          <div className={styles.headerEmoji}>🏸</div>
-          <div>
-            <h2 className={styles.headerTitle}>
-              {isEditing ? "Chỉnh Sửa Trận Đấu" : "Ghi Nhận Trận Đấu Mới"}
-            </h2>
-            <p className={styles.headerSubtitle}>
-              {isEditing
-                ? "Cập nhật thông tin và theo dõi thanh toán! 💰"
-                : "Hãy điền thông tin về trận cầu lông vừa chơi nhé! 😊"}
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Success Message */}
       {success && (
         <div
@@ -477,6 +479,7 @@ const GameForm: React.FC<GameFormProps> = ({
           </div>
 
           <div className={styles.sectionContent}>
+            {/* Date field - full width */}
             <div className={styles.formRow}>
               <div className={styles.fieldGroup}>
                 <label
@@ -509,7 +512,10 @@ const GameForm: React.FC<GameFormProps> = ({
                   </div>
                 )}
               </div>
+            </div>
 
+            {/* Location field - full width */}
+            <div className={styles.formRow}>
               <div className={styles.fieldGroup}>
                 <label
                   htmlFor='location'
@@ -532,7 +538,7 @@ const GameForm: React.FC<GameFormProps> = ({
                           setErrors(prev => _.omit(prev, "location"))
                       }}
                       className={`${styles.presetCard} ${
-                        location === preset.value ? "selected" : ""
+                        location === preset.value ? styles.selected : ""
                       }`}
                     >
                       <div className={styles.presetIcon}>{preset.icon}</div>
@@ -605,7 +611,7 @@ const GameForm: React.FC<GameFormProps> = ({
                         setErrors(prev => _.omit(prev, "yardCost"))
                     }}
                     className={`${styles.presetCard} ${
-                      yardCost === preset.value ? "selected" : ""
+                      yardCost === preset.value ? styles.selected : ""
                     }`}
                   >
                     <div className={styles.presetIcon}>{preset.icon}</div>
@@ -686,7 +692,7 @@ const GameForm: React.FC<GameFormProps> = ({
                     className={`${styles.presetCard} ${
                       shuttleCockQuantity === preset.quantity &&
                       shuttleCockPrice === preset.price
-                        ? "selected"
+                        ? styles.selected
                         : ""
                     }`}
                   >
@@ -729,7 +735,9 @@ const GameForm: React.FC<GameFormProps> = ({
                             )
                         }}
                         className={`${styles.quantityBtn} ${
-                          shuttleCockQuantity === quantity ? "selected" : ""
+                          shuttleCockQuantity === quantity
+                            ? styles.selected
+                            : ""
                         }`}
                       >
                         {quantity}
@@ -789,7 +797,9 @@ const GameForm: React.FC<GameFormProps> = ({
                       onFocus={e => e.target.select()}
                       onChange={e => {
                         const value = e.target.value.replace(/[^0-9]/g, "") // Only allow numbers
-                        setShuttleCockPrice(value === "" ? 0 : Number(value) * 1000)
+                        setShuttleCockPrice(
+                          value === "" ? 0 : Number(value) * 1000
+                        )
                         if (errors.shuttleCockPrice)
                           setErrors(prev => _.omit(prev, "shuttleCockPrice"))
                       }}
@@ -835,7 +845,7 @@ const GameForm: React.FC<GameFormProps> = ({
               >
                 <span className={styles.labelIcon}>📋</span>
                 <span className={styles.labelText}>Chi phí khác</span>
-                <span className={styles.optionalBadge}>không bắt buộc</span>
+                <span className={styles.requiredStar}>*</span>
               </label>
               <div className={`${styles.inputWrapper} ${styles.money}`}>
                 <div className={styles.inputPrefix}>×1000</div>
@@ -855,7 +865,7 @@ const GameForm: React.FC<GameFormProps> = ({
                   } ${errors.otherFees ? "error" : ""} ${
                     otherFees > 0 ? "filled" : ""
                   }`}
-                  placeholder='0'
+                  placeholder='Nhập chi phí...'
                 />
                 <div className={`${styles.inputSuffix} ${styles.money}`}>đ</div>
                 <div className={styles.inputGlow}></div>
@@ -866,7 +876,10 @@ const GameForm: React.FC<GameFormProps> = ({
                 </div>
               )}
               <div className={styles.fieldTip}>
-                <span>💡 VD: Đậu xe, nước uống, vé vào cổng... (Nhập 50 = 50,000đ)</span>
+                <span>
+                  💡 VD: Đậu xe, nước uống, vé vào cổng... (Nhập 50 = 50,000đ) -
+                  Bắt buộc nhập
+                </span>
               </div>
             </div>
 
@@ -1095,15 +1108,17 @@ const GameForm: React.FC<GameFormProps> = ({
                     const isPaid =
                       memberPaymentStatus[member.id] || member.hasPaid || false
                     const isSelected = selectedMembers.includes(member.id)
-                    const prePay = memberPrePays[member.id] || 0
+                    const prePay = memberPrePays[member.id]?.amount || 0
+                    const prePayCategory =
+                      memberPrePays[member.id]?.category || ""
                     const remaining = getMemberRemainingAmount(member.id)
 
                     return (
                       <div
                         key={member.id}
                         className={`${styles.memberCardFriendly} ${
-                          isSelected ? "selected" : ""
-                        } ${isPaid ? "paid" : ""} ${styles.clickable}`}
+                          isSelected ? styles.selected : ""
+                        } ${isPaid ? styles.paid : ""} ${styles.clickable}`}
                         onClick={() => handleMemberToggle(member.id)}
                       >
                         <input
@@ -1160,11 +1175,41 @@ const GameForm: React.FC<GameFormProps> = ({
                                 Đã trả trước:
                               </span>
                             </label>
+
+                            {/* Pre-pay category quick select buttons */}
+                            <div className={styles.prepayCategoryButtons}>
+                              {["Sân", "Cầu", "Nước"].map(category => (
+                                <button
+                                  key={category}
+                                  type='button'
+                                  onClick={() => {
+                                    handlePrePayChange(
+                                      member.id,
+                                      prePay,
+                                      category
+                                    )
+                                  }}
+                                  className={`${styles.categoryBtn} ${
+                                    prePayCategory === category
+                                      ? styles.selected
+                                      : ""
+                                  }`}
+                                >
+                                  {category === "Sân" && "🏟️"}
+                                  {category === "Cầu" && "🏸"}
+                                  {category === "Nước" && "💧"}
+                                  <span>{category}</span>
+                                </button>
+                              ))}
+                            </div>
+
                             <div className={styles.prepayInputWrapper}>
                               <div className={styles.inputPrefix}>×1000</div>
                               <input
                                 type='text'
-                                value={prePay === 0 ? "" : (prePay / 1000).toString()}
+                                value={
+                                  prePay === 0 ? "" : (prePay / 1000).toString()
+                                }
                                 onFocus={e => e.target.select()}
                                 onChange={e => {
                                   const value = e.target.value.replace(
@@ -1181,12 +1226,35 @@ const GameForm: React.FC<GameFormProps> = ({
                               />
                               <span className={styles.prepaySuffix}>đ</span>
                             </div>
+
+                            {/* Show selected category and remaining amount */}
                             {prePay > 0 && (
-                              <div className={styles.prepayRemaining}>
-                                Còn cần trả:{" "}
-                                <strong>
-                                  {remaining.toLocaleString("vi-VN")}đ
-                                </strong>
+                              <div className={styles.prepayInfo}>
+                                {prePayCategory && (
+                                  <div className={styles.prepayCategory}>
+                                    Trả cho: <strong>{prePayCategory}</strong>
+                                  </div>
+                                )}
+                                <div className={styles.prepayRemaining}>
+                                  {remaining >= 0 ? (
+                                    <>
+                                      Còn cần trả:{" "}
+                                      <strong>
+                                        {remaining.toLocaleString("vi-VN")}đ
+                                      </strong>
+                                    </>
+                                  ) : (
+                                    <>
+                                      Trả thừa:{" "}
+                                      <strong className={styles.overpaid}>
+                                        {Math.abs(remaining).toLocaleString(
+                                          "vi-VN"
+                                        )}
+                                        đ
+                                      </strong>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             )}
                           </div>
@@ -1207,9 +1275,11 @@ const GameForm: React.FC<GameFormProps> = ({
                                     {isPaid ? "Đã trả" : "Chưa trả"}
                                   </span>
                                   <span className={styles.paymentAmount}>
-                                    {remaining > 0
+                                    {remaining >= 0
                                       ? `${remaining.toLocaleString("vi-VN")}đ`
-                                      : "Hoàn thành"}
+                                      : `Trả thừa ${Math.abs(
+                                          remaining
+                                        ).toLocaleString("vi-VN")}đ`}
                                   </span>
                                   <div className={styles.viewOnlyBadge}>
                                     👁️ Chỉ xem
@@ -1222,7 +1292,7 @@ const GameForm: React.FC<GameFormProps> = ({
                                   type='button'
                                   onClick={() => handlePaymentToggle(member.id)}
                                   className={`${styles.paymentToggleBtn} ${
-                                    isPaid ? "paid" : "unpaid"
+                                    isPaid ? styles.paid : styles.unpaid
                                   }`}
                                   title={
                                     isPaid
@@ -1237,9 +1307,11 @@ const GameForm: React.FC<GameFormProps> = ({
                                     {isPaid ? "Đã trả" : "Chưa trả"}
                                   </div>
                                   <div className={styles.paymentAmount}>
-                                    {remaining > 0
+                                    {remaining >= 0
                                       ? `${remaining.toLocaleString("vi-VN")}đ`
-                                      : "Hoàn thành"}
+                                      : `Trả thừa ${Math.abs(
+                                          remaining
+                                        ).toLocaleString("vi-VN")}đ`}
                                   </div>
                                 </button>
                               </div>

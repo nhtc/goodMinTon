@@ -31,14 +31,16 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Vietnamese phone number validation
-  const validateVietnamesePhone = (phoneNumber: string): { isValid: boolean; message: string } => {
+  const validateVietnamesePhone = (
+    phoneNumber: string
+  ): { isValid: boolean; message: string } => {
     if (!phoneNumber.trim()) {
       return { isValid: true, message: "" } // Phone is optional
     }
 
     // Remove all non-digit characters
     const cleanPhone = phoneNumber.replace(/\D/g, "")
-    
+
     // Vietnamese phone number patterns
     const patterns = [
       /^(84|0)(3[2-9]|5[689]|7[06-9]|8[1-9]|9[0-9])\d{7}$/, // Mobile numbers
@@ -47,14 +49,17 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
     ]
 
     const isValid = patterns.some(pattern => pattern.test(cleanPhone))
-    
+
     if (!isValid) {
       if (cleanPhone.length < 9) {
         return { isValid: false, message: "Số điện thoại quá ngắn" }
       } else if (cleanPhone.length > 11) {
         return { isValid: false, message: "Số điện thoại quá dài" }
-      } else if (!cleanPhone.startsWith('84') && !cleanPhone.startsWith('0')) {
-        return { isValid: false, message: "Số điện thoại phải bắt đầu bằng 0 hoặc 84" }
+      } else if (!cleanPhone.startsWith("84") && !cleanPhone.startsWith("0")) {
+        return {
+          isValid: false,
+          message: "Số điện thoại phải bắt đầu bằng 0 hoặc 84",
+        }
       } else {
         return { isValid: false, message: "Số điện thoại không hợp lệ" }
       }
@@ -79,12 +84,12 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setPhone(value)
-    
+
     // Clear general error when user starts typing
     if (error && error.includes("điện thoại")) {
       setError("")
     }
-    
+
     // Validate phone number
     const validation = validateVietnamesePhone(value)
     setPhoneError(validation.isValid ? "" : validation.message)
@@ -192,9 +197,11 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
     }
 
     try {
-      const url = isEditing ? `/api/members/${editingMember!.id}` : "/api/members"
+      const url = isEditing
+        ? `/api/members/${editingMember!.id}`
+        : "/api/members"
       const method = isEditing ? "PUT" : "POST"
-      
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -209,7 +216,9 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || `Failed to ${isEditing ? 'update' : 'create'} member`)
+        throw new Error(
+          data.error || `Failed to ${isEditing ? "update" : "create"} member`
+        )
       }
 
       // Success
@@ -218,16 +227,25 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
         setPhone("")
         setNameExists(false)
       }
-      setSuccess(isEditing ? "🎉 Cập nhật thành viên thành công!" : "🎉 Thêm thành viên thành công!")
+      setSuccess(
+        isEditing
+          ? "🎉 Cập nhật thành viên thành công!"
+          : "🎉 Thêm thành viên thành công!"
+      )
       onUpdate()
 
       setTimeout(() => setSuccess(""), 4000)
     } catch (error) {
-      console.error(`Error ${isEditing ? 'updating' : 'creating'} member:`, error)
+      console.error(
+        `Error ${isEditing ? "updating" : "creating"} member:`,
+        error
+      )
       setError(
         error instanceof Error
           ? error.message
-          : `Không thể ${isEditing ? 'cập nhật' : 'thêm'} thành viên. Vui lòng thử lại!`
+          : `Không thể ${
+              isEditing ? "cập nhật" : "thêm"
+            } thành viên. Vui lòng thử lại!`
       )
     } finally {
       setIsSubmitting(false)
@@ -249,10 +267,9 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
             {isEditing ? "Chỉnh Sửa Thành Viên" : "Thêm Thành viên Mới"}
           </h2>
           <p className={styles.formSubtitle}>
-            {isEditing 
+            {isEditing
               ? "Cập nhật thông tin thành viên câu lạc bộ cầu lông"
-              : "Mời thêm thành viên mới vào câu lạc bộ cầu lông của bạn"
-            }
+              : "Mời thêm thành viên mới vào câu lạc bộ cầu lông của bạn"}
           </p>
         </div>
       </div>
@@ -374,22 +391,20 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
                 onChange={handlePhoneChange}
                 className={`${styles.formInput} ${
                   phoneError ? styles.error : ""
-                } ${
-                  phone.trim() && !phoneError ? styles.filled : ""
-                }`}
+                } ${phone.trim() && !phoneError ? styles.filled : ""}`}
                 placeholder='VD: 0912345678 hoặc 84912345678'
                 disabled={isSubmitting}
                 maxLength={15}
               />
               <div className={styles.inputBorder}></div>
-              
+
               {/* Phone validation icons */}
               {phoneError && (
                 <div className={`${styles.inputIcon} ${styles.error}`}>
                   <span>✕</span>
                 </div>
               )}
-              
+
               {phone.trim() && !phoneError && (
                 <div className={`${styles.inputIcon} ${styles.success}`}>
                   <span>✓</span>
@@ -446,12 +461,18 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
               {isSubmitting ? (
                 <>
                   <div className={styles.btnSpinner}></div>
-                  <span>{isEditing ? "Đang cập nhật..." : "Đang thêm thành viên..."}</span>
+                  <span>
+                    {isEditing ? "Đang cập nhật..." : "Đang thêm thành viên..."}
+                  </span>
                 </>
               ) : (
                 <>
-                  <span className={styles.btnIcon}>{isEditing ? "✏️" : "➕"}</span>
-                  <span>{isEditing ? "Cập nhật thành viên" : "Thêm thành viên"}</span>
+                  <span className={styles.btnIcon}>
+                    {isEditing ? "✏️" : "➕"}
+                  </span>
+                  <span>
+                    {isEditing ? "Cập nhật thành viên" : "Thêm thành viên"}
+                  </span>
                 </>
               )}
             </span>

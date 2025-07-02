@@ -8,6 +8,8 @@ interface ModalProps {
   children: React.ReactNode
   title?: string
   showHeader?: boolean
+  size?: "default" | "large" | "xl"
+  customWidth?: string
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -16,6 +18,8 @@ const Modal: React.FC<ModalProps> = ({
   children,
   title,
   showHeader = true,
+  size = "default",
+  customWidth,
 }) => {
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -50,11 +54,26 @@ const Modal: React.FC<ModalProps> = ({
     }
   }
 
+  // Get modal size class
+  const getSizeClass = () => {
+    switch (size) {
+      case "large":
+        return styles.contentLarge
+      case "xl":
+        return styles.contentXL
+      default:
+        return styles.content
+    }
+  }
+
+  // Custom inline styles if customWidth is provided
+  const customStyles = customWidth ? { maxWidth: customWidth } : {}
+
   return (
     <Dialog.Root open={isOpen} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className={styles.overlay} />
-        <Dialog.Content className={styles.content}>
+        <Dialog.Content className={getSizeClass()} style={customStyles}>
           {/* Always render close button outside of scrollable content */}
           <Dialog.Close asChild>
             <button

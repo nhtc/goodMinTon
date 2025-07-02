@@ -1,10 +1,42 @@
 "use client"
 import React, { useEffect, useRef } from "react"
 import Link from "next/link"
+import { TypeAnimation } from "react-type-animation"
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts"
+import CountUp from "react-countup"
 import styles from "./page.module.css"
 
 const HomePage = () => {
   const observerRef = useRef<IntersectionObserver | null>(null)
+
+  // Sample data for charts
+  const monthlyData = [
+    { name: "T1", games: 24, members: 45 },
+    { name: "T2", games: 32, members: 52 },
+    { name: "T3", games: 28, members: 48 },
+    { name: "T4", games: 35, members: 58 },
+    { name: "T5", games: 42, members: 65 },
+    { name: "T6", games: 38, members: 62 },
+  ]
+
+  const costData = [
+    { name: "Sân cầu", value: 65, color: "#4ade80" },
+    { name: "Cầu lông", value: 25, color: "#60a5fa" },
+    { name: "Khác", value: 10, color: "#f59e0b" },
+  ]
+
+  const COLORS = ["#4ade80", "#60a5fa", "#f59e0b"]
 
   useEffect(() => {
     // Intersection Observer for smooth scroll animations
@@ -38,13 +70,118 @@ const HomePage = () => {
       {/* Hero Section */}
       <div className={styles.heroSection}>
         <div className='container mx-auto px-6 py-20'>
-          <div
-            className={`text-center text-white mb-20 ${styles.animateOnScroll}`}
-          >
-            <h1 className={styles.heroTitle}>
-              Tính tiền
-              <span className={styles.heroHighlight}> Cầu Lông</span>
+          <div className={`text-center  mb-20 ${styles.animateOnScroll}`}>
+            <h1 className={`${styles.heroTitle} ${styles.colorfulText}`}>
+              <TypeAnimation
+                sequence={[
+                  'Tính tiền Cầu Lông', // Type this text
+                  2000, // Wait 2 seconds
+                  'Quản lý Club dễ dàng', // Type this text
+                  2000, // Wait 2 seconds
+                  'Tính tiền Cầu Lông', // Back to main text
+                ]}
+                wrapper="span"
+                cursor={true}
+                repeat={Infinity}
+                style={{
+                  fontSize: 'inherit',
+                  fontWeight: 'inherit',
+                  background: 'inherit',
+                  WebkitBackgroundClip: 'inherit',
+                  WebkitTextFillColor: 'inherit',
+                  backgroundClip: 'inherit',
+                  display: 'inline-block',
+                }}
+              />
             </h1>
+          </div>
+
+          {/* Statistics Section */}
+          <div className={`${styles.statsSection} ${styles.animateOnScroll}`}>
+            <div className={styles.statsGrid}>
+              <div className={styles.statCard}>
+                <div className={styles.statIcon}>🏸</div>
+                <div className={styles.statNumber}>
+                  <CountUp end={247} duration={2.5} />
+                </div>
+                <div className={styles.statLabel}>Trận đấu hoàn thành</div>
+              </div>
+
+              <div className={styles.statCard}>
+                <div className={styles.statIcon}>👥</div>
+                <div className={styles.statNumber}>
+                  <CountUp end={89} duration={2.5} />
+                </div>
+                <div className={styles.statLabel}>Thành viên tích cực</div>
+              </div>
+
+              <div className={styles.statCard}>
+                <div className={styles.statIcon}>💰</div>
+                <div className={styles.statNumber}>
+                  <CountUp end={12500000} duration={2.5} separator=',' />₫
+                </div>
+                <div className={styles.statLabel}>Tổng chi phí quản lý</div>
+              </div>
+
+              <div className={styles.statCard}>
+                <div className={styles.statIcon}>📈</div>
+                <div className={styles.statNumber}>
+                  <CountUp end={95} duration={2.5} />%
+                </div>
+                <div className={styles.statLabel}>Mức độ hài lòng</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Charts Section */}
+          <div className={`${styles.chartsSection} ${styles.animateOnScroll}`}>
+            <div className={styles.chartsGrid}>
+              <div className={styles.chartCard}>
+                <h3 className={styles.chartTitle}>📊 Hoạt động theo tháng</h3>
+                <div className={styles.chartContainer}>
+                  <ResponsiveContainer width='100%' height={300}>
+                    <BarChart data={monthlyData}>
+                      <CartesianGrid strokeDasharray='3 3' />
+                      <XAxis dataKey='name' />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey='games' fill='#4ade80' name='Trận đấu' />
+                      <Bar dataKey='members' fill='#60a5fa' name='Thành viên' />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className={styles.chartCard}>
+                <h3 className={styles.chartTitle}>💸 Phân bổ chi phí</h3>
+                <div className={styles.chartContainer}>
+                  <ResponsiveContainer width='100%' height={300}>
+                    <PieChart>
+                      <Pie
+                        data={costData}
+                        cx='50%'
+                        cy='50%'
+                        labelLine={false}
+                        label={({ name, percent }) =>
+                          `${name} ${((percent || 0) * 100).toFixed(0)}%`
+                        }
+                        outerRadius={80}
+                        fill='#8884d8'
+                        dataKey='value'
+                      >
+                        {costData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Feature Cards */}
@@ -129,6 +266,122 @@ const HomePage = () => {
                 <Link href='/members' className={styles.quickActionBtn}>
                   <span>👤</span>
                   <span>Thêm người</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* System Features Overview */}
+          <div className={`${styles.infoSection} ${styles.animateOnScroll}`}>
+            <div className={styles.infoGrid}>
+              <div className={styles.infoCard}>
+                <h3 className={styles.infoTitle}>🎯 Tính năng chính</h3>
+                <ul className={styles.featureList}>
+                  <li>✅ Quản lý thành viên (thêm/sửa/xóa)</li>
+                  <li>✅ Ghi lại chi tiết từng trận đấu</li>
+                  <li>✅ Tự động chia tiền theo số người chơi</li>
+                  <li>✅ Theo dõi thanh toán realtime</li>
+                  <li>✅ Tạo QR code chuyển khoản</li>
+                  <li>✅ Báo cáo thống kê chi tiết</li>
+                </ul>
+              </div>
+
+              <div className={styles.infoCard}>
+                <h3 className={styles.infoTitle}>📋 Hướng dẫn sử dụng</h3>
+                <div className={styles.stepsList}>
+                  <div className={styles.step}>
+                    <span className={styles.stepNumber}>1</span>
+                    <span>Thêm thành viên vào hệ thống</span>
+                  </div>
+                  <div className={styles.step}>
+                    <span className={styles.stepNumber}>2</span>
+                    <span>Tạo trận đấu mới với chi phí</span>
+                  </div>
+                  <div className={styles.step}>
+                    <span className={styles.stepNumber}>3</span>
+                    <span>Chọn người tham gia</span>
+                  </div>
+                  <div className={styles.step}>
+                    <span className={styles.stepNumber}>4</span>
+                    <span>Chia sẻ QR thanh toán</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.infoCard}>
+                <h3 className={styles.infoTitle}>💡 Mẹo sử dụng</h3>
+                <div className={styles.tipsList}>
+                  <div className={styles.tip}>
+                    <span className={styles.tipIcon}>🏸</span>
+                    <span>Nhập "Chi phí khác" cho nước uống, vợt dự phòng</span>
+                  </div>
+                  <div className={styles.tip}>
+                    <span className={styles.tipIcon}>💰</span>
+                    <span>Hệ thống tự động chia đều tiền cho tất cả thành viên</span>
+                  </div>
+                  <div className={styles.tip}>
+                    <span className={styles.tipIcon}>📱</span>
+                    <span>QR code có thể mở trực tiếp app ngân hàng</span>
+                  </div>
+                  <div className={styles.tip}>
+                    <span className={styles.tipIcon}>👥</span>
+                    <span>Theo dõi ai đã thanh toán, ai chưa thanh toán</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Demo Preview Section */}
+          <div className={`${styles.demoSection} ${styles.animateOnScroll}`}>
+            <div className={styles.demoContent}>
+              <h2 className={styles.demoTitle}>🎮 Xem trước Demo</h2>
+              <p className={styles.demoDescription}>
+                Khám phá giao diện và tính năng của hệ thống qua các màn hình demo
+              </p>
+              
+              <div className={styles.demoGrid}>
+                <div className={styles.demoCard}>
+                  <div className={styles.demoImage}>👥</div>
+                  <h3 className={styles.demoCardTitle}>Quản lý Thành viên</h3>
+                  <p className={styles.demoCardDesc}>Thêm, sửa, xóa thành viên. Tìm kiếm nhanh và quản lý thông tin liên lạc.</p>
+                  <div className={styles.demoStats}>
+                    <span className={styles.demoStat}>📊 89 thành viên</span>
+                    <span className={styles.demoStat}>⚡ Tìm kiếm realtime</span>
+                  </div>
+                </div>
+
+                <div className={styles.demoCard}>
+                  <div className={styles.demoImage}>📅</div>
+                  <h3 className={styles.demoCardTitle}>Lịch sử Game</h3>
+                  <p className={styles.demoCardDesc}>Ghi lại từng trận đấu với chi phí sân, cầu, và các khoản phụ thu.</p>
+                  <div className={styles.demoStats}>
+                    <span className={styles.demoStat}>🏸 247 trận đấu</span>
+                    <span className={styles.demoStat}>💰 12.5M đã quản lý</span>
+                  </div>
+                </div>
+
+                <div className={styles.demoCard}>
+                  <div className={styles.demoImage}>💳</div>
+                  <h3 className={styles.demoCardTitle}>Thanh toán QR</h3>
+                  <p className={styles.demoCardDesc}>Tạo QR code tự động, kết nối app ngân hàng, theo dõi thanh toán.</p>
+                  <div className={styles.demoStats}>
+                    <span className={styles.demoStat}>📱 Mở app ngân hàng</span>
+                    <span className={styles.demoStat}>✅ Theo dõi realtime</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.demoActions}>
+                <Link href="/login" className={styles.demoButton}>
+                  <span>🔑</span>
+                  <span>Đăng nhập Admin</span>
+                  <small>(admin / password123)</small>
+                </Link>
+                <Link href="/members" className={styles.demoButton}>
+                  <span>👀</span>
+                  <span>Xem chế độ khách</span>
+                  <small>(Chỉ xem, không chỉnh sửa)</small>
                 </Link>
               </div>
             </div>
