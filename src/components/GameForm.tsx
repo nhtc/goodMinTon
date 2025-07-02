@@ -341,11 +341,13 @@ const GameForm: React.FC<GameFormProps> = ({
     try {
       if (isEditing && gameData) {
         // Transform memberPrePays to the format expected by API
-        const apiPrePays: { [key: string]: { amount: number; category: string } } = {}
+        const apiPrePays: {
+          [key: string]: { amount: number; category: string }
+        } = {}
         Object.entries(memberPrePays).forEach(([memberId, prePayData]) => {
           apiPrePays[memberId] = {
             amount: prePayData.amount,
-            category: prePayData.category
+            category: prePayData.category,
           }
         })
 
@@ -365,11 +367,13 @@ const GameForm: React.FC<GameFormProps> = ({
         setSuccess("🎉 Cập nhật trận đấu thành công!")
       } else {
         // Transform memberPrePays to the format expected by API
-        const apiPrePays: { [key: string]: { amount: number; category: string } } = {}
+        const apiPrePays: {
+          [key: string]: { amount: number; category: string }
+        } = {}
         Object.entries(memberPrePays).forEach(([memberId, prePayData]) => {
           apiPrePays[memberId] = {
             amount: prePayData.amount,
-            category: prePayData.category
+            category: prePayData.category,
           }
         })
 

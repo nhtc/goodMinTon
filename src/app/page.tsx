@@ -74,23 +74,23 @@ const HomePage = () => {
             <h1 className={`${styles.heroTitle} ${styles.colorfulText}`}>
               <TypeAnimation
                 sequence={[
-                  'Tính tiền Cầu Lông', // Type this text
+                  "Tính tiền Cầu Lông", // Type this text
                   2000, // Wait 2 seconds
-                  'Quản lý Club dễ dàng', // Type this text
+                  "Quản lý Club dễ dàng", // Type this text
                   2000, // Wait 2 seconds
-                  'Tính tiền Cầu Lông', // Back to main text
+                  "Tính tiền Cầu Lông", // Back to main text
                 ]}
-                wrapper="span"
+                wrapper='span'
                 cursor={true}
                 repeat={Infinity}
                 style={{
-                  fontSize: 'inherit',
-                  fontWeight: 'inherit',
-                  background: 'inherit',
-                  WebkitBackgroundClip: 'inherit',
-                  WebkitTextFillColor: 'inherit',
-                  backgroundClip: 'inherit',
-                  display: 'inline-block',
+                  fontSize: "inherit",
+                  fontWeight: "inherit",
+                  background: "inherit",
+                  WebkitBackgroundClip: "inherit",
+                  WebkitTextFillColor: "inherit",
+                  backgroundClip: "inherit",
+                  display: "inline-block",
                 }}
               />
             </h1>
@@ -317,7 +317,9 @@ const HomePage = () => {
                   </div>
                   <div className={styles.tip}>
                     <span className={styles.tipIcon}>💰</span>
-                    <span>Hệ thống tự động chia đều tiền cho tất cả thành viên</span>
+                    <span>
+                      Hệ thống tự động chia đều tiền cho tất cả thành viên
+                    </span>
                   </div>
                   <div className={styles.tip}>
                     <span className={styles.tipIcon}>📱</span>
@@ -337,24 +339,33 @@ const HomePage = () => {
             <div className={styles.demoContent}>
               <h2 className={styles.demoTitle}>🎮 Xem trước Demo</h2>
               <p className={styles.demoDescription}>
-                Khám phá giao diện và tính năng của hệ thống qua các màn hình demo
+                Khám phá giao diện và tính năng của hệ thống qua các màn hình
+                demo
               </p>
-              
+
               <div className={styles.demoGrid}>
                 <div className={styles.demoCard}>
                   <div className={styles.demoImage}>👥</div>
                   <h3 className={styles.demoCardTitle}>Quản lý Thành viên</h3>
-                  <p className={styles.demoCardDesc}>Thêm, sửa, xóa thành viên. Tìm kiếm nhanh và quản lý thông tin liên lạc.</p>
+                  <p className={styles.demoCardDesc}>
+                    Thêm, sửa, xóa thành viên. Tìm kiếm nhanh và quản lý thông
+                    tin liên lạc.
+                  </p>
                   <div className={styles.demoStats}>
                     <span className={styles.demoStat}>📊 89 thành viên</span>
-                    <span className={styles.demoStat}>⚡ Tìm kiếm realtime</span>
+                    <span className={styles.demoStat}>
+                      ⚡ Tìm kiếm realtime
+                    </span>
                   </div>
                 </div>
 
                 <div className={styles.demoCard}>
                   <div className={styles.demoImage}>📅</div>
                   <h3 className={styles.demoCardTitle}>Lịch sử Game</h3>
-                  <p className={styles.demoCardDesc}>Ghi lại từng trận đấu với chi phí sân, cầu, và các khoản phụ thu.</p>
+                  <p className={styles.demoCardDesc}>
+                    Ghi lại từng trận đấu với chi phí sân, cầu, và các khoản phụ
+                    thu.
+                  </p>
                   <div className={styles.demoStats}>
                     <span className={styles.demoStat}>🏸 247 trận đấu</span>
                     <span className={styles.demoStat}>💰 12.5M đã quản lý</span>
@@ -364,21 +375,26 @@ const HomePage = () => {
                 <div className={styles.demoCard}>
                   <div className={styles.demoImage}>💳</div>
                   <h3 className={styles.demoCardTitle}>Thanh toán QR</h3>
-                  <p className={styles.demoCardDesc}>Tạo QR code tự động, kết nối app ngân hàng, theo dõi thanh toán.</p>
+                  <p className={styles.demoCardDesc}>
+                    Tạo QR code tự động, kết nối app ngân hàng, theo dõi thanh
+                    toán.
+                  </p>
                   <div className={styles.demoStats}>
                     <span className={styles.demoStat}>📱 Mở app ngân hàng</span>
-                    <span className={styles.demoStat}>✅ Theo dõi realtime</span>
+                    <span className={styles.demoStat}>
+                      ✅ Theo dõi realtime
+                    </span>
                   </div>
                 </div>
               </div>
 
               <div className={styles.demoActions}>
-                <Link href="/login" className={styles.demoButton}>
+                <Link href='/login' className={styles.demoButton}>
                   <span>🔑</span>
                   <span>Đăng nhập Admin</span>
                   <small>(admin / password123)</small>
                 </Link>
-                <Link href="/members" className={styles.demoButton}>
+                <Link href='/members' className={styles.demoButton}>
                   <span>👀</span>
                   <span>Xem chế độ khách</span>
                   <small>(Chỉ xem, không chỉnh sửa)</small>
