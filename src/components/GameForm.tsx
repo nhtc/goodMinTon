@@ -188,7 +188,9 @@ const GameForm: React.FC<GameFormProps> = ({
     setTotalCost(total)
 
     if (selectedMembers.length > 0) {
-      setCostPerMember(Math.round(total / selectedMembers.length))
+      const costPerMemberExact = total / selectedMembers.length
+      // Round up to the nearest 1000
+      setCostPerMember(Math.ceil(costPerMemberExact / 1000) * 1000)
     } else {
       setCostPerMember(0)
     }
