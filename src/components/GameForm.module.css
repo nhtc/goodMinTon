@@ -1052,8 +1052,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1rem;
-  max-height: 600px; /* Increased height for expanded cards */
-  overflow-y: auto;
   padding: 0.5rem;
   /* Smooth scrolling */
   scroll-behavior: smooth;
@@ -1331,7 +1329,6 @@
 }
 
 .prepayRemaining {
-  margin-top: 0.5rem;
   color: rgba(255, 255, 255, 0.8);
   font-size: 0.85rem;
 }
@@ -2519,7 +2516,8 @@
 }
 
 .prepayInfo {
-  font-size: 10px;
+  font-size: 15px;
+  margin-top: 5px;
 }
 
 /* ===== MODAL CONTEXT OPTIMIZATIONS ===== */

@@ -137,14 +137,25 @@ const GameForm: React.FC<GameFormProps> = ({
     amount: number,
     category?: string
   ) => {
-    setMemberPrePays(prev => ({
-      ...prev,
-      [memberId]: {
-        amount: Math.max(0, amount),
-        category:
-          category !== undefined ? category : prev[memberId]?.category || "",
-      },
-    }))
+    setMemberPrePays(prev => {
+      const currentCategory = prev[memberId]?.category || ""
+
+      // If category is provided, toggle it (uncheck if same, set if different)
+      const newCategory =
+        category !== undefined
+          ? category === currentCategory
+            ? ""
+            : category
+          : currentCategory
+
+      return {
+        ...prev,
+        [memberId]: {
+          amount: Math.max(0, amount),
+          category: newCategory,
+        },
+      }
+    })
   }
 
   const handlePaymentToggle = async (memberId: string) => {
@@ -1236,7 +1247,15 @@ const GameForm: React.FC<GameFormProps> = ({
                               <div className={styles.prepayInfo}>
                                 {prePayCategory && (
                                   <div className={styles.prepayCategory}>
-                                    Trả cho: <strong>{prePayCategory}</strong>
+                                    Trả cho:{" "}
+                                    {prePayCategory === "Sân"
+                                      ? "🏟️"
+                                      : prePayCategory === "Cầu"
+                                      ? "🏸"
+                                      : prePayCategory === "Nước"
+                                      ? "💧"
+                                      : ""}
+                                    <strong> {prePayCategory}</strong>
                                   </div>
                                 )}
                                 <div className={styles.prepayRemaining}>
