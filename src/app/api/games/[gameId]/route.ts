@@ -98,7 +98,7 @@ export async function PUT(
     const shuttleCockCost = (shuttleCockQuantity || 0) * (shuttleCockPrice || 0)
     const totalCost = (yardCost || 0) + shuttleCockCost + (otherFees || 0)
     const costPerMember = memberIds && memberIds.length > 0 
-      ? totalCost / memberIds.length 
+      ? Math.ceil((totalCost / memberIds.length) / 1000) * 1000
       : 0
 
     // Update game details
