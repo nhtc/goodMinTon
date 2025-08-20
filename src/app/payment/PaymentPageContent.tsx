@@ -51,6 +51,7 @@ const PaymentPageContent = () => {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [memberOutstandingAmount, setMemberOutstandingAmount] =
     useState<number>(0)
+  const [unpaidGames, setUnpaidGames] = useState<Game[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string>("")
 
@@ -81,6 +82,7 @@ const PaymentPageContent = () => {
     const calculateOutstandingAmount = async () => {
       if (!selectedMember) {
         setMemberOutstandingAmount(0)
+        setUnpaidGames([])
         return
       }
 
@@ -93,19 +95,27 @@ const PaymentPageContent = () => {
         const games: Game[] = await response.json()
 
         let totalOutstanding = 0
+        const memberUnpaidGames: Game[] = []
+        
         games.forEach(game => {
           const participation = game.participants.find(
             p => p.id === selectedMember.id
           )
           if (participation && !participation.hasPaid) {
-            totalOutstanding += game.costPerMember - participation.prePaid
+            const gameOutstanding = game.costPerMember - participation.prePaid
+            if (gameOutstanding > 0) {
+              totalOutstanding += gameOutstanding
+              memberUnpaidGames.push(game)
+            }
           }
         })
 
         setMemberOutstandingAmount(totalOutstanding)
+        setUnpaidGames(memberUnpaidGames)
       } catch (error) {
         console.error("Error calculating outstanding amount:", error)
         setMemberOutstandingAmount(0)
+        setUnpaidGames([])
       }
     }
 
@@ -114,14 +124,15 @@ const PaymentPageContent = () => {
 
   // Update payment info when member is selected
   useEffect(() => {
-    if (selectedMember) {
+    if (selectedMember && unpaidGames.length > 0) {
+      const paymentContent = generatePaymentContent(selectedMember, unpaidGames)
       setPaymentInfo(prev => ({
         ...prev,
         amount: memberOutstandingAmount,
-        content: `${selectedMember.name.toUpperCase()} TRA TIEN CAU LONG`,
+        content: paymentContent,
       }))
     }
-  }, [selectedMember, memberOutstandingAmount])
+  }, [selectedMember, memberOutstandingAmount, unpaidGames])
 
   // Get amount and content from URL params (fallback if no member selected)
   useEffect(() => {
@@ -180,7 +191,7 @@ const PaymentPageContent = () => {
 
     // VietQR universal banking URL format
     const amount = memberOutstandingAmount
-    const content = `Thanh toan cau long - ${selectedMember.name}`
+    const content = generatePaymentContent(selectedMember, unpaidGames)
 
     // VietQR format that works with most Vietnamese banking apps
     const vietQRUrl = `https://qr.sepay.vn/img?acc=${
@@ -221,31 +232,30 @@ const PaymentPageContent = () => {
 
         // Fallback: If banking app is not installed, open browser after delay
         setTimeout(() => {
+          const content = generatePaymentContent(selectedMember, unpaidGames)
           const fallbackUrl = `https://qr.sepay.vn/img?acc=${
             paymentInfo.accountNumber
-          }&bank=970436&amount=${memberOutstandingAmount}&des=${encodeURIComponent(
-            `Thanh toan cau long - ${selectedMember.name}`
-          )}`
+          }&bank=970436&amount=${memberOutstandingAmount}&des=${encodeURIComponent(content)}`
           window.open(fallbackUrl, "_blank")
         }, 1500)
       } else {
         // For desktop, open QR page in new tab
+        const content = generatePaymentContent(selectedMember, unpaidGames)
         const fallbackUrl = `https://qr.sepay.vn/img?acc=${
           paymentInfo.accountNumber
-        }&bank=970436&amount=${memberOutstandingAmount}&des=${encodeURIComponent(
-          `Thanh toan cau long - ${selectedMember.name}`
-        )}`
+        }&bank=970436&amount=${memberOutstandingAmount}&des=${encodeURIComponent(content)}`
         window.open(fallbackUrl, "_blank")
       }
     } catch (error) {
       console.error("Error opening banking app:", error)
       // Final fallback - copy payment info to clipboard
+      const content = generatePaymentContent(selectedMember, unpaidGames)
       const paymentDetails = `
 Ngân hàng: ${paymentInfo.bankName}
 Số tài khoản: ${paymentInfo.accountNumber}
 Chủ tài khoản: ${paymentInfo.accountHolder}
 Số tiền: ${formatCurrency(memberOutstandingAmount)}
-Nội dung: Thanh toan cau long - ${selectedMember.name}
+Nội dung: ${content}
       `.trim()
 
       copyToClipboard(paymentDetails, "paymentDetails")
@@ -272,6 +282,42 @@ Nội dung: Thanh toan cau long - ${selectedMember.name}
       style: "currency",
       currency: "VND",
     }).format(amount)
+  }
+
+  // Generate payment content with match dates
+  const generatePaymentContent = (member: Member, games: Game[]) => {
+    if (!member || games.length === 0) return "Thanh toan cau long"
+
+    const memberName = member.name.toUpperCase()
+    
+    if (games.length === 1) {
+      // Single game payment - include the specific day and month
+      const game = games[0]
+      const gameDate = new Date(game.date)
+      const day = gameDate.getDate()
+      const month = gameDate.getMonth() + 1 // getMonth() returns 0-11, so add 1
+      return `${memberName} - CL - ${day}.${month}`
+    } else {
+      // Multiple games - show day.month numbers separated by commas
+      const dayMonths = games
+        .map(game => {
+          const gameDate = new Date(game.date)
+          const day = gameDate.getDate()
+          const month = gameDate.getMonth() + 1
+          return `${day}.${month}`
+        })
+        .sort((a, b) => {
+          // Sort by month first, then by day
+          const [dayA, monthA] = a.split('.').map(Number)
+          const [dayB, monthB] = b.split('.').map(Number)
+          if (monthA !== monthB) return monthA - monthB
+          return dayA - dayB
+        })
+        .filter((dayMonth, index, arr) => arr.indexOf(dayMonth) === index) // Remove duplicates if any
+      
+      const dayMonthsList = dayMonths.join(', ')
+      return `${memberName} - CL - ${dayMonthsList}`
+    }
   }
 
   return (
@@ -365,6 +411,43 @@ Nội dung: Thanh toan cau long - ${selectedMember.name}
                           {formatCurrency(memberOutstandingAmount)}
                         </span>
                       </div>
+                      
+                      {/* Unpaid Games Breakdown */}
+                      {unpaidGames.length > 0 && (
+                        <div className={styles.unpaidGamesBreakdown}>
+                          <div className={styles.breakdownHeader}>
+                            <span className={styles.breakdownIcon}>📋</span>
+                            <span className={styles.breakdownTitle}>
+                              Chi tiết các trận chưa thanh toán ({unpaidGames.length} trận):
+                            </span>
+                          </div>
+                          <div className={styles.gamesList}>
+                            {unpaidGames.slice(0, 5).map((game, index) => {
+                              const participation = game.participants.find(p => p.id === selectedMember.id)
+                              const gameAmount = participation ? game.costPerMember - participation.prePaid : game.costPerMember
+                              const gameDate = new Date(game.date).toLocaleDateString("vi-VN", {
+                                weekday: "short",
+                                day: "2-digit",
+                                month: "2-digit"
+                              })
+                              
+                              return (
+                                <div key={game.id} className={styles.gameItem}>
+                                  <span className={styles.gameDate}>📅 {gameDate}</span>
+                                  <span className={styles.gameAmount}>
+                                    {formatCurrency(gameAmount)}
+                                  </span>
+                                </div>
+                              )
+                            })}
+                            {unpaidGames.length > 5 && (
+                              <div className={styles.moreGames}>
+                                + {unpaidGames.length - 5} trận khác...
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
