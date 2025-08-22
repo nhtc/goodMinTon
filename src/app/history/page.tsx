@@ -19,6 +19,7 @@ interface Member {
   id: string
   name: string
   phone?: string
+  avatar?: string
   participantId?: string // For payment tracking
   hasPaid?: boolean // Payment status
   paidAt?: string // Payment timestamp
@@ -750,7 +751,24 @@ const HistoryPage = () => {
                                   <div
                                     className={styles.participantAvatarSmall}
                                   >
-                                    {participant.name.charAt(0).toUpperCase()}
+                                    {participant.avatar ? (
+                                      <img 
+                                        src={participant.avatar} 
+                                        alt={`${participant.name}'s avatar`}
+                                        className={styles.participantAvatarImage}
+                                        onError={(e) => {
+                                          e.currentTarget.style.display = 'none';
+                                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (fallback) fallback.style.display = 'flex';
+                                        }}
+                                      />
+                                    ) : null}
+                                    <div 
+                                      className={styles.participantAvatarFallback}
+                                      style={{ display: participant.avatar ? 'none' : 'flex' }}
+                                    >
+                                      {participant.name.charAt(0).toUpperCase()}
+                                    </div>
                                   </div>
                                   <div className={styles.participantInfoSmall}>
                                     <div
@@ -1154,7 +1172,24 @@ const HistoryPage = () => {
                                   title={`QR thanh toán cho ${participant.name}`}
                                 >
                                   <div className={styles.memberQrAvatar}>
-                                    {participant.name.charAt(0).toUpperCase()}
+                                    {participant.avatar ? (
+                                      <img 
+                                        src={participant.avatar} 
+                                        alt={`${participant.name}'s avatar`}
+                                        className={styles.memberQrAvatarImage}
+                                        onError={(e) => {
+                                          e.currentTarget.style.display = 'none';
+                                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (fallback) fallback.style.display = 'flex';
+                                        }}
+                                      />
+                                    ) : null}
+                                    <div 
+                                      className={styles.memberQrAvatarFallback}
+                                      style={{ display: participant.avatar ? 'none' : 'flex' }}
+                                    >
+                                      {participant.name.charAt(0).toUpperCase()}
+                                    </div>
                                   </div>
                                   <div className={styles.memberQrInfo}>
                                     <div className={styles.memberQrName}>
@@ -1201,7 +1236,24 @@ const HistoryPage = () => {
                         >
                           <div className={styles.participantInfoWrapper}>
                             <div className={styles.participantAvatarLarge}>
-                              {participant.name.charAt(0).toUpperCase()}
+                              {participant.avatar ? (
+                                <img 
+                                  src={participant.avatar} 
+                                  alt={`${participant.name}'s avatar`}
+                                  className={styles.participantAvatarLargeImage}
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                    if (fallback) fallback.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null}
+                              <div 
+                                className={styles.participantAvatarLargeFallback}
+                                style={{ display: participant.avatar ? 'none' : 'flex' }}
+                              >
+                                {participant.name.charAt(0).toUpperCase()}
+                              </div>
                             </div>
                             <div className={styles.participantInfo}>
                               <div className={styles.participantName}>

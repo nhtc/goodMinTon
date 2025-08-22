@@ -9,6 +9,7 @@ interface Member {
   id: string
   name: string
   phone?: string
+  avatar?: string
   isActive?: boolean
   participantId?: string // For existing games
   hasPaid?: boolean // Payment status
@@ -1217,7 +1218,24 @@ const GameForm: React.FC<GameFormProps> = ({
                         />
                         <div className={styles.memberSelector}>
                           <div className={styles.memberAvatarFriendly}>
-                            {member.name.charAt(0).toUpperCase()}
+                            {member.avatar ? (
+                              <img 
+                                src={member.avatar} 
+                                alt={`${member.name}'s avatar`}
+                                className={styles.memberAvatarImage}
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                  if (fallback) fallback.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
+                            <div 
+                              className={styles.memberAvatarFallback}
+                              style={{ display: member.avatar ? 'none' : 'flex' }}
+                            >
+                              {member.name.charAt(0).toUpperCase()}
+                            </div>
                           </div>
                           <div className={styles.memberInfoFriendly}>
                             <div className={styles.memberNameFriendly}>

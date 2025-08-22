@@ -2,6 +2,7 @@ export interface Member {
     id: string;
     name: string;
     phone?: string;
+    avatar?: string; // URL for member avatar image
     isActive: boolean;
     createdAt: string;
     updatedAt: string;

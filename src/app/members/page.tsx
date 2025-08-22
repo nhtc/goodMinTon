@@ -18,6 +18,7 @@ interface Member {
   name: string
   email?: string
   phone?: string
+  avatar?: string
   isActive: boolean
   createdAt: string
 }
@@ -431,7 +432,25 @@ const MembersPage = () => {
                     {/* Member Avatar */}
                     <div className={styles.memberAvatar}>
                       <div className={styles.avatarCircle}>
-                        {member.name.charAt(0).toUpperCase()}
+                        {member.avatar ? (
+                          <img 
+                            src={member.avatar} 
+                            alt={`${member.name}'s avatar`}
+                            className={styles.avatarImage}
+                            onError={(e) => {
+                              // Fallback to initials if image fails to load
+                              e.currentTarget.style.display = 'none';
+                              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div 
+                          className={styles.avatarFallback}
+                          style={{ display: member.avatar ? 'none' : 'flex' }}
+                        >
+                          {member.name.charAt(0).toUpperCase()}
+                        </div>
                       </div>
                       <div
                         className={`${styles.memberStatus} ${styles.online}`}

@@ -95,7 +95,7 @@ export async function PUT(
     const params = await context.params
     const { id } = params
     const body = await request.json()
-    const { name, email, phone, isActive } = body
+    const { name, email, phone, avatar, isActive } = body
 
     if (!id) {
       return NextResponse.json(
@@ -119,7 +119,8 @@ export async function PUT(
     // Prepare update data
     const updateData: any = {
       name: name?.trim() || existingMember.name,
-      phone: phone?.trim() || existingMember.phone
+      phone: phone?.trim() || existingMember.phone,
+      avatar: avatar?.trim() || (existingMember as any).avatar
     }
 
     // Only update isActive if explicitly provided

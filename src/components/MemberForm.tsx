@@ -2,12 +2,14 @@
 import { withAuth } from "@/components/AuthorizedComponent"
 import React, { useState, useEffect, useRef } from "react"
 import styles from "./MemberForm.module.css"
+import { getConsistentAvatar } from "@/utils/avatar"
 
 interface Member {
   id: string
   name: string
   email?: string
   phone?: string
+  avatar?: string
   isActive: boolean
   createdAt: string
 }
@@ -21,6 +23,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
   const [name, setName] = useState(editingMember?.name || "")
   const [phone, setPhone] = useState(editingMember?.phone || "")
   const [isActive, setIsActive] = useState(editingMember?.isActive ?? true)
+  const [avatarUrl, setAvatarUrl] = useState(editingMember?.avatar || "")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCheckingName, setIsCheckingName] = useState(false)
   const [error, setError] = useState("")
@@ -76,12 +79,23 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
       setName(editingMember.name)
       setPhone(editingMember.phone || "")
       setIsActive(editingMember.isActive ?? true)
+      setAvatarUrl(editingMember.avatar || "")
       setError("")
       setSuccess("")
       setNameExists(false)
       setPhoneError("")
     }
   }, [editingMember])
+
+  // Generate avatar preview when name changes
+  useEffect(() => {
+    if (name.trim().length >= 2) {
+      const generatedAvatar = getConsistentAvatar(name.trim())
+      setAvatarUrl(generatedAvatar)
+    } else {
+      setAvatarUrl("")
+    }
+  }, [name])
 
   // Handle phone number changes with validation
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -213,6 +227,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
         body: JSON.stringify({
           name: name.trim(),
           phone: phone.trim() || undefined,
+          avatar: avatarUrl || getConsistentAvatar(name.trim()),
           isActive,
         }),
       })
@@ -280,6 +295,32 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
           </p>
         </div>
       </div>
+
+      {/* Avatar Preview */}
+      {avatarUrl && (
+        <div className={styles.avatarPreview}>
+          <div className={styles.avatarContainer}>
+            <img 
+              src={avatarUrl} 
+              alt={`Avatar for ${name}`}
+              className={styles.avatarImage}
+              onError={(e) => {
+                // Fallback to initials avatar if image fails to load
+                e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=200&background=6366f1&color=fff&bold=true`;
+              }}
+            />
+            <div className={styles.avatarOverlay}>
+              <span className={styles.avatarLabel}>Preview</span>
+            </div>
+          </div>
+          <div className={styles.avatarInfo}>
+            <p className={styles.avatarTitle}>🎨 Avatar được tạo tự động</p>
+            <p className={styles.avatarDescription}>
+              Avatar sẽ được tạo dựa trên tên của bạn và sẽ luôn giống nhau cho cùng một tên.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Success Message */}
       {success && (

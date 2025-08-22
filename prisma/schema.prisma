@@ -12,6 +12,7 @@ model Member {
   id        String   @id @default(cuid())
   name      String   @unique
   phone     String?
+  avatar    String?  // URL for member avatar image
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

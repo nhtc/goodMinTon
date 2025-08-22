@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     console.log('Received request body:', body)
     
-    const { name, phone, isActive = true } = body
+    const { name, phone, avatar, isActive = true } = body
 
     // Validate required fields
     if (!name || typeof name !== 'string') {
@@ -50,6 +50,14 @@ export async function POST(request: NextRequest) {
     if (phone && typeof phone !== 'string') {
       return NextResponse.json(
         { error: 'Phone must be a string' },
+        { status: 400 }
+      )
+    }
+
+    // Validate avatar if provided
+    if (avatar && typeof avatar !== 'string') {
+      return NextResponse.json(
+        { error: 'Avatar must be a string URL' },
         { status: 400 }
       )
     }
@@ -79,6 +87,7 @@ export async function POST(request: NextRequest) {
     console.log('Creating member with data:', {
       name: name.trim(),
       phone: phone?.trim() || null,
+      avatar: avatar?.trim() || null,
       isActive
     })
 
@@ -87,6 +96,7 @@ export async function POST(request: NextRequest) {
       data: {
         name: name.trim(),
         phone: phone?.trim() || null,
+        avatar: avatar?.trim() || null,
         isActive
       } as any
     })
