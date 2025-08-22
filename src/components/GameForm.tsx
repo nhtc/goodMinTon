@@ -9,6 +9,7 @@ interface Member {
   id: string
   name: string
   phone?: string
+  isActive?: boolean
   participantId?: string // For existing games
   hasPaid?: boolean // Payment status
   paidAt?: string // Payment timestamp
@@ -37,6 +38,9 @@ const GameForm: React.FC<GameFormProps> = ({
   const [memberPrePays, setMemberPrePays] = useState<{
     [key: string]: { amount: number; category: string }
   }>({}) // ✅ New state for pre-pays
+  const [memberCustomAmounts, setMemberCustomAmounts] = useState<{
+    [key: string]: number
+  }>({}) // ✅ New state for extra amounts per member (added to equal share)
   const [totalCost, setTotalCost] = useState<number>(0)
   const [costPerMember, setCostPerMember] = useState<number>(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -85,15 +89,21 @@ const GameForm: React.FC<GameFormProps> = ({
         const prePayMap: {
           [key: string]: { amount: number; category: string }
         } = {}
+        const customAmountMap: { [key: string]: number } = {}
+        
         gameData.participants.forEach((participant: any) => {
           paymentMap[participant.id] = participant.hasPaid || false
           prePayMap[participant.id] = {
             amount: participant.prePaid || 0,
             category: participant.prePaidCategory || "",
           }
+          if (participant.customAmount) {
+            customAmountMap[participant.id] = participant.customAmount
+          }
         })
         setMemberPaymentStatus(paymentMap)
         setMemberPrePays(prePayMap)
+        setMemberCustomAmounts(customAmountMap)
       }
     }
   }, [isEditing, gameData])
@@ -110,6 +120,13 @@ const GameForm: React.FC<GameFormProps> = ({
           const newPrePays = { ...prevPrePays }
           delete newPrePays[memberId]
           return newPrePays
+        })
+        
+        // Clear custom amount for unselected members
+        setMemberCustomAmounts(prevCustomAmounts => {
+          const newCustomAmounts = { ...prevCustomAmounts }
+          delete newCustomAmounts[memberId]
+          return newCustomAmounts
         })
       }
 
@@ -129,6 +146,15 @@ const GameForm: React.FC<GameFormProps> = ({
   const clearAllMembers = () => {
     setSelectedMembers([])
     setMemberPrePays({}) // Clear all pre-pays when clearing members
+    setMemberCustomAmounts({}) // Clear all custom amounts when clearing members
+  }
+
+  // ✅ Handle custom amount changes
+  const handleCustomAmountChange = (memberId: string, amount: number) => {
+    setMemberCustomAmounts(prev => ({
+      ...prev,
+      [memberId]: Math.max(0, amount)
+    }))
   }
 
   // ✅ Handle pre-pay input changes
@@ -188,6 +214,7 @@ const GameForm: React.FC<GameFormProps> = ({
     setTotalCost(total)
 
     if (selectedMembers.length > 0) {
+      // Always calculate equal share - this is the base amount for everyone
       const costPerMemberExact = total / selectedMembers.length
       // Round up to the nearest 1000
       setCostPerMember(Math.ceil(costPerMemberExact / 1000) * 1000)
@@ -209,7 +236,12 @@ const GameForm: React.FC<GameFormProps> = ({
   // ✅ Calculate remaining amounts for each member (can be negative if overpaid)
   const getMemberRemainingAmount = (memberId: string) => {
     const prePay = memberPrePays[memberId]?.amount || 0
-    return costPerMember - prePay // Allow negative values for overpayment
+    
+    // Always start with equal share, then add any extra amount
+    const extraAmount = memberCustomAmounts[memberId] || 0
+    const totalAmountForMember = costPerMember + extraAmount
+    
+    return totalAmountForMember - prePay
   }
 
   // ✅ Calculate total pre-paid amount
@@ -223,6 +255,21 @@ const GameForm: React.FC<GameFormProps> = ({
   const getTotalRemaining = () => {
     return selectedMembers.reduce((sum, memberId) => {
       return sum + getMemberRemainingAmount(memberId)
+    }, 0)
+  }
+
+  // ✅ Calculate total custom amounts
+  const getTotalCustomAmounts = () => {
+    return selectedMembers.reduce((sum, memberId) => {
+      return sum + (memberCustomAmounts[memberId] || 0)
+    }, 0)
+  }
+
+  // ✅ Calculate total amount including base shares and extra amounts
+  const getTotalExpectedAmount = () => {
+    return selectedMembers.reduce((sum, memberId) => {
+      const extraAmount = memberCustomAmounts[memberId] || 0
+      return sum + costPerMember + extraAmount
     }, 0)
   }
 
@@ -376,6 +423,7 @@ const GameForm: React.FC<GameFormProps> = ({
           memberIds: selectedMembers,
           costPerMember,
           memberPrePays: apiPrePays,
+          memberCustomAmounts: memberCustomAmounts, // These are extra amounts, not total amounts
         })
         setSuccess("🎉 Cập nhật trận đấu thành công!")
       } else {
@@ -402,6 +450,7 @@ const GameForm: React.FC<GameFormProps> = ({
           memberIds: selectedMembers,
           costPerMember,
           memberPrePays: apiPrePays, // ✅ Include pre-pays in correct format
+          memberCustomAmounts: memberCustomAmounts, // These are extra amounts, not total amounts
         })
 
         // Reset form for new game
@@ -413,6 +462,7 @@ const GameForm: React.FC<GameFormProps> = ({
         setOtherFees(0)
         setSelectedMembers([])
         setMemberPrePays({}) // ✅ Reset pre-pays
+        setMemberCustomAmounts({}) // ✅ Reset custom amounts
         setSearchTerm("")
         setErrors({})
         setMemberPaymentStatus({})
@@ -436,9 +486,11 @@ const GameForm: React.FC<GameFormProps> = ({
     }
   }
 
-  const filteredMembers = members.filter(member =>
-    member.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredMembers = members
+    .filter(member => member.isActive !== false) // Only show active members (default true for existing members)
+    .filter(member =>
+      member.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
 
   // Calculate payment statistics
   const paidCount = Object.values(memberPaymentStatus).filter(
@@ -950,9 +1002,27 @@ const GameForm: React.FC<GameFormProps> = ({
                   {selectedMembers.length > 0 && (
                     <div className={styles.costPerPerson}>
                       <span className={styles.personIcon}>👤</span>
-                      <span className={styles.personLabel}>Mỗi người:</span>
+                      <span className={styles.personLabel}>Mỗi người (chia đều):</span>
                       <span className={styles.personValue}>
                         {costPerMember.toLocaleString("vi-VN")}đ
+                      </span>
+                    </div>
+                  )}
+                  {selectedMembers.length > 0 && getTotalCustomAmounts() > 0 && (
+                    <div className={styles.costPerPerson}>
+                      <span className={styles.personIcon}>💰</span>
+                      <span className={styles.personLabel}>Tổng phụ phí:</span>
+                      <span className={styles.personValue}>
+                        +{getTotalCustomAmounts().toLocaleString("vi-VN")}đ
+                      </span>
+                    </div>
+                  )}
+                  {selectedMembers.length > 0 && getTotalCustomAmounts() > 0 && (
+                    <div className={styles.costPerPerson}>
+                      <span className={styles.personIcon}>🧾</span>
+                      <span className={styles.personLabel}>Tổng thu dự kiến:</span>
+                      <span className={styles.personValue}>
+                        {getTotalExpectedAmount().toLocaleString("vi-VN")}đ
                       </span>
                     </div>
                   )}
@@ -1243,45 +1313,112 @@ const GameForm: React.FC<GameFormProps> = ({
                               />
                               <span className={styles.prepaySuffix}>đ</span>
                             </div>
+                          </div>
+                        )}
 
-                            {/* Show selected category and remaining amount */}
-                            {prePay > 0 && (
-                              <div className={styles.prepayInfo}>
-                                {prePayCategory && (
-                                  <div className={styles.prepayCategory}>
-                                    Trả cho:{" "}
-                                    {prePayCategory === "Sân"
-                                      ? "🏟️"
-                                      : prePayCategory === "Cầu"
-                                      ? "🏸"
-                                      : prePayCategory === "Nước"
-                                      ? "💧"
-                                      : ""}
-                                    <strong> {prePayCategory}</strong>
-                                  </div>
-                                )}
-                                <div className={styles.prepayRemaining}>
-                                  {remaining >= 0 ? (
-                                    <>
-                                      Còn cần trả:{" "}
-                                      <strong>
-                                        {remaining.toLocaleString("vi-VN")}đ
-                                      </strong>
-                                    </>
-                                  ) : (
-                                    <>
-                                      Trả thừa:{" "}
-                                      <strong className={styles.overpaid}>
-                                        {Math.abs(remaining).toLocaleString(
-                                          "vi-VN"
-                                        )}
-                                        đ
-                                      </strong>
-                                    </>
-                                  )}
-                                </div>
+                        {/* ✅ Extra Amount input for selected members */}
+                        {isSelected && (
+                          <div
+                            className={styles.customAmountSection}
+                            onClick={e => e.stopPropagation()} // Prevent card click
+                          >
+                            <label className={styles.customAmountLabel}>
+                              <span className={styles.customAmountIcon}>💰</span>
+                              <span className={styles.customAmountText}>
+                                Phụ phí thêm:
+                              </span>
+                            </label>
+
+                            <div className={styles.customAmountInputWrapper}>
+                              <div className={styles.inputPrefix}>×1000</div>
+                              <input
+                                type='text'
+                                value={
+                                  (memberCustomAmounts[member.id] || 0) === 0 
+                                    ? "" 
+                                    : ((memberCustomAmounts[member.id] || 0) / 1000).toString()
+                                }
+                                onFocus={e => e.target.select()}
+                                onChange={e => {
+                                  const value = e.target.value.replace(
+                                    /[^0-9]/g,
+                                    ""
+                                  ) // Only allow numbers
+                                  setMemberCustomAmounts(prev => ({
+                                    ...prev,
+                                    [member.id]: value === "" ? 0 : Number(value) * 1000
+                                  }))
+                                }}
+                                className={styles.customAmountInput}
+                                placeholder='0'
+                              />
+                              <span className={styles.customAmountSuffix}>đ</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* ✅ Combined Financial Breakdown - Show once per selected member */}
+                        {isSelected && (
+                          <div className={styles.memberFinancialBreakdown}>
+                            <h4 className={styles.breakdownTitle}>
+                              <span>💰</span>
+                              Chi tiết thanh toán
+                            </h4>
+                            
+                            <div className={styles.breakdownItems}>
+                              {/* Base equal share - always show */}
+                              <div className={styles.breakdownItem}>
+                                <span className={styles.breakdownLabel}>Phần chia đều:</span>
+                                <span className={`${styles.breakdownValue} ${styles.base}`}>
+                                  <strong>{costPerMember.toLocaleString("vi-VN")}đ</strong>
+                                </span>
                               </div>
-                            )}
+
+                              {/* Extra fees - show if any */}
+                              {memberCustomAmounts[member.id] > 0 && (
+                                <div className={styles.breakdownItem}>
+                                  <span className={styles.breakdownLabel}>Phụ phí thêm:</span>
+                                  <span className={`${styles.breakdownValue} ${styles.positive}`}>
+                                    <strong>+{(memberCustomAmounts[member.id] || 0).toLocaleString("vi-VN")}đ</strong>
+                                  </span>
+                                </div>
+                              )}
+                            
+                              {/* Prepaid amount - show if any */}
+                              {prePay > 0 && (
+                                <>
+                                  {prePayCategory && (
+                                    <div className={styles.breakdownCategory}>
+                                      <span className={styles.categoryIcon}>
+                                        {prePayCategory === "Sân" ? "🏟️" : prePayCategory === "Cầu" ? "🏸" : prePayCategory === "Nước" ? "💧" : "💸"}
+                                      </span>
+                                      <span className={styles.categoryText}>Đã trả cho: <strong>{prePayCategory}</strong></span>
+                                    </div>
+                                  )}
+                                  <div className={styles.breakdownItem}>
+                                    <span className={styles.breakdownLabel}>Đã trả trước:</span>
+                                    <span className={`${styles.breakdownValue} ${styles.negative}`}>
+                                      <strong>-{prePay.toLocaleString("vi-VN")}đ</strong>
+                                    </span>
+                                  </div>
+                                </>
+                              )}
+
+                              {/* Final remaining amount */}
+                              <div className={`${styles.breakdownItem} ${styles.total}`}>
+                                <span className={styles.breakdownLabel}>
+                                  {remaining >= 0 ? "Còn phải trả:" : "Trả thừa:"}
+                                </span>
+                                <span className={`${styles.breakdownValue} ${remaining >= 0 ? styles.remaining : styles.overpaid}`}>
+                                  <strong>
+                                    {remaining >= 0 
+                                      ? `${remaining.toLocaleString("vi-VN")}đ`
+                                      : `${Math.abs(remaining).toLocaleString("vi-VN")}đ`
+                                    }
+                                  </strong>
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         )}
 

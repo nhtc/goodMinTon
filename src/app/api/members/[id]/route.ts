@@ -95,7 +95,7 @@ export async function PUT(
     const params = await context.params
     const { id } = params
     const body = await request.json()
-    const { name, email, phone } = body
+    const { name, email, phone, isActive } = body
 
     if (!id) {
       return NextResponse.json(
@@ -116,13 +116,21 @@ export async function PUT(
       )
     }
 
+    // Prepare update data
+    const updateData: any = {
+      name: name?.trim() || existingMember.name,
+      phone: phone?.trim() || existingMember.phone
+    }
+
+    // Only update isActive if explicitly provided
+    if (isActive !== undefined) {
+      updateData.isActive = isActive
+    }
+
     // Update the member
     const updatedMember = await prisma.member.update({
       where: { id },
-      data: {
-        name: name?.trim() || existingMember.name,
-        phone: phone?.trim() || existingMember.phone
-      }
+      data: updateData
     })
 
     return NextResponse.json(updatedMember)

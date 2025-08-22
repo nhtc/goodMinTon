@@ -37,7 +37,8 @@ export async function GET(
         hasPaid: p.hasPaid,
         paidAt: p.paidAt,
         prePaid: p.prePaid,
-        prePaidCategory: p.prePaidCategory
+        prePaidCategory: p.prePaidCategory,
+        customAmount: p.customAmount
       }))
     }
 
@@ -56,10 +57,14 @@ export async function PUT(
   request: NextRequest,
   context: { params: Promise<{ gameId: string }> }
 ) {
+  const startTime = Date.now()
+  console.log('🚀 Starting game update...')
+  
   try {
     const params = await context.params
     const { gameId } = params
     const body = await request.json()
+    console.log(`📊 Parse time: ${Date.now() - startTime}ms`)
     
     const {
       date,
@@ -69,7 +74,8 @@ export async function PUT(
       shuttleCockPrice,
       otherFees,
       memberIds,
-      memberPrePays
+      memberPrePays,
+      memberCustomAmounts = {}
     } = body
 
     if (!gameId) {
@@ -79,6 +85,7 @@ export async function PUT(
       )
     }
 
+    const fetchStartTime = Date.now()
     // Check if game exists
     const existingGame = await prisma.game.findUnique({
       where: { id: gameId },
@@ -86,6 +93,7 @@ export async function PUT(
         participants: true
       }
     })
+    console.log(`🔍 Fetch existing game: ${Date.now() - fetchStartTime}ms`)
 
     if (!existingGame) {
       return NextResponse.json(
@@ -101,70 +109,122 @@ export async function PUT(
       ? Math.ceil((totalCost / memberIds.length) / 1000) * 1000
       : 0
 
-    // Update game details
-    const updatedGame = await prisma.game.update({
-      where: { id: gameId },
-      data: {
-        date: date ? new Date(date) : existingGame.date,
-        location: location !== undefined ? location : existingGame.location,
-        yardCost: yardCost !== undefined ? yardCost : existingGame.yardCost,
-        shuttleCockQuantity: shuttleCockQuantity !== undefined ? shuttleCockQuantity : existingGame.shuttleCockQuantity,
-        shuttleCockPrice: shuttleCockPrice !== undefined ? shuttleCockPrice : existingGame.shuttleCockPrice,
-        otherFees: otherFees !== undefined ? otherFees : existingGame.otherFees,
-        totalCost,
-        costPerMember
-      }
-    })
-
-    // Update participants if provided
-    if (memberIds) {
-      // Remove existing participants
-      await prisma.gameParticipant.deleteMany({
-        where: { gameId }
+    const transactionStartTime = Date.now()
+    
+    // For remote DB, minimize transaction complexity and DB calls
+    console.log('🌐 Using remote DB - optimizing for network latency...')
+    
+    // Strategy: Single efficient update transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Update game details (required)
+      await tx.game.update({
+        where: { id: gameId },
+        data: {
+          date: date ? new Date(date) : existingGame.date,
+          location: location !== undefined ? location : existingGame.location,
+          yardCost: yardCost !== undefined ? yardCost : existingGame.yardCost,
+          shuttleCockQuantity: shuttleCockQuantity !== undefined ? shuttleCockQuantity : existingGame.shuttleCockQuantity,
+          shuttleCockPrice: shuttleCockPrice !== undefined ? shuttleCockPrice : existingGame.shuttleCockPrice,
+          otherFees: otherFees !== undefined ? otherFees : existingGame.otherFees,
+          totalCost,
+          costPerMember
+        }
       })
 
-      // Add new participants
-      if (memberIds.length > 0) {
-        await prisma.gameParticipant.createMany({
-          data: memberIds.map((memberId: string) => ({
-            gameId,
-            memberId,
-            hasPaid: false,
-            prePaid: memberPrePays && memberPrePays[memberId] ? (memberPrePays[memberId].amount || 0) : 0,
-            prePaidCategory: memberPrePays && memberPrePays[memberId] ? (memberPrePays[memberId].category || "") : ""
-          }))
-        })
-      }
-    }
-
-    // Fetch updated game with participants
-    const gameWithParticipants = await prisma.game.findUnique({
-      where: { id: gameId },
-      include: {
-        participants: {
-          include: {
-            member: true
+      // 2. Handle participants efficiently - only if changed
+      if (memberIds) {
+        const currentMemberIds = new Set(existingGame.participants.map(p => p.memberId))
+        const newMemberIds = new Set(memberIds)
+        
+        // Quick check if anything changed
+        const hasChanges = currentMemberIds.size !== newMemberIds.size || 
+                          Array.from(currentMemberIds).some(id => !newMemberIds.has(id))
+        
+        if (hasChanges) {
+          // Batch operation: delete all and recreate (fewer DB calls for remote DB)
+          const paymentMap = new Map(existingGame.participants.map(p => [p.memberId, p]))
+          
+          await tx.gameParticipant.deleteMany({ where: { gameId } })
+          
+          if (memberIds.length > 0) {
+            await tx.gameParticipant.createMany({
+              data: memberIds.map((memberId: string) => {
+                const existing = paymentMap.get(memberId)
+                return {
+                  gameId,
+                  memberId,
+                  hasPaid: existing?.hasPaid || false,
+                  paidAt: existing?.paidAt || null,
+                  prePaid: memberPrePays?.[memberId]?.amount || existing?.prePaid || 0,
+                  prePaidCategory: memberPrePays?.[memberId]?.category || existing?.prePaidCategory || "",
+                  customAmount: Number(memberCustomAmounts[memberId]) || (existing as any)?.customAmount || 0
+                }
+              })
+            })
+          }
+        } else if (memberPrePays || memberCustomAmounts) {
+          // Only update pre-pays and custom amounts for unchanged participants (batch update)
+          const updates = existingGame.participants
+            .filter(p => memberPrePays?.[p.memberId] || memberCustomAmounts?.[p.memberId] !== undefined)
+            .map(p => ({
+              where: { id: p.id },
+              data: {
+                prePaid: memberPrePays?.[p.memberId]?.amount ?? p.prePaid,
+                prePaidCategory: memberPrePays?.[p.memberId]?.category ?? p.prePaidCategory,
+                customAmount: Number(memberCustomAmounts[p.memberId]) || (p as any).customAmount || 0
+              }
+            }))
+          
+          // Execute updates in parallel (but limit concurrency for remote DB)
+          const BATCH_SIZE = 5
+          for (let i = 0; i < updates.length; i += BATCH_SIZE) {
+            const batch = updates.slice(i, i + BATCH_SIZE)
+            await Promise.all(batch.map(update => 
+              tx.gameParticipant.update(update)
+            ))
           }
         }
       }
-    })
 
+      // 3. Return result in same transaction (single query)
+      return await tx.game.findUnique({
+        where: { id: gameId },
+        include: {
+          participants: {
+            include: { member: true }
+          }
+        }
+      })
+    }, {
+      timeout: 15000, // Increase timeout for remote DB
+      maxWait: 5000,  // Max wait time to acquire transaction
+    })
+    
+    console.log(`🏁 Remote DB transaction: ${Date.now() - transactionStartTime}ms`)
+
+    const transformStartTime = Date.now()
     // Transform the response
     const transformedGame = {
-      ...gameWithParticipants,
-      participants: gameWithParticipants?.participants.map((p: any) => ({
+      ...result,
+      participants: result?.participants.map((p: any) => ({
         ...p.member,
         participantId: p.id,
         hasPaid: p.hasPaid,
         paidAt: p.paidAt,
         prePaid: p.prePaid,
-        prePaidCategory: p.prePaidCategory
+        prePaidCategory: p.prePaidCategory,
+        customAmount: p.customAmount
       }))
     }
+    console.log(`🔄 Transform response: ${Date.now() - transformStartTime}ms`)
+
+    const endTime = Date.now()
+    console.log(`✅ Total game update: ${endTime - startTime}ms`)
 
     return NextResponse.json(transformedGame)
   } catch (error) {
-    console.error('Error updating game:', error)
+    const endTime = Date.now()
+    console.error(`❌ Game update failed after ${endTime - startTime}ms:`, error)
     return NextResponse.json(
       { error: 'Failed to update game' },
       { status: 500 }

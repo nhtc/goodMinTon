@@ -31,7 +31,8 @@ export async function GET() {
         hasPaid: p.hasPaid,
         paidAt: p.paidAt,
         prePaid: p.prePaid,
-        prePaidCategory: p.prePaidCategory
+        prePaidCategory: p.prePaidCategory,
+        customAmount: p.customAmount
       }))
     }))
 
@@ -59,7 +60,8 @@ export async function POST(request: NextRequest) {
       totalCost,
       memberIds,
       costPerMember,
-      memberPrePays = {}
+      memberPrePays = {},
+      memberCustomAmounts = {}
     } = body
 
     // Validate required fields
@@ -70,7 +72,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create game with participants including pre-pays
+    // Create game with participants including pre-pays and custom amounts
     const game = await prisma.game.create({
       data: {
         date: new Date(date),
@@ -88,7 +90,8 @@ export async function POST(request: NextRequest) {
               connect: { id: memberId }
             },
             prePaid: Number(memberPrePays[memberId]?.amount) || 0,
-            prePaidCategory: memberPrePays[memberId]?.category || ""
+            prePaidCategory: memberPrePays[memberId]?.category || "",
+            customAmount: Number(memberCustomAmounts[memberId]) || 0 // Extra amount on top of equal share
           }))
         }
       },
@@ -101,7 +104,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Transform response to include pre-pay data
+    // Transform response to include pre-pay and custom amount data
     const transformedGame = {
       ...game,
       participants: game.participants.map((p: any) => ({
@@ -110,7 +113,8 @@ export async function POST(request: NextRequest) {
         hasPaid: p.hasPaid,
         paidAt: p.paidAt,
         prePaid: p.prePaid,
-        prePaidCategory: p.prePaidCategory
+        prePaidCategory: p.prePaidCategory,
+        customAmount: p.customAmount
       }))
     }
 

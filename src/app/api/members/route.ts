@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '../../../lib/prisma'
 import { Prisma } from '@prisma/client'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const url = new URL(request.url)
+    const activeOnly = url.searchParams.get('activeOnly') === 'true'
+    
     const members = await prisma.member.findMany({
+      where: activeOnly ? ({ isActive: true } as any) : undefined,
       orderBy: {
         createdAt: 'desc'
       }
@@ -24,7 +28,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     console.log('Received request body:', body)
     
-    const { name, phone } = body
+    const { name, phone, isActive = true } = body
 
     // Validate required fields
     if (!name || typeof name !== 'string') {
@@ -50,6 +54,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate isActive if provided
+    if (isActive !== undefined && typeof isActive !== 'boolean') {
+      return NextResponse.json(
+        { error: 'isActive must be a boolean' },
+        { status: 400 }
+      )
+    }
+
     // Check if member with this name already exists
     const existingMember = await prisma.member.findUnique({
       where: { 
@@ -66,15 +78,17 @@ export async function POST(request: NextRequest) {
 
     console.log('Creating member with data:', {
       name: name.trim(),
-      phone: phone?.trim() || null
+      phone: phone?.trim() || null,
+      isActive
     })
 
     // Create new member
     const member = await prisma.member.create({
       data: {
         name: name.trim(),
-        phone: phone?.trim() || null
-      }
+        phone: phone?.trim() || null,
+        isActive
+      } as any
     })
 
     console.log('Member created successfully:', member)

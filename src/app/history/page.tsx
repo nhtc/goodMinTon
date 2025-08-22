@@ -131,7 +131,7 @@ const HistoryPage = () => {
 
   const fetchMembers = async () => {
     try {
-      const data = await apiService.members.getAll()
+      const data = await apiService.members.getActive() // Only fetch active members for game selection
       setMembers(data)
     } catch (error) {
       console.error("Error fetching members:", error)

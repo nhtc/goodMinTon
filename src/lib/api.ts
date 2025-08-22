@@ -58,6 +58,7 @@ export const apiService = {
       memberIds: string[]
       costPerMember: number
       memberPrePays?: { [key: string]: { amount: number; category: string } } // ✅ Fix pre-pays structure
+      memberCustomAmounts?: { [key: string]: number } // ✅ Add custom amounts
     }) {
       const response = await fetch('/api/games', {
         method: 'POST',
@@ -87,6 +88,7 @@ export const apiService = {
       memberIds: string[]
       costPerMember: number
       memberPrePays?: { [key: string]: { amount: number; category: string } }
+      memberCustomAmounts?: { [key: string]: number } // ✅ Add custom amounts
     }) {
       const response = await fetch(`/api/games/${gameId}`, {
         method: 'PUT',
@@ -144,6 +146,14 @@ export const apiService = {
       return response.json()
     },
 
+    async getActive() {
+      const response = await fetch('/api/members?activeOnly=true')
+      if (!response.ok) {
+        throw new Error('Failed to fetch active members')
+      }
+      return response.json()
+    },
+
     async create(memberData: { name: string; phone?: string }) {
       const response = await fetch('/api/members', {
         method: 'POST',
@@ -186,6 +196,22 @@ export const apiService = {
       if (!response.ok) {
         const error = await response.json()
         throw new Error(error.error || 'Failed to update member')
+      }
+
+      return response.json()
+    },
+
+    async toggleStatus(id: string) {
+      const response = await fetch(`/api/members/${id}/toggle`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to toggle member status')
       }
 
       return response.json()

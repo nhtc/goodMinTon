@@ -1611,6 +1611,68 @@
   }
 }
 
+/* Member Status Styles */
+.activeStatus {
+  color: #059669;
+  font-weight: 600;
+}
+
+.inactiveStatus {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* Inactive Member Card Styling */
+.inactiveMember {
+  opacity: 0.7;
+  filter: grayscale(30%);
+  border: 2px dashed #e5e7eb !important;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%) !important;
+}
+
+.inactiveMember .memberName {
+  color: #6b7280 !important;
+}
+
+.inactiveMember .memberAvatar .avatarCircle {
+  background: linear-gradient(135deg, #9ca3af, #6b7280) !important;
+}
+
+/* Action Button Styles */
+.activateBtn {
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  color: #059669;
+  border: 2px solid #6ee7b7;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+}
+
+.activateBtn:hover {
+  background: linear-gradient(135deg, #a7f3d0, #6ee7b7);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.3);
+}
+
+.deactivateBtn {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #d97706;
+  border: 2px solid #fbbf24;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
+}
+
+.deactivateBtn:hover {
+  background: linear-gradient(135deg, #fde68a, #fbbf24);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(217, 119, 6, 0.3);
+}
+
+.activateBtn:disabled,
+.deactivateBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  background: #f3f4f6;
+}
+
 /* Reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .memberCard {
@@ -1633,4 +1695,39 @@
     font-size: 0.8rem;
     min-height: 44px;
   }
+}
+
+/* Filter Options Styles */
+.filter-options {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.filter-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #4b5563;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.filter-label:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.filter-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #3b82f6;
+  cursor: pointer;
 }

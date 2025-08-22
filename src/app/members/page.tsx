@@ -18,6 +18,7 @@ interface Member {
   name: string
   email?: string
   phone?: string
+  isActive: boolean
   createdAt: string
 }
 
@@ -25,7 +26,9 @@ const MembersPage = () => {
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
+  const [toggleLoading, setToggleLoading] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [showInactive, setShowInactive] = useState(true) // Show inactive members by default
   const [showModal, setShowModal] = useState(false)
   const [editingMember, setEditingMember] = useState<Member | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -53,8 +56,20 @@ const MembersPage = () => {
     fetchMembers()
   }, [])
 
-  const handleMemberUpdate = async () => {
-    await fetchMembers()
+  const handleMemberUpdate = async (updatedMember?: Member) => {
+    if (!editingMember) {
+      // Adding a new member - refetch to get the latest list
+      await fetchMembers()
+    } else if (updatedMember) {
+      // Editing existing member - update local state to prevent flash
+      setMembers(prevMembers => 
+        prevMembers.map(member => 
+          member.id === updatedMember.id 
+            ? updatedMember
+            : member
+        )
+      )
+    }
     setShowModal(false)
     setEditingMember(null)
   }
@@ -124,19 +139,71 @@ const MembersPage = () => {
     }
   }
 
+  const handleToggleMemberStatus = async (id: string, name: string) => {
+    try {
+      setToggleLoading(id)
+      
+      // Optimistically update the UI first
+      setMembers(prevMembers => 
+        prevMembers.map(member => 
+          member.id === id 
+            ? { ...member, isActive: !member.isActive }
+            : member
+        )
+      )
+
+      const response = await fetch(`/api/members/${id}/toggle`, {
+        method: "PATCH",
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        // Revert the optimistic update on error
+        setMembers(prevMembers => 
+          prevMembers.map(member => 
+            member.id === id 
+              ? { ...member, isActive: !member.isActive }
+              : member
+          )
+        )
+        throw new Error(data.error || "Failed to toggle member status")
+      }
+
+      // Update with the actual data from server
+      setMembers(prevMembers => 
+        prevMembers.map(member => 
+          member.id === id 
+            ? { ...member, ...data.member }
+            : member
+        )
+      )
+    } catch (error) {
+      console.error("Error toggling member status:", error)
+      // Only show alert for actual errors
+      alert("Có lỗi xảy ra khi thay đổi trạng thái thành viên!")
+    } finally {
+      setToggleLoading(null)
+    }
+  }
+
   const handleCancelDelete = () => {
     setShowDeleteConfirm(false)
     setMemberToDelete(null)
   }
 
-  // Filter members based on search term
-  const filteredMembers = members.filter(
-    member =>
+  // Filter members based on search term and active status
+  const filteredMembers = members.filter(member => {
+    const matchesSearch = 
       member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (member.email &&
         member.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (member.phone && member.phone.includes(searchTerm))
-  )
+    
+    const matchesStatus = showInactive || member.isActive
+    
+    return matchesSearch && matchesStatus
+  })
 
   return (
     <AuthorizedComponent>
@@ -149,7 +216,8 @@ const MembersPage = () => {
                 <div>
                   <h1 className={styles.headerTitle}>Quản lý Thành viên</h1>
                   <p className={styles.headerSubtitle}>
-                    Tổ chức và theo dõi các thành viên câu lạc bộ cầu lông
+                    Tổ chức và theo dõi các thành viên câu lạc bộ cầu lông. 
+                    Chỉ thành viên đang hoạt động mới được hiển thị khi tạo trận đấu.
                   </p>
                 </div>
               </div>
@@ -214,26 +282,21 @@ const MembersPage = () => {
               </div>
             </div>
             <div className={styles["stat-card"]}>
-              <div className={styles["stat-icon"]}>📅</div>
+              <div className={styles["stat-icon"]}>✅</div>
               <div className={styles["stat-content"]}>
                 <div className={styles["stat-number"]}>
-                  {
-                    members.filter(m => {
-                      const joinDate = new Date(m.createdAt)
-                      const now = new Date()
-                      const diffTime = Math.abs(
-                        now.getTime() - joinDate.getTime()
-                      )
-                      const diffDays = Math.ceil(
-                        diffTime / (1000 * 60 * 60 * 24)
-                      )
-                      return diffDays <= 30
-                    }).length
-                  }
+                  {members.filter(m => m.isActive).length}
                 </div>
-                <div className={styles["stat-label"]}>
-                  Thành viên mới (30 ngày)
+                <div className={styles["stat-label"]}>Hoạt động</div>
+              </div>
+            </div>
+            <div className={styles["stat-card"]}>
+              <div className={styles["stat-icon"]}>⏸️</div>
+              <div className={styles["stat-content"]}>
+                <div className={styles["stat-number"]}>
+                  {members.filter(m => !m.isActive).length}
                 </div>
+                <div className={styles["stat-label"]}>Tạm dừng</div>
               </div>
             </div>
             <div className={styles["stat-card"]}>
@@ -269,9 +332,24 @@ const MembersPage = () => {
                 </button>
               )}
             </div>
-            {searchTerm && (
+            
+            {/* Filter Options */}
+            <div className={styles["filter-options"]}>
+              <label className={styles["filter-label"]}>
+                <input
+                  type="checkbox"
+                  checked={showInactive}
+                  onChange={(e) => setShowInactive(e.target.checked)}
+                  className={styles["filter-checkbox"]}
+                />
+                <span>Hiển thị thành viên tạm dừng</span>
+              </label>
+            </div>
+            
+            {(searchTerm || !showInactive) && (
               <div className={styles["search-results"]}>
-                Tìm thấy <strong>{filteredMembers.length}</strong> thành viên
+                Hiển thị <strong>{filteredMembers.length}</strong> / {members.length} thành viên
+                {!showInactive && " (chỉ đang hoạt động)"}
               </div>
             )}
           </div>
@@ -346,7 +424,9 @@ const MembersPage = () => {
                 {filteredMembers.map((member, index) => (
                   <div
                     key={member.id}
-                    className={`${styles.memberCard} ${styles.memberCardAnimated}`}
+                    className={`${styles.memberCard} ${styles.memberCardAnimated} ${
+                      !member.isActive ? styles.inactiveMember : ""
+                    }`}
                   >
                     {/* Member Avatar */}
                     <div className={styles.memberAvatar}>
@@ -390,6 +470,25 @@ const MembersPage = () => {
                             )}
                           </span>
                         </div>
+                        
+                        {/* Member Status */}
+                        <div className={styles.detailItem}>
+                          <span className={styles.detailIcon}>
+                            {member.isActive ? "✅" : "❌"}
+                          </span>
+                          <span className={styles.detailText}>
+                            Trạng thái:{" "}
+                            <span
+                              className={
+                                member.isActive
+                                  ? styles.activeStatus
+                                  : styles.inactiveStatus
+                              }
+                            >
+                              {member.isActive ? "Hoạt động" : "Tạm dừng"}
+                            </span>
+                          </span>
+                        </div>
                       </div>
                     </div>
 
@@ -412,6 +511,28 @@ const MembersPage = () => {
                           >
                             <span>✏️</span>
                           </button>
+                          
+                          <button
+                            onClick={() =>
+                              handleToggleMemberStatus(member.id, member.name)
+                            }
+                            disabled={toggleLoading === member.id}
+                            className={`${styles.actionBtn} ${
+                              member.isActive ? styles.deactivateBtn : styles.activateBtn
+                            }`}
+                            title={
+                              member.isActive 
+                                ? 'Tạm dừng thành viên' 
+                                : 'Kích hoạt thành viên'
+                            }
+                          >
+                            {toggleLoading === member.id ? (
+                              <div className={styles.miniSpinner}></div>
+                            ) : (
+                              <span>{member.isActive ? "⏸️" : "▶️"}</span>
+                            )}
+                          </button>
+                          
                           <button
                             onClick={() =>
                               handleDeleteMember(member.id, member.name)

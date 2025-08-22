@@ -4,14 +4,15 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Member {
   id        String   @id @default(cuid())
   name      String   @unique
   phone     String?
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -47,6 +48,7 @@ model GameParticipant {
   paidAt          DateTime?
   prePaid         Float     @default(0)
   prePaidCategory String    @default("")
+  customAmount    Float?    // Custom amount for this member (overrides costPerMember if set)
 
   game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
   member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)

@@ -8,17 +8,19 @@ interface Member {
   name: string
   email?: string
   phone?: string
+  isActive: boolean
   createdAt: string
 }
 
 interface MemberFormProps {
-  onUpdate: () => void
+  onUpdate: (updatedMember?: Member) => void
   editingMember?: Member | null
 }
 
 const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
   const [name, setName] = useState(editingMember?.name || "")
   const [phone, setPhone] = useState(editingMember?.phone || "")
+  const [isActive, setIsActive] = useState(editingMember?.isActive ?? true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCheckingName, setIsCheckingName] = useState(false)
   const [error, setError] = useState("")
@@ -73,6 +75,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
     if (editingMember) {
       setName(editingMember.name)
       setPhone(editingMember.phone || "")
+      setIsActive(editingMember.isActive ?? true)
       setError("")
       setSuccess("")
       setNameExists(false)
@@ -210,6 +213,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
         body: JSON.stringify({
           name: name.trim(),
           phone: phone.trim() || undefined,
+          isActive,
         }),
       })
 
@@ -225,6 +229,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
       if (!isEditing) {
         setName("")
         setPhone("")
+        setIsActive(true)
         setNameExists(false)
       }
       setSuccess(
@@ -232,7 +237,9 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
           ? "🎉 Cập nhật thành viên thành công!"
           : "🎉 Thêm thành viên thành công!"
       )
-      onUpdate()
+      
+      // Pass the updated/created member data back to parent
+      onUpdate(data)
 
       setTimeout(() => setSuccess(""), 4000)
     } catch (error) {
@@ -430,6 +437,39 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
                 <span>💡 VD: 0912345678, +84912345678, 02812345678</span>
               </div>
             )}
+          </div>
+
+          {/* Active Status Field */}
+          <div className={styles.fieldGroup}>
+            <label className={`${styles.fieldLabel} ${styles.friendly}`}>
+              <span className={styles.labelIcon}>
+                {isActive ? "✅" : "⏸️"}
+              </span>
+              <span className={styles.labelText}>Trạng thái thành viên</span>
+            </label>
+            <div className={styles.statusToggleWrapper}>
+              <label className={styles.statusToggle}>
+                <input
+                  type="checkbox"
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
+                  className={styles.statusCheckbox}
+                  disabled={isSubmitting}
+                />
+                <span className={styles.statusSlider}></span>
+                <span className={styles.statusLabel}>
+                  {isActive ? "Đang hoạt động" : "Tạm dừng"}
+                </span>
+              </label>
+            </div>
+            <div className={styles.fieldHelp}>
+              <span>
+                💡 {isActive 
+                  ? "Thành viên sẽ xuất hiện trong danh sách chọn khi tạo trận đấu"
+                  : "Thành viên sẽ không xuất hiện khi tạo trận đấu mới"
+                }
+              </span>
+            </div>
           </div>
         </div>
 

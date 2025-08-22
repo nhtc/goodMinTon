@@ -1,7 +1,12 @@
 export interface Member {
     id: string;
     name: string;
-    hasPaid: boolean;
+    phone?: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+    hasPaid?: boolean; // For game participation
+    paidAt?: string; // For game participation
 }
 
 export interface GameRecord {
