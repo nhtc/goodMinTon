@@ -475,7 +475,9 @@ const MembersPage = () => {
                         </div>
                       </div>
                       <div
-                        className={`${styles.memberStatus} ${styles.online}`}
+                        className={`${styles.memberStatus} ${
+                          member.isActive ? styles.activeIndicator : styles.inactiveIndicator
+                        }`}
                       ></div>
                     </div>
 
