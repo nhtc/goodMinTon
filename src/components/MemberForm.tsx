@@ -3,6 +3,7 @@ import { withAuth } from "@/components/AuthorizedComponent"
 import React, { useState, useEffect, useRef } from "react"
 import styles from "./MemberForm.module.css"
 import { getConsistentAvatar } from "@/utils/avatar"
+import AvatarUpload from "./AvatarUpload"
 
 interface Member {
   id: string
@@ -296,31 +297,13 @@ const MemberForm: React.FC<MemberFormProps> = ({ onUpdate, editingMember }) => {
         </div>
       </div>
 
-      {/* Avatar Preview */}
-      {avatarUrl && (
-        <div className={styles.avatarPreview}>
-          <div className={styles.avatarContainer}>
-            <img 
-              src={avatarUrl} 
-              alt={`Avatar for ${name}`}
-              className={styles.avatarImage}
-              onError={(e) => {
-                // Fallback to initials avatar if image fails to load
-                e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=200&background=6366f1&color=fff&bold=true`;
-              }}
-            />
-            <div className={styles.avatarOverlay}>
-              <span className={styles.avatarLabel}>Preview</span>
-            </div>
-          </div>
-          <div className={styles.avatarInfo}>
-            <p className={styles.avatarTitle}>🎨 Avatar được tạo tự động</p>
-            <p className={styles.avatarDescription}>
-              Avatar sẽ được tạo dựa trên tên của bạn và sẽ luôn giống nhau cho cùng một tên.
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Avatar Upload */}
+      <AvatarUpload
+        currentAvatar={avatarUrl}
+        memberName={name.trim() || "New Member"}
+        onAvatarChange={setAvatarUrl}
+        disabled={isSubmitting}
+      />
 
       {/* Success Message */}
       {success && (

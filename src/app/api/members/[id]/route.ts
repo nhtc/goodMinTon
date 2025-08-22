@@ -104,6 +104,25 @@ export async function PUT(
       )
     }
 
+    // Validate avatar if provided
+    if (avatar && typeof avatar !== 'string') {
+      return NextResponse.json(
+        { error: 'Avatar must be a string URL or data URL' },
+        { status: 400 }
+      )
+    }
+
+    // Validate avatar size if it's a data URL (base64)
+    if (avatar && avatar.startsWith('data:')) {
+      // Check if base64 data is reasonable size (max 1MB)
+      if (avatar.length > 1024 * 1024) {
+        return NextResponse.json(
+          { error: 'Avatar image is too large. Please use a smaller image.' },
+          { status: 400 }
+        )
+      }
+    }
+
     // Check if member exists
     const existingMember = await prisma.member.findUnique({
       where: { id }

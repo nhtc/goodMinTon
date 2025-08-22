@@ -12,6 +12,7 @@ import {
 
 // Lazy load heavy components for better performance
 const MemberForm = lazy(() => import("../../components/MemberForm"))
+const AvatarManager = lazy(() => import("../../components/AvatarManager"))
 
 interface Member {
   id: string
@@ -37,6 +38,8 @@ const MembersPage = () => {
     id: string
     name: string
   } | null>(null)
+  const [showAvatarManager, setShowAvatarManager] = useState(false)
+  const [memberToEditAvatar, setMemberToEditAvatar] = useState<Member | null>(null)
   const { canEdit, userRole } = usePermissions()
 
   const fetchMembers = async () => {
@@ -78,6 +81,25 @@ const MembersPage = () => {
   const handleEditMember = (member: Member) => {
     setEditingMember(member)
     setShowModal(true)
+  }
+
+  const handleEditAvatar = (member: Member) => {
+    setMemberToEditAvatar(member)
+    setShowAvatarManager(true)
+  }
+
+  const handleAvatarUpdated = (updatedMember: Member) => {
+    // Update the member in the local state
+    setMembers(prevMembers =>
+      prevMembers.map(member =>
+        member.id === updatedMember.id ? updatedMember : member
+      )
+    )
+    // Close the modal after successful update with a short delay to show success message
+    setTimeout(() => {
+      setShowAvatarManager(false)
+      setMemberToEditAvatar(null)
+    }, 2000)
   }
 
   const handleMemberSubmit = async (
@@ -532,6 +554,14 @@ const MembersPage = () => {
                           </button>
                           
                           <button
+                            onClick={() => handleEditAvatar(member)}
+                            className={`${styles.actionBtn} ${styles.avatarBtn}`}
+                            title='Thay đổi ảnh đại diện'
+                          >
+                            <span>🖼️</span>
+                          </button>
+                          
+                          <button
                             onClick={() =>
                               handleToggleMemberStatus(member.id, member.name)
                             }
@@ -648,6 +678,30 @@ const MembersPage = () => {
           type='danger'
           isLoading={deleteLoading === memberToDelete?.id}
         />
+
+        {/* Avatar Manager Modal */}
+        <Modal
+          isOpen={showAvatarManager}
+          onClose={() => {
+            setShowAvatarManager(false)
+            setMemberToEditAvatar(null)
+          }}
+          showHeader={true}
+          title={memberToEditAvatar ? `🎨 Update Avatar for ${memberToEditAvatar.name}` : "Avatar Manager"}
+        >
+          {memberToEditAvatar && (
+            <Suspense
+              fallback={
+                <div className={styles.loadingFallback}>Đang tải avatar manager...</div>
+              }
+            >
+              <AvatarManager
+                member={memberToEditAvatar}
+                onUpdate={handleAvatarUpdated}
+              />
+            </Suspense>
+          )}
+        </Modal>
       </div>
     </AuthorizedComponent>
   )
