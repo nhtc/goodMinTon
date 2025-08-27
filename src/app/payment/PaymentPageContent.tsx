@@ -103,10 +103,8 @@ const PaymentPageContent = () => {
           )
           if (participation && !participation.hasPaid) {
             const gameOutstanding = game.costPerMember - participation.prePaid
-            if (gameOutstanding > 0) {
               totalOutstanding += gameOutstanding
               memberUnpaidGames.push(game)
-            }
           }
         })
 
