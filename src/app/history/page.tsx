@@ -8,6 +8,7 @@ import {
   EditableContent,
   usePermissions,
 } from "../../components/AuthorizedComponent"
+import { useToast } from "../../context/ToastContext"
 import { capitalize } from "lodash"
 import Modal from "../../components/Modal"
 import ConfirmationModal from "../../components/ConfirmationModal"
@@ -58,6 +59,7 @@ const HistoryPage = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [paymentLoading, setPaymentLoading] = useState<string | null>(null)
   const { canEdit, userRole } = usePermissions()
+  const { showSuccess, showError } = useToast()
 
   // ✅ Helper function to get category icon
   const getCategoryIcon = (category: string) => {
@@ -175,9 +177,10 @@ const HistoryPage = () => {
 
       setShowDeleteConfirm(false)
       setGameToDelete(null)
+      showSuccess("Thành công", "Đã xóa trận đấu thành công")
     } catch (error) {
       console.error("Error deleting game:", error)
-      alert(error instanceof Error ? error.message : "Không thể xóa trận đấu")
+      showError("Lỗi", error instanceof Error ? error.message : "Không thể xóa trận đấu")
     } finally {
       setDeleteLoading(null)
     }
@@ -269,7 +272,7 @@ const HistoryPage = () => {
       }
     } catch (error) {
       console.error("Error updating payment:", error)
-      alert("Không thể cập nhật trạng thái thanh toán")
+      showError("Lỗi", "Không thể cập nhật trạng thái thanh toán")
     } finally {
       setPaymentLoading(null)
     }

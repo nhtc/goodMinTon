@@ -1,0 +1,21 @@
+/* Toast Position Styles */
+.toastPosition {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.toastPosition > * {
+  pointer-events: auto;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .toastPosition {
+    top: 0.5rem;
+    right: 0.5rem;
+    left: 0.5rem;
+  }
+}

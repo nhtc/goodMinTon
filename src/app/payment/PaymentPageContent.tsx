@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import styles from "./page.module.css"
+import { useToast } from "../../context/ToastContext"
 
 interface PaymentInfo {
   bankName: string
@@ -38,6 +39,7 @@ interface Game {
 
 const PaymentPageContent = () => {
   const searchParams = useSearchParams()
+  const { showWarning, showError } = useToast()
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
     bankName: "Vietcombank",
     accountNumber: "9937822899",
@@ -215,7 +217,7 @@ const PaymentPageContent = () => {
 
   const openBankingApp = () => {
     if (!selectedMember || memberOutstandingAmount === 0) {
-      alert("Vui lòng chọn thành viên và đảm bảo có số tiền cần thanh toán")
+      showWarning("Thông tin thiếu", "Vui lòng chọn thành viên và đảm bảo có số tiền cần thanh toán")
       return
     }
 
@@ -257,7 +259,8 @@ Nội dung: ${content}
       `.trim()
 
       copyToClipboard(paymentDetails, "paymentDetails")
-      alert(
+      showError(
+        "Không thể mở ứng dụng",
         "Không thể mở ứng dụng ngân hàng. Thông tin thanh toán đã được sao chép vào clipboard."
       )
     }

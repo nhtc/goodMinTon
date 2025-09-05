@@ -1,0 +1,169 @@
+/* Notification Demo Styles */
+.container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.description {
+  font-size: 1rem;
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.section {
+  margin-bottom: 2rem;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.buttonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 50px;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+.button.success {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.button.success:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+.button.error {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+}
+
+.button.error:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+.button.warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}
+
+.button.warning:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
+}
+
+.button.info {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+
+.button.info:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.button.modal {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+}
+
+.button.modal:hover {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+}
+
+.features {
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border-left: 4px solid #3b82f6;
+}
+
+.featureList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.featureList li {
+  padding: 0.5rem 0;
+  color: #374151;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.featureList li:not(:last-child) {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+  }
+  
+  .buttonGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .button {
+    width: 100%;
+  }
+}
+
+/* Animation for button interactions */
+@keyframes buttonPress {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+.button:active {
+  animation: buttonPress 0.15s ease;
+}

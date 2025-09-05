@@ -9,6 +9,8 @@ import {
   EditableContent,
   usePermissions,
 } from "../../components/AuthorizedComponent"
+import { useToast } from "../../context/ToastContext"
+import { useAlertActions } from "../../context/AlertContext"
 
 // Lazy load heavy components for better performance
 const MemberForm = lazy(() => import("../../components/MemberForm"))
@@ -41,6 +43,8 @@ const MembersPage = () => {
   const [showAvatarManager, setShowAvatarManager] = useState(false)
   const [memberToEditAvatar, setMemberToEditAvatar] = useState<Member | null>(null)
   const { canEdit, userRole } = usePermissions()
+  const { showSuccess, showError, showWarning } = useToast()
+  const { showConfirm } = useAlertActions()
 
   const fetchMembers = async () => {
     try {
@@ -144,7 +148,10 @@ const MembersPage = () => {
       if (!response.ok) {
         if (response.status === 400 && data.gameCount) {
           // Member is in games, show error message
-          alert(`❌ Không thể xóa ${memberToDelete.name}\n\n${data.message}`)
+          showError(
+            "Không thể xóa thành viên",
+            `Không thể xóa ${memberToDelete.name}. ${data.message}`
+          )
         } else {
           throw new Error(data.error || "Failed to delete member")
         }
@@ -154,9 +161,10 @@ const MembersPage = () => {
       await fetchMembers()
       setShowDeleteConfirm(false)
       setMemberToDelete(null)
+      showSuccess("Thành công", `Đã xóa thành viên ${memberToDelete.name}`)
     } catch (error) {
       console.error("Error deleting member:", error)
-      alert("Có lỗi xảy ra khi xóa thành viên!")
+      showError("Lỗi", "Có lỗi xảy ra khi xóa thành viên!")
     } finally {
       setDeleteLoading(null)
     }
@@ -203,8 +211,8 @@ const MembersPage = () => {
       )
     } catch (error) {
       console.error("Error toggling member status:", error)
-      // Only show alert for actual errors
-      alert("Có lỗi xảy ra khi thay đổi trạng thái thành viên!")
+      // Only show toast for actual errors
+      showError("Lỗi", "Có lỗi xảy ra khi thay đổi trạng thái thành viên!")
     } finally {
       setToggleLoading(null)
     }
@@ -277,10 +285,13 @@ const MembersPage = () => {
                   <button
                     onClick={() => {
                       if (userRole === "guest") {
-                        alert("Vui lòng đăng nhập để thêm thành viên")
-                        window.location.href = "/login"
+                        showWarning("Yêu cầu đăng nhập", "Vui lòng đăng nhập để thêm thành viên")
+                        setTimeout(() => {
+                          window.location.href = "/login"
+                        }, 2000)
                       } else {
-                        alert(
+                        showError(
+                          "Không có quyền",
                           "Bạn không có quyền thêm thành viên. Liên hệ quản trị viên để được cấp quyền."
                         )
                       }
@@ -426,10 +437,13 @@ const MembersPage = () => {
                       } else {
                         // Redirect to login for guests or show permission error for authenticated users
                         if (userRole === "guest") {
-                          alert("Vui lòng đăng nhập để thêm thành viên")
-                          window.location.href = "/login"
+                          showWarning("Yêu cầu đăng nhập", "Vui lòng đăng nhập để thêm thành viên")
+                          setTimeout(() => {
+                            window.location.href = "/login"
+                          }, 2000)
                         } else {
-                          alert(
+                          showError(
+                            "Không có quyền",
                             "Bạn không có quyền thêm thành viên. Liên hệ quản trị viên để được cấp quyền."
                           )
                         }

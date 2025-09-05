@@ -1,0 +1,212 @@
+/* Alert Modal Styles */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+  max-width: 500px;
+  width: 90vw;
+  max-height: 80vh;
+  overflow: hidden;
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.iconContainer {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modal.success .iconContainer {
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+}
+
+.modal.error .iconContainer {
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+}
+
+.modal.warning .iconContainer {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+}
+
+.modal.info .iconContainer {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+}
+
+.icon {
+  font-size: 1.5rem;
+}
+
+.title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.closeButton {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.closeButton:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  transform: scale(1.1);
+}
+
+.content {
+  padding: 1.5rem;
+}
+
+.message {
+  margin: 0;
+  color: #374151;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding: 1rem 1.5rem 1.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.actionButton {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  min-width: 80px;
+}
+
+.actionButton.primary {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+}
+
+.actionButton.primary:hover {
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.actionButton.secondary {
+  background: #f9fafb;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.actionButton.secondary:hover {
+  background: #f3f4f6;
+  transform: translateY(-1px);
+}
+
+.actionButton.danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+}
+
+.actionButton.danger:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .modal {
+    width: 95vw;
+    margin: 1rem;
+  }
+  
+  .header {
+    padding: 1rem;
+  }
+  
+  .content {
+    padding: 1rem;
+  }
+  
+  .actions {
+    padding: 0.75rem 1rem 1rem;
+    flex-direction: column-reverse;
+  }
+  
+  .actionButton {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .title {
+    font-size: 1.125rem;
+  }
+  
+  .message {
+    font-size: 0.9rem;
+  }
+}

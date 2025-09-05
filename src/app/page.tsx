@@ -15,6 +15,7 @@ import {
   Cell,
 } from "recharts"
 import CountUp from "react-countup"
+import NotificationDemo from "../components/NotificationDemo"
 import styles from "./page.module.css"
 
 const HomePage = () => {
@@ -332,6 +333,11 @@ const HomePage = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Notification Demo Section */}
+          <div className={`${styles.demoSection} ${styles.animateOnScroll}`}>
+            <NotificationDemo />
           </div>
 
           {/* Demo Preview Section */}
