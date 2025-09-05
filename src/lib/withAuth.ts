@@ -13,11 +13,17 @@ export interface AuthenticatedRequest extends NextRequest {
   user: AuthenticatedUser
 }
 
+// Type for route handler function - using any to avoid the generic constraint issue
+type RouteHandler = (
+  request: NextRequest,
+  context?: any
+) => Promise<NextResponse>
+
 // Higher-order function to wrap route handlers with authentication
-export function withAuth<T extends any[]>(
-  handler: (request: AuthenticatedRequest, ...args: T) => Promise<NextResponse>
-) {
-  return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
+export function withAuth(
+  handler: RouteHandler
+): RouteHandler {
+  return async (request: NextRequest, context?: any): Promise<NextResponse> => {
     try {
       // Check for authentication token
       const authCookie = request.cookies.get('auth-token')
@@ -37,7 +43,7 @@ export function withAuth<T extends any[]>(
       authenticatedRequest.user = decoded
 
       // Call the original handler with authenticated request
-      return await handler(authenticatedRequest, ...args)
+      return await handler(authenticatedRequest, context)
       
     } catch (error) {
       console.error('Authentication error:', error)
@@ -50,21 +56,22 @@ export function withAuth<T extends any[]>(
 }
 
 // Optional: Create specific role-based wrappers
-export function withAdminAuth<T extends any[]>(
-  handler: (request: AuthenticatedRequest, ...args: T) => Promise<NextResponse>
-) {
-  return withAuth(async (request: AuthenticatedRequest, ...args: T) => {
-    if (request.user.role !== 'admin') {
+export function withAdminAuth(
+  handler: RouteHandler
+): RouteHandler {
+  return withAuth(async (request: NextRequest, context?: any) => {
+    const user = (request as AuthenticatedRequest).user
+    if (user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required.' },
         { status: 403 }
       )
     }
-    return await handler(request, ...args)
+    return await handler(request, context)
   })
 }
 
 // Helper function to get user from request (for use in handlers)
-export function getUser(request: AuthenticatedRequest): AuthenticatedUser {
-  return request.user
+export function getUser(request: NextRequest): AuthenticatedUser | null {
+  return (request as any).user || null
 }

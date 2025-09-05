@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '../../../lib/prisma'
 import { Prisma } from '@prisma/client'
-import { withAuth, AuthenticatedRequest, getUser } from '../../../lib/withAuth'
+import { withAuth, getUser } from '../../../lib/withAuth'
 
 // GET handler - wrapped with authentication
-async function getMembers(request: AuthenticatedRequest) {
+async function getMembers(request: NextRequest) {
   try {
+    const user = getUser(request)
     const url = new URL(request.url)
     const activeOnly = url.searchParams.get('activeOnly') === 'true'
     
@@ -28,14 +29,16 @@ async function getMembers(request: AuthenticatedRequest) {
 
 
 // POST handler - wrapped with authentication
-async function createMember(request: AuthenticatedRequest) {
+async function createMember(request: NextRequest) {
   try {
     const body = await request.json()
     console.log('Received request body:', body)
     
     // You can access the authenticated user like this:
     const user = getUser(request)
-    console.log('Request made by user:', user.username)
+    if (user) {
+      console.log('Request made by user:', user.username)
+    }
     
     const { name, phone, avatar, isActive = true } = body
 

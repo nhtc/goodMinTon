@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '../../../../lib/prisma'
-import { withAuth, AuthenticatedRequest } from '../../../../lib/withAuth'
+import { withAuth, getUser } from '../../../../lib/withAuth'
 
 // GET - Get a specific game by ID
 async function getGame(
-  request: AuthenticatedRequest,
+  request: NextRequest,
   context: { params: Promise<{ gameId: string }> }
 ) {
   try {
@@ -55,13 +55,14 @@ async function getGame(
 
 // PUT - Update a game by ID
 async function updateGame(
-  request: AuthenticatedRequest,
+  request: NextRequest,
   context: { params: Promise<{ gameId: string }> }
 ) {
   const startTime = Date.now()
   console.log('🚀 Starting game update...')
   
   try {
+    const user = getUser(request)
     const params = await context.params
     const { gameId } = params
     const body = await request.json()
@@ -235,10 +236,11 @@ async function updateGame(
 
 // DELETE - Delete a game by ID
 async function deleteGame(
-  request: AuthenticatedRequest,
+  request: NextRequest,
   context: { params: Promise<{ gameId: string }> }
 ) {
   try {
+    const user = getUser(request)
     const params = await context.params
     const { gameId } = params
 

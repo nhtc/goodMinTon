@@ -1,5 +1,6 @@
 "use client"
 
+"use client"
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import Toast from '../components/Toast';
 import styles from './ToastContext.module.css';
