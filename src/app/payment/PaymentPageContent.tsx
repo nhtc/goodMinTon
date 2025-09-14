@@ -62,7 +62,7 @@ const PaymentPageContent = () => {
     const fetchMembers = async () => {
       try {
         setLoading(true)
-        const response = await fetch("/api/members?activeOnly=true") // Only fetch active members
+        const response = await fetch("/api/members") // Only fetch active members
         if (!response.ok) {
           throw new Error("Failed to fetch members")
         }
