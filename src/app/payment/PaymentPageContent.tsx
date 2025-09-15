@@ -61,6 +61,7 @@ const PaymentPageContent = () => {
   const [copySuccess, setCopySuccess] = useState<string>("")
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [isChangingMember, setIsChangingMember] = useState<boolean>(false)
+  const [showAllGames, setShowAllGames] = useState<boolean>(false)
   
   // Use the custom hook for outstanding calculation - this will cache the calculation
   const { 
@@ -79,6 +80,11 @@ const PaymentPageContent = () => {
 
   // Combined loading state for better UX
   const isCalculatingAmount = outstandingLoading || outstandingFetching || isChangingMember
+  
+  // Toggle function for showing all games
+  const toggleShowAllGames = () => {
+    setShowAllGames(prev => !prev)
+  }
   
   // Handler for member selection with smooth loading transition
   const handleMemberChange = async (memberId: string) => {
@@ -108,11 +114,13 @@ const PaymentPageContent = () => {
     if (!member) {
       setSelectedMember(null)
       setIsChangingMember(false)
+      setShowAllGames(false) // Reset show all games when member changes
       return
     }
     
     // Set changing state immediately for smooth UX
     setIsChangingMember(true)
+    setShowAllGames(false) // Reset show all games when member changes
     
     // Small delay to prevent flash and show loading state
     setTimeout(() => {
@@ -447,7 +455,7 @@ Nội dung: ${content}
                               </span>
                             </div>
                             <div className={styles.gamesList}>
-                              {unpaidGames.slice(0, 5).map((game, index) => {
+                              {(showAllGames ? unpaidGames : unpaidGames.slice(0, 5)).map((game, index) => {
                                 const participation = game.participants.find(p => p.id === selectedMember.id)
                                 const gameAmount = participation ? game.costPerMember - participation.prePaid : game.costPerMember
                                 const gameDate = new Date(game.date).toLocaleDateString("vi-VN", {
@@ -466,8 +474,27 @@ Nội dung: ${content}
                                 )
                               })}
                               {unpaidGames.length > 5 && (
-                                <div className={styles.moreGames}>
-                                  + {unpaidGames.length - 5} trận khác...
+                                <div className={styles.showMoreContainer}>
+                                  {!showAllGames && (
+                                    <div className={styles.moreGames}>
+                                      + {unpaidGames.length - 5} trận khác...
+                                    </div>
+                                  )}
+                                  <button
+                                    onClick={toggleShowAllGames}
+                                    className={styles.showAllButton}
+                                    title={showAllGames ? 'Thu gọn danh sách' : 'Hiển thị tất cả trận đấu'}
+                                  >
+                                    <span className={styles.showAllIcon}>
+                                      {showAllGames ? '⬆️' : '⬇️'}
+                                    </span>
+                                    <span className={styles.showAllText}>
+                                      {showAllGames ? 'Thu gọn' : 'Xem tất cả'}
+                                    </span>
+                                    <span className={styles.showAllCount}>
+                                      ({unpaidGames.length})
+                                    </span>
+                                  </button>
                                 </div>
                               )}
                             </div>
