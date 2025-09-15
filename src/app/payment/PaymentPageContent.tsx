@@ -4,6 +4,8 @@ import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import styles from "./page.module.css"
 import { useToast } from "../../context/ToastContext"
+import { useMembers, useMemberOutstanding } from "../../hooks/useQueries"
+import MemberAutocomplete from "../../components/MemberAutocomplete"
 
 interface PaymentInfo {
   bankName: string
@@ -40,6 +42,14 @@ interface Game {
 const PaymentPageContent = () => {
   const searchParams = useSearchParams()
   const { showWarning, showError } = useToast()
+  
+  // React Query hooks - these will cache the data
+  const { 
+    data: members = [], 
+    isLoading: membersLoading, 
+    error: membersError 
+  } = useMembers()
+  
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
     bankName: "Vietcombank",
     accountNumber: "9937822899",
@@ -49,82 +59,74 @@ const PaymentPageContent = () => {
 
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("")
   const [copySuccess, setCopySuccess] = useState<string>("")
-  const [members, setMembers] = useState<Member[]>([])
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
-  const [memberOutstandingAmount, setMemberOutstandingAmount] =
-    useState<number>(0)
-  const [unpaidGames, setUnpaidGames] = useState<Game[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string>("")
+  const [isChangingMember, setIsChangingMember] = useState<boolean>(false)
+  
+  // Use the custom hook for outstanding calculation - this will cache the calculation
+  const { 
+    data: outstandingData, 
+    isLoading: outstandingLoading,
+    error: outstandingError,
+    isFetching: outstandingFetching
+  } = useMemberOutstanding(selectedMember?.id || null)
+  
+  const memberOutstandingAmount = outstandingData?.totalOutstanding || 0
+  const unpaidGames = outstandingData?.unpaidGames || []
 
-  // Fetch members from API
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch("/api/members") // Only fetch active members
-        if (!response.ok) {
-          throw new Error("Failed to fetch members")
-        }
-        const membersData = await response.json()
-        setMembers(membersData)
-      } catch (error) {
-        console.error("Error fetching members:", error)
-        setError("Failed to load members")
-      } finally {
-        setLoading(false)
-      }
+  // Handle members loading error
+  const error = membersError ? 'Failed to load members' : null
+  const loading = membersLoading
+
+  // Combined loading state for better UX
+  const isCalculatingAmount = outstandingLoading || outstandingFetching || isChangingMember
+  
+  // Handler for member selection with smooth loading transition
+  const handleMemberChange = async (memberId: string) => {
+    const member = members.find((m: Member) => m.id === memberId)
+    
+    if (!member) {
+      setSelectedMember(null)
+      setIsChangingMember(false)
+      return
     }
+    
+    // Set changing state immediately for smooth UX
+    setIsChangingMember(true)
+    
+    // Small delay to prevent flash and show loading state
+    setTimeout(() => {
+      setSelectedMember(member)
+      // Reset changing state after a minimum display time
+      setTimeout(() => {
+        setIsChangingMember(false)
+      }, 300) // Minimum loading display time
+    }, 100)
+  }
 
-    fetchMembers()
-  }, [])
-
-  // Calculate outstanding amount for selected member
-  useEffect(() => {
-    const calculateOutstandingAmount = async () => {
-      if (!selectedMember) {
-        setMemberOutstandingAmount(0)
-        setUnpaidGames([])
-        return
-      }
-
-      try {
-        // Fetch games to calculate outstanding amount
-        const response = await fetch("/api/games")
-        if (!response.ok) {
-          throw new Error("Failed to fetch games")
-        }
-        const games: Game[] = await response.json()
-
-        let totalOutstanding = 0
-        const memberUnpaidGames: Game[] = []
-        
-        games.forEach(game => {
-          const participation = game.participants.find(
-            p => p.id === selectedMember.id
-          )
-          if (participation && !participation.hasPaid) {
-            const gameOutstanding = game.costPerMember - participation.prePaid
-              totalOutstanding += gameOutstanding
-              memberUnpaidGames.push(game)
-          }
-        })
-
-        setMemberOutstandingAmount(totalOutstanding)
-        setUnpaidGames(memberUnpaidGames)
-      } catch (error) {
-        console.error("Error calculating outstanding amount:", error)
-        setMemberOutstandingAmount(0)
-        setUnpaidGames([])
-      }
+  // Handler for autocomplete component that accepts Member object
+  const handleAutocompleteChange = (member: Member | null) => {
+    if (!member) {
+      setSelectedMember(null)
+      setIsChangingMember(false)
+      return
     }
-
-    calculateOutstandingAmount()
-  }, [selectedMember])
+    
+    // Set changing state immediately for smooth UX
+    setIsChangingMember(true)
+    
+    // Small delay to prevent flash and show loading state
+    setTimeout(() => {
+      setSelectedMember(member)
+      // Reset changing state after a minimum display time
+      setTimeout(() => {
+        setIsChangingMember(false)
+      }, 300) // Minimum loading display time
+    }, 100)
+  }
 
   // Update payment info when member is selected
   useEffect(() => {
-    if (selectedMember && unpaidGames.length > 0) {
+    if (selectedMember && unpaidGames.length > 0 && memberOutstandingAmount > 0) {
       const paymentContent = generatePaymentContent(selectedMember, unpaidGames)
       setPaymentInfo(prev => ({
         ...prev,
@@ -285,40 +287,27 @@ Nội dung: ${content}
     }).format(amount)
   }
 
-  // Generate payment content with match dates
+  // Generate payment content with match dates (optimized for QR code length)
   const generatePaymentContent = (member: Member, games: Game[]) => {
     if (!member || games.length === 0) return "Thanh toan cau long"
 
-    const memberName = member.name.toUpperCase()
+    // Get the most recent game date to use as "den ngay" (until date)
+    const sortedGames = games.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    const latestGame = sortedGames[0]
+    const gameDate = new Date(latestGame.date)
+    const day = gameDate.getDate()
+    const month = gameDate.getMonth() + 1 // getMonth() returns 0-11, so add 1
     
-    if (games.length === 1) {
-      // Single game payment - include the specific day and month
-      const game = games[0]
-      const gameDate = new Date(game.date)
-      const day = gameDate.getDate()
-      const month = gameDate.getMonth() + 1 // getMonth() returns 0-11, so add 1
-      return `${memberName} - CL - ${day}.${month}`
-    } else {
-      // Multiple games - show day.month numbers separated by commas
-      const dayMonths = games
-        .map(game => {
-          const gameDate = new Date(game.date)
-          const day = gameDate.getDate()
-          const month = gameDate.getMonth() + 1
-          return `${day}.${month}`
-        })
-        .sort((a, b) => {
-          // Sort by month first, then by day
-          const [dayA, monthA] = a.split('.').map(Number)
-          const [dayB, monthB] = b.split('.').map(Number)
-          if (monthA !== monthB) return monthA - monthB
-          return dayA - dayB
-        })
-        .filter((dayMonth, index, arr) => arr.indexOf(dayMonth) === index) // Remove duplicates if any
-      
-      const dayMonthsList = dayMonths.join(', ')
-      return `${memberName} - CL - ${dayMonthsList}`
+    // Shorter format: "Thanh toan den ngay DD.MM" - optimized for QR code
+    let content = `${member.name.toUpperCase()} - CL -> ${day}.${month}`
+    
+    // Ensure content is not too long for QR code (max ~25 characters for better QR generation)
+    if (content.length > 25) {
+      // Ultra short fallback: "TT den DD.MM"
+      content = `${member.name.toUpperCase()} - CL -> ${day}.${month}`
     }
+    
+    return content
   }
 
   return (
@@ -358,6 +347,18 @@ Nội dung: ${content}
             <h3 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>👤</span>
               Chọn thành viên
+              {/* Show cache status for better UX - React Query automatically handles caching */}
+              {!membersLoading && members.length > 0 && !isCalculatingAmount && (
+                <span className={styles.cacheIndicator} title="Dữ liệu đã được cache - thao tác nhanh hơn">
+                  ⚡
+                </span>
+              )}
+              {/* Show calculating indicator */}
+              {isCalculatingAmount && (
+                <span className={styles.calculatingIndicatorTitle} title="Đang xử lý...">
+                  <div className={styles.miniLoadingSpinner}></div>
+                </span>
+              )}
             </h3>
 
             {loading ? (
@@ -372,84 +373,108 @@ Nội dung: ${content}
               </div>
             ) : (
               <div className={styles.memberSelector}>
-                <select
-                  value={selectedMember?.id || ""}
-                  onChange={e => {
-                    const member = members.find(m => m.id === e.target.value)
-                    setSelectedMember(member || null)
-                  }}
-                  className={styles.memberDropdown}
-                  title='Chọn thành viên để thanh toán'
-                  aria-label='Chọn thành viên để thanh toán'
-                >
-                  <option value=''>-- Chọn thành viên --</option>
-                  {members.map(member => (
-                    <option key={member.id} value={member.id}>
-                      {member.name} {member.phone ? `(${member.phone})` : ""}
-                    </option>
-                  ))}
-                </select>
+                <MemberAutocomplete
+                  members={members}
+                  selectedMember={selectedMember}
+                  onMemberChange={handleAutocompleteChange}
+                  placeholder="Tìm kiếm thành viên theo tên hoặc số điện thoại..."
+                  disabled={isChangingMember}
+                  isLoading={isChangingMember}
+                />
 
                 {selectedMember && (
                   <div className={styles.memberInfo}>
-                    <div className={styles.memberDetails}>
-                      <div className={styles.memberName}>
-                        <span className={styles.memberIcon}>👤</span>
-                        <strong>{selectedMember.name}</strong>
-                      </div>
-                      {selectedMember.phone && (
-                        <div className={styles.memberPhone}>
-                          <span className={styles.phoneIcon}>📱</span>
-                          {selectedMember.phone}
-                        </div>
-                      )}
-                      <div className={styles.memberAmount}>
-                        <span className={styles.amountIcon}>💰</span>
-                        <span className={styles.amountLabel}>
-                          Số tiền cần thanh toán:
-                        </span>
-                        <span className={styles.amountValue}>
-                          {formatCurrency(memberOutstandingAmount)}
-                        </span>
-                      </div>
-                      
-                      {/* Unpaid Games Breakdown */}
-                      {unpaidGames.length > 0 && (
-                        <div className={styles.unpaidGamesBreakdown}>
-                          <div className={styles.breakdownHeader}>
-                            <span className={styles.breakdownIcon}>📋</span>
-                            <span className={styles.breakdownTitle}>
-                              Chi tiết các trận chưa thanh toán ({unpaidGames.length} trận):
-                            </span>
-                          </div>
-                          <div className={styles.gamesList}>
-                            {unpaidGames.slice(0, 5).map((game, index) => {
-                              const participation = game.participants.find(p => p.id === selectedMember.id)
-                              const gameAmount = participation ? game.costPerMember - participation.prePaid : game.costPerMember
-                              const gameDate = new Date(game.date).toLocaleDateString("vi-VN", {
-                                weekday: "short",
-                                day: "2-digit",
-                                month: "2-digit"
-                              })
-                              
-                              return (
-                                <div key={game.id} className={styles.gameItem}>
-                                  <span className={styles.gameDate}>📅 {gameDate}</span>
-                                  <span className={styles.gameAmount}>
-                                    {formatCurrency(gameAmount)}
-                                  </span>
-                                </div>
-                              )
-                            })}
-                            {unpaidGames.length > 5 && (
-                              <div className={styles.moreGames}>
-                                + {unpaidGames.length - 5} trận khác...
+                    {isCalculatingAmount ? (
+                      <div className={styles.memberCalculatingState}>
+                        <div className={styles.memberCalculatingContent}>
+                          <div className={styles.memberPreview}>
+                            <div className={styles.memberName}>
+                              <span className={styles.memberIcon}>👤</span>
+                              <strong>{selectedMember.name}</strong>
+                            </div>
+                            {selectedMember.phone && (
+                              <div className={styles.memberPhone}>
+                                <span className={styles.phoneIcon}>📱</span>
+                                {selectedMember.phone}
                               </div>
                             )}
                           </div>
+                          <div className={styles.calculatingIndicator}>
+                            <div className={styles.loadingSpinner}></div>
+                            <p>
+                              {isChangingMember 
+                                ? "Đang chọn thành viên..." 
+                                : "Đang tính toán số tiền cần thanh toán..."
+                              }
+                            </p>
+                          </div>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    ) : outstandingError ? (
+                      <div className={styles.errorState}>
+                        <span className={styles.errorIcon}>⚠️</span>
+                        <p>Không thể tính toán số tiền cần thanh toán</p>
+                      </div>
+                    ) : (
+                      <div className={styles.memberDetails}>
+                        <div className={styles.memberName}>
+                          <span className={styles.memberIcon}>👤</span>
+                          <strong>{selectedMember.name}</strong>
+                        </div>
+                        {selectedMember.phone && (
+                          <div className={styles.memberPhone}>
+                            <span className={styles.phoneIcon}>📱</span>
+                            {selectedMember.phone}
+                          </div>
+                        )}
+                        <div className={styles.memberAmount}>
+                          <span className={styles.amountIcon}>💰</span>
+                          <span className={styles.amountLabel}>
+                            Số tiền cần thanh toán:
+                          </span>
+                          <span className={styles.amountValue}>
+                            {formatCurrency(memberOutstandingAmount)}
+                          </span>
+                        </div>
+                        
+                        {/* Unpaid Games Breakdown */}
+                        {unpaidGames.length > 0 && (
+                          <div className={styles.unpaidGamesBreakdown}>
+                            <div className={styles.breakdownHeader}>
+                              <span className={styles.breakdownIcon}>📋</span>
+                              <span className={styles.breakdownTitle}>
+                                Chi tiết các trận chưa thanh toán ({unpaidGames.length} trận):
+                              </span>
+                            </div>
+                            <div className={styles.gamesList}>
+                              {unpaidGames.slice(0, 5).map((game, index) => {
+                                const participation = game.participants.find(p => p.id === selectedMember.id)
+                                const gameAmount = participation ? game.costPerMember - participation.prePaid : game.costPerMember
+                                const gameDate = new Date(game.date).toLocaleDateString("vi-VN", {
+                                  weekday: "short",
+                                  day: "2-digit",
+                                  month: "2-digit"
+                                })
+                                
+                                return (
+                                  <div key={game.id} className={styles.gameItem}>
+                                    <span className={styles.gameDate}>📅 {gameDate}</span>
+                                    <span className={styles.gameAmount}>
+                                      {formatCurrency(gameAmount)}
+                                    </span>
+                                  </div>
+                                )
+                              })}
+                              {unpaidGames.length > 5 && (
+                                <div className={styles.moreGames}>
+                                  + {unpaidGames.length - 5} trận khác...
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -460,16 +485,29 @@ Nội dung: ${content}
           <div className={styles.qrSection}>
             <div className={styles.qrContainer}>
               <div className={styles.qrWrapper}>
-                {!selectedMember || memberOutstandingAmount === 0 ? (
+                {!selectedMember || memberOutstandingAmount === 0 || isCalculatingAmount ? (
                   <div className={styles.qrPlaceholder}>
-                    <div className={styles.noMemberSelected}>
-                      <span className={styles.selectIcon}>👆</span>
-                      <p>
-                        {!selectedMember
-                          ? "Vui lòng chọn thành viên để tạo mã QR thanh toán"
-                          : "Thành viên này không có khoản nào cần thanh toán"}
-                      </p>
-                    </div>
+                    {isCalculatingAmount ? (
+                      <div className={styles.qrCalculatingState}>
+                        <div className={styles.loadingSpinner}></div>
+                        <p>
+                          {isChangingMember 
+                            ? "Đang chuẩn bị thông tin thanh toán..." 
+                            : "Đang tạo mã QR..."
+                          }
+                        </p>
+                      </div>
+                    ) : !selectedMember ? (
+                      <div className={styles.noMemberSelected}>
+                        <span className={styles.selectIcon}>👆</span>
+                        <p>Vui lòng chọn thành viên để tạo mã QR thanh toán</p>
+                      </div>
+                    ) : (
+                      <div className={styles.noMemberSelected}>
+                        <span className={styles.selectIcon}>👆</span>
+                        <p>Thành viên này không có khoản nào cần thanh toán</p>
+                      </div>
+                    )}
                   </div>
                 ) : qrCodeUrl ? (
                   <img
@@ -498,7 +536,7 @@ Nội dung: ${content}
               </div>
 
               {/* Banking App Button Moved Outside qrWrapper */}
-              {selectedMember && memberOutstandingAmount > 0 && (
+              {selectedMember && memberOutstandingAmount > 0 && !isCalculatingAmount && (
                 <div className={styles.bankingAppSection}>
                   <div className={styles.orDivider}>
                     <span className={styles.orText}>hoặc</span>
