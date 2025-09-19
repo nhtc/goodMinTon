@@ -1,5 +1,6 @@
 // src/lib/api.ts
 import axios from 'axios'
+import { PersonalEventFilters, CreatePersonalEventData, UpdatePersonalEventData, PersonalEventListResponse, PersonalEvent } from '../types'
 
 const api = axios.create({
   baseURL: '/api',
@@ -212,6 +213,101 @@ export const apiService = {
       if (!response.ok) {
         const error = await response.json()
         throw new Error(error.error || 'Failed to toggle member status')
+      }
+
+      return response.json()
+    },
+  },
+
+  personalEvents: {
+    async getAll(filters?: PersonalEventFilters): Promise<PersonalEventListResponse> {
+      const searchParams = new URLSearchParams()
+      
+      if (filters?.search) searchParams.set('search', filters.search)
+      if (filters?.startDate) searchParams.set('startDate', filters.startDate)
+      if (filters?.endDate) searchParams.set('endDate', filters.endDate)
+      if (filters?.memberId) searchParams.set('memberId', filters.memberId)
+      if (filters?.page) searchParams.set('page', filters.page.toString())
+      if (filters?.limit) searchParams.set('limit', filters.limit.toString())
+
+      const queryString = searchParams.toString()
+      const url = `/api/personal-events${queryString ? `?${queryString}` : ''}`
+      
+      const response = await fetch(url)
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to fetch personal events')
+      }
+      return response.json()
+    },
+
+    async getById(id: string): Promise<PersonalEvent> {
+      const response = await fetch(`/api/personal-events/${id}`)
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to fetch personal event')
+      }
+      return response.json()
+    },
+
+    async create(data: CreatePersonalEventData): Promise<PersonalEvent> {
+      const response = await fetch('/api/personal-events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to create personal event')
+      }
+
+      return response.json()
+    },
+
+    async update(id: string, data: UpdatePersonalEventData): Promise<PersonalEvent> {
+      const response = await fetch(`/api/personal-events/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to update personal event')
+      }
+
+      return response.json()
+    },
+
+    async delete(id: string): Promise<{ message: string }> {
+      const response = await fetch(`/api/personal-events/${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to delete personal event')
+      }
+
+      return response.json()
+    },
+
+    async togglePayment(eventId: string, memberId: string): Promise<{ message: string; participant: any }> {
+      const response = await fetch(`/api/personal-events/${eventId}/participants/${memberId}/payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to toggle payment status')
       }
 
       return response.json()
