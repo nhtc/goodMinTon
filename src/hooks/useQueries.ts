@@ -8,7 +8,9 @@ import type {
   PersonalEventParticipant
 } from '../types'
 
-// Types
+/**
+ * Member interface for type safety
+ */
 interface Member {
   id: string
   name: string
@@ -17,17 +19,31 @@ interface Member {
   isActive?: boolean
 }
 
+/**
+ * Game participant interface extending member data
+ */
 interface GameParticipant {
-  id: string // This is the member's ID (from member object)
+  /** Member's unique identifier */
+  id: string
+  /** Member's display name */
   name: string
+  /** Member's phone number */
   phone?: string
-  participantId: string // This is the participation record ID
+  /** Participation record ID */
+  participantId: string
+  /** Payment status flag */
   hasPaid: boolean
+  /** Payment timestamp */
   paidAt?: string
+  /** Pre-paid amount */
   prePaid: number
+  /** Custom payment amount override */
   customAmount?: number
 }
 
+/**
+ * Game interface with participants and cost information
+ */
 interface Game {
   id: string
   date: string
@@ -35,11 +51,16 @@ interface Game {
   participants: GameParticipant[]
 }
 
-// Query Keys - centralized for consistency
+/**
+ * Centralized query keys for cache management and consistency
+ */
 export const queryKeys = {
+  // Base entity keys
   members: ['members'] as const,
   activeMembers: ['members', 'active'] as const,
   games: ['games'] as const,
+  
+  // Parameterized keys
   game: (id: string) => ['games', id] as const,
   memberOutstanding: (memberId: string) => ['member-outstanding', memberId] as const,
   personalEvents: ['personalEvents'] as const,
@@ -47,46 +68,89 @@ export const queryKeys = {
   personalEvent: (id: string) => ['personalEvents', id] as const,
 }
 
-// Members Hooks
+/**
+ * Configuration constants for query caching
+ */
+const CACHE_CONFIG = {
+  /** Standard stale time for member data */
+  MEMBERS_STALE_TIME: 5 * 60 * 1000, // 5 minutes
+  /** Standard garbage collection time */
+  STANDARD_GC_TIME: 10 * 60 * 1000, // 10 minutes
+  /** Shorter stale time for payment-sensitive data */
+  PAYMENT_STALE_TIME: 2 * 60 * 1000, // 2 minutes
+  /** Short stale time for calculations */
+  CALCULATION_STALE_TIME: 1 * 60 * 1000, // 1 minute
+  /** Short GC time for calculations */
+  CALCULATION_GC_TIME: 5 * 60 * 1000, // 5 minutes
+} as const
+
+// ============================================
+// MEMBER HOOKS
+// ============================================
+
+/**
+ * Hook to fetch all members
+ * @returns Query result with all members data
+ */
 export const useMembers = () => {
   return useQuery({
     queryKey: queryKeys.members,
     queryFn: apiService.members.getAll,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: CACHE_CONFIG.MEMBERS_STALE_TIME,
+    gcTime: CACHE_CONFIG.STANDARD_GC_TIME,
   })
 }
 
+/**
+ * Hook to fetch only active members
+ * @returns Query result with active members data
+ */
 export const useActiveMembers = () => {
   return useQuery({
     queryKey: queryKeys.activeMembers,
     queryFn: apiService.members.getActive,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: CACHE_CONFIG.MEMBERS_STALE_TIME,
+    gcTime: CACHE_CONFIG.STANDARD_GC_TIME,
   })
 }
 
-// Games Hooks
+// ============================================
+// GAME HOOKS  
+// ============================================
+
+/**
+ * Hook to fetch all games with payment data
+ * @returns Query result with all games data
+ */
 export const useGames = () => {
   return useQuery({
     queryKey: queryKeys.games,
     queryFn: apiService.games.getAll,
-    staleTime: 2 * 60 * 1000, // 2 minutes (shorter for payment data)
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: CACHE_CONFIG.PAYMENT_STALE_TIME,
+    gcTime: CACHE_CONFIG.STANDARD_GC_TIME,
   })
 }
 
+/**
+ * Hook to fetch a specific game by ID
+ * @param id - Game identifier
+ * @returns Query result with single game data
+ */
 export const useGame = (id: string) => {
   return useQuery({
     queryKey: queryKeys.game(id),
     queryFn: () => apiService.games.getById(id),
     enabled: !!id,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: CACHE_CONFIG.PAYMENT_STALE_TIME,
+    gcTime: CACHE_CONFIG.STANDARD_GC_TIME,
   })
 }
 
-// Custom hook for member outstanding amount calculation
+/**
+ * Hook to calculate a member's outstanding payment amount
+ * @param memberId - Member identifier (nullable)
+ * @returns Query result with outstanding amount and unpaid games
+ */
 export const useMemberOutstanding = (memberId: string | null) => {
   const { data: games, isLoading: gamesLoading, error: gamesError } = useGames()
   
@@ -120,9 +184,8 @@ export const useMemberOutstanding = (memberId: string | null) => {
       }
     },
     enabled: !!memberId && !!games && !gamesLoading,
-    staleTime: 1 * 60 * 1000, // 1 minute for outstanding calculations
-    gcTime: 5 * 60 * 1000, // 5 minutes
-    // Add placeholderData to prevent flashing
+    staleTime: CACHE_CONFIG.CALCULATION_STALE_TIME,
+    gcTime: CACHE_CONFIG.CALCULATION_GC_TIME,
     placeholderData: {
       totalOutstanding: 0,
       unpaidGames: [] as Game[]
@@ -130,7 +193,14 @@ export const useMemberOutstanding = (memberId: string | null) => {
   })
 }
 
-// Mutation hooks for updating data
+// ============================================
+// MUTATION HOOKS
+// ============================================
+
+/**
+ * Hook to create a new game with cache invalidation
+ * @returns Mutation hook for creating games
+ */
 export const useCreateGame = () => {
   const queryClient = useQueryClient()
   
@@ -142,9 +212,16 @@ export const useCreateGame = () => {
       // Also invalidate member outstanding calculations
       queryClient.invalidateQueries({ queryKey: ['member-outstanding'] })
     },
+    onError: (error) => {
+      console.error('Failed to create game:', error)
+    },
   })
 }
 
+/**
+ * Hook to update an existing game
+ * @returns Mutation hook for updating games
+ */
 export const useUpdateGame = () => {
   const queryClient = useQueryClient()
   
@@ -156,6 +233,9 @@ export const useUpdateGame = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.game(gameId) })
       queryClient.invalidateQueries({ queryKey: queryKeys.games })
       queryClient.invalidateQueries({ queryKey: ['member-outstanding'] })
+    },
+    onError: (error) => {
+      console.error('Failed to update game:', error)
     },
   })
 }
@@ -229,26 +309,43 @@ export const useToggleMemberStatus = () => {
   })
 }
 
-// Personal Events Hooks
+// ============================================
+// PERSONAL EVENTS HOOKS
+// ============================================
+
+/**
+ * Hook to fetch personal events with optional filtering
+ * @param filters - Optional filters for personal events
+ * @returns Query result with filtered personal events data
+ */
 export const usePersonalEvents = (filters?: PersonalEventFilters) => {
   return useQuery({
     queryKey: queryKeys.personalEventsWithFilters(filters),
     queryFn: () => apiService.personalEvents.getAll(filters),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: CACHE_CONFIG.PAYMENT_STALE_TIME,
+    gcTime: CACHE_CONFIG.STANDARD_GC_TIME,
   })
 }
 
+/**
+ * Hook to fetch a specific personal event by ID
+ * @param id - Personal event identifier
+ * @returns Query result with single personal event data
+ */
 export const usePersonalEvent = (id: string) => {
   return useQuery({
     queryKey: queryKeys.personalEvent(id),
     queryFn: () => apiService.personalEvents.getById(id),
     enabled: !!id,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: CACHE_CONFIG.PAYMENT_STALE_TIME,
+    gcTime: CACHE_CONFIG.STANDARD_GC_TIME,
   })
 }
 
+/**
+ * Hook to create a new personal event with cache management
+ * @returns Mutation hook for creating personal events
+ */
 export const useCreatePersonalEvent = () => {
   const queryClient = useQueryClient()
   
@@ -260,9 +357,16 @@ export const useCreatePersonalEvent = () => {
       // Also invalidate filtered queries
       queryClient.invalidateQueries({ queryKey: ['personalEvents'] })
     },
+    onError: (error) => {
+      console.error('Failed to create personal event:', error)
+    },
   })
 }
 
+/**
+ * Hook to update an existing personal event
+ * @returns Mutation hook for updating personal events
+ */
 export const useUpdatePersonalEvent = () => {
   const queryClient = useQueryClient()
   
@@ -275,9 +379,16 @@ export const useUpdatePersonalEvent = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.personalEvents })
       queryClient.invalidateQueries({ queryKey: ['personalEvents'] })
     },
+    onError: (error) => {
+      console.error('Failed to update personal event:', error)
+    },
   })
 }
 
+/**
+ * Hook to delete a personal event
+ * @returns Mutation hook for deleting personal events
+ */
 export const useDeletePersonalEvent = () => {
   const queryClient = useQueryClient()
   
@@ -288,26 +399,35 @@ export const useDeletePersonalEvent = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.personalEvents })
       queryClient.invalidateQueries({ queryKey: ['personalEvents'] })
     },
+    onError: (error) => {
+      console.error('Failed to delete personal event:', error)
+    },
   })
 }
 
+/**
+ * Hook to toggle payment status for personal events with optimistic updates
+ * Provides immediate UI feedback while the server request is processing
+ * @returns Mutation hook with optimistic updates and rollback functionality
+ */
 export const useTogglePersonalEventPayment = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
     mutationFn: ({ eventId, memberId }: { eventId: string; memberId: string }) => 
       apiService.personalEvents.togglePayment(eventId, memberId),
-    // Optimistic updates
+    
+    // Optimistic updates for immediate UI feedback
     onMutate: async ({ eventId, memberId }) => {
-      // Cancel any outgoing refetches
+      // Cancel any outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: queryKeys.personalEvent(eventId) })
       await queryClient.cancelQueries({ queryKey: queryKeys.personalEvents })
 
-      // Snapshot the previous values
+      // Snapshot the previous values for rollback
       const previousEvent = queryClient.getQueryData<PersonalEvent>(queryKeys.personalEvent(eventId))
       const previousEvents = queryClient.getQueryData<PersonalEvent[]>(queryKeys.personalEvents)
 
-      // Optimistically update the individual event
+      // Optimistically update the individual event cache
       if (previousEvent) {
         const updatedEvent = {
           ...previousEvent,
@@ -320,7 +440,7 @@ export const useTogglePersonalEventPayment = () => {
         queryClient.setQueryData(queryKeys.personalEvent(eventId), updatedEvent)
       }
 
-      // Optimistically update the events list
+      // Optimistically update the events list cache
       if (previousEvents) {
         const updatedEvents = previousEvents.map(event =>
           event.id === eventId
@@ -337,10 +457,11 @@ export const useTogglePersonalEventPayment = () => {
         queryClient.setQueryData(queryKeys.personalEvents, updatedEvents)
       }
 
-      // Return a context object with the snapshotted values
+      // Return context for potential rollback
       return { previousEvent, previousEvents, eventId, memberId }
     },
-    // If the mutation fails, use the context returned from onMutate to roll back
+    
+    // Rollback optimistic updates on failure
     onError: (err, { eventId, memberId }, context) => {
       if (context?.previousEvent) {
         queryClient.setQueryData(queryKeys.personalEvent(eventId), context.previousEvent)
@@ -348,9 +469,10 @@ export const useTogglePersonalEventPayment = () => {
       if (context?.previousEvents) {
         queryClient.setQueryData(queryKeys.personalEvents, context.previousEvents)
       }
-      console.error('Payment toggle failed:', err)
+      console.error('Personal event payment toggle failed:', err)
     },
-    // Always refetch after error or success
+    
+    // Always refetch to ensure data consistency
     onSettled: (_, __, { eventId }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.personalEvent(eventId) })
       queryClient.invalidateQueries({ queryKey: queryKeys.personalEvents })
