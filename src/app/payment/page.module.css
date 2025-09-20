@@ -1412,3 +1412,385 @@
     font-size: 1rem;
   }
 }
+
+/* Payment Type Selection Styles */
+.paymentTypeSection {
+  margin: 2rem 0;
+}
+
+.paymentTypeSelector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.paymentTypeBtn {
+  display: flex;
+  align-items: center;
+  padding: 1.25rem;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  gap: 1rem;
+}
+
+.paymentTypeBtn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
+}
+
+.paymentTypeBtn.active {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+}
+
+.typeIcon {
+  font-size: 2rem;
+  min-width: 3rem;
+  text-align: center;
+}
+
+.typeContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.typeTitle {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #1f2937;
+}
+
+.typeDesc {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+/* Personal Event Selection Styles */
+.personalEventSection {
+  margin: 2rem 0;
+}
+
+.personalEventSelector {
+  margin-top: 1rem;
+}
+
+.personalEventSelect {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.personalEventSelect:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.participantSelection {
+  margin-top: 1.5rem;
+}
+
+.participantTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.participantIcon {
+  font-size: 1.2rem;
+}
+
+.participantsList {
+  display: grid;
+  gap: 1rem;
+}
+
+.participantBtn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.participantBtn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+}
+
+.participantBtn.active {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.participantBtn.paid {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.participantBtn.unpaid {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.participantInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.participantAvatar {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.participantAvatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.participantAvatarFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.participantAvatarFallback.hidden {
+  display: none;
+}
+
+.participantAvatarFallback.visible {
+  display: flex;
+}
+
+.participantDetails {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.participantName {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.participantAmount {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #059669;
+}
+
+.participantStatus {
+  margin-top: 0.25rem;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.statusBadge.paid {
+  background: rgba(16, 185, 129, 0.2);
+  color: #047857;
+}
+
+.statusBadge.unpaid {
+  background: rgba(245, 158, 11, 0.2);
+  color: #92400e;
+}
+
+@media (max-width: 768px) {
+  .paymentTypeSelector {
+    grid-template-columns: 1fr;
+  }
+  
+  .participantBtn {
+    padding: 0.75rem;
+  }
+  
+  .participantAvatar {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .typeIcon {
+    font-size: 1.5rem;
+    min-width: 2.5rem;
+  }
+}
+
+/* Selected Event Info Styles */
+.selectedEventInfo {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.eventInfoHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.eventIcon {
+  font-size: 2rem;
+}
+
+.eventDetails {
+  flex: 1;
+}
+
+.eventTitle {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+}
+
+.eventDate,
+.eventLocation {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0.25rem 0;
+}
+
+/* Pay All Info Styles */
+.payAllInfo {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.payAllTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.payAllIcon {
+  font-size: 1.2rem;
+}
+
+.payAllDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.payAllParticipant {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 6px;
+}
+
+.participantName {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.participantAmount {
+  font-weight: 600;
+  color: #059669;
+}
+
+/* Selected Participant Info Styles */
+.selectedParticipantInfo {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.participantInfoTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #047857;
+}
+
+.participantInfoIcon {
+  font-size: 1.2rem;
+}
+
+.participantInfoDetails {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 6px;
+}
+
+.participantInfoName {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.participantInfoAmount {
+  font-weight: 600;
+  color: #059669;
+  font-size: 1.1rem;
+}
