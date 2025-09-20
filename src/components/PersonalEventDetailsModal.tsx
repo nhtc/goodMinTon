@@ -1,4 +1,4 @@
-"use client"
+'use client'
 import React, { useState } from 'react'
 import Modal from './Modal'
 import ConfirmationModal from './ConfirmationModal'
@@ -12,6 +12,9 @@ import type {
   UpdatePersonalEventData,
   CreatePersonalEventData 
 } from '../types'
+
+// Constants for better maintainability
+const PAYMENT_TOGGLE_TIMEOUT = 1000 // milliseconds
 
 const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
   isOpen,
@@ -56,15 +59,19 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
     }
   }
 
-  // Handle payment toggle (you would pass this from parent)
-  const handlePaymentToggle = async (eventId: string, memberId: string) => {
+  /**
+   * Handles payment status toggle for a participant
+   * @param eventId - ID of the personal event
+   * @param memberId - ID of the member to toggle payment for
+   */
+  const handlePaymentToggle = async (eventId: string, memberId: string): Promise<void> => {
     const paymentKey = `${eventId}-${memberId}`
     setPaymentLoading(paymentKey)
     
     try {
       // This would call an API to toggle payment status
       // For now, just simulate loading
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise(resolve => setTimeout(resolve, PAYMENT_TOGGLE_TIMEOUT))
       console.log('Toggle payment for:', { eventId, memberId })
     } catch (error) {
       console.error('Error toggling payment:', error)
@@ -73,8 +80,12 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
     }
   }
 
-  // Format date display
-  const formatDate = (dateString: string) => {
+  /**
+   * Formats date to Vietnamese locale format
+   * @param dateString - ISO date string to format
+   * @returns Formatted date string
+   */
+  const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString("vi-VN", {
       weekday: "long",
       day: "2-digit",
@@ -85,7 +96,12 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
     })
   }
 
-  const formatTime = (dateString: string) => {
+  /**
+   * Formats time to Vietnamese locale format
+   * @param dateString - ISO date string to format
+   * @returns Formatted time string
+   */
+  const formatTime = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString("vi-VN", {
       day: "2-digit",
       month: "2-digit",
@@ -94,7 +110,38 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
     })
   }
 
-  // Calculate totals
+  /**
+   * Calculates payment statistics for the event
+   * @param event - The personal event to calculate statistics for
+   * @returns Object containing payment statistics
+   */
+  const calculatePaymentStats = (event: PersonalEvent | undefined) => {
+    if (!event?.participants) {
+      return {
+        totalPaid: 0,
+        totalUnpaid: 0,
+        totalCollected: 0,
+        totalRemaining: 0
+      }
+    }
+
+    const totalPaid = event.participants.filter(p => p.hasPaid).length
+    const totalUnpaid = event.participants.length - totalPaid
+    const totalCollected = event.participants
+      .filter(p => p.hasPaid)
+      .reduce((sum, p) => sum + p.customAmount, 0)
+    const totalRemaining = event.totalCost - totalCollected
+
+    return {
+      totalPaid,
+      totalUnpaid,
+      totalCollected,
+      totalRemaining
+    }
+  }
+
+  // Calculate totals using the extracted function
+  const paymentStats = calculatePaymentStats(event)  // Calculate totals
   const totalPaid = event?.participants?.filter(p => p.hasPaid).length || 0
   const totalUnpaid = (event?.participants?.length || 0) - totalPaid
   const totalCollected = event?.participants
@@ -224,28 +271,28 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
                 <div className={`${styles.paymentStat} ${styles.paid}`}>
                   <span className={styles.statIcon}>✅</span>
                   <div className={styles.statInfo}>
-                    <span className={styles.statNumber}>{totalPaid}</span>
+                    <span className={styles.statNumber}>{paymentStats.totalPaid}</span>
                     <span className={styles.statLabel}>đã trả</span>
                   </div>
                 </div>
                 <div className={`${styles.paymentStat} ${styles.unpaid}`}>
                   <span className={styles.statIcon}>⏳</span>
                   <div className={styles.statInfo}>
-                    <span className={styles.statNumber}>{totalUnpaid}</span>
+                    <span className={styles.statNumber}>{paymentStats.totalUnpaid}</span>
                     <span className={styles.statLabel}>chưa trả</span>
                   </div>
                 </div>
                 <div className={`${styles.paymentStat} ${styles.total}`}>
                   <span className={styles.statIcon}>💰</span>
                   <div className={styles.statInfo}>
-                    <span className={styles.statNumber}>{totalCollected.toLocaleString("vi-VN")}đ</span>
+                    <span className={styles.statNumber}>{paymentStats.totalCollected.toLocaleString("vi-VN")}đ</span>
                     <span className={styles.statLabel}>đã thu</span>
                   </div>
                 </div>
                 <div className={`${styles.paymentStat} ${styles.remaining}`}>
                   <span className={styles.statIcon}>⏳</span>
                   <div className={styles.statInfo}>
-                    <span className={styles.statNumber}>{totalRemaining.toLocaleString("vi-VN")}đ</span>
+                    <span className={styles.statNumber}>{paymentStats.totalRemaining.toLocaleString("vi-VN")}đ</span>
                     <span className={styles.statLabel}>còn cần thu</span>
                   </div>
                 </div>
@@ -255,10 +302,31 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
 
           {/* Participants List */}
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>
-              <span className={styles.sectionIcon}>👥</span>
-              Thành Viên Tham Gia ({event?.participants?.length || 0})
-            </h3>
+            <div className={styles.participantsHeader}>
+              <h3 className={styles.sectionTitle}>
+                <span className={styles.sectionIcon}>👥</span>
+                Thành Viên Tham Gia ({event?.participants?.length || 0})
+              </h3>
+              
+              {/* Pay All Button */}
+              <AuthorizedComponent 
+                requireEdit={true}
+                viewOnlyFallback={null}
+              >
+                {event && event.participants && event.participants.some(p => !p.hasPaid) && (
+                  <a
+                    href={`/payment?personalEventId=${event.id}&payAll=true`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.payAllBtn}
+                    title="Tạo mã QR thanh toán cho tất cả thành viên chưa trả"
+                  >
+                    <span className={styles.payAllIcon}>💳</span>
+                    <span className={styles.payAllText}>QR Thanh Toán Tập Thể</span>
+                  </a>
+                )}
+              </AuthorizedComponent>
+            </div>
             <div className={styles.participantsList}>
               {event?.participants?.map((participant) => {
                 const paymentKey = `${event.id}-${participant.memberId}`
@@ -326,31 +394,47 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
                         </div>
                       }
                     >
-                      <button
-                        onClick={() => event && handlePaymentToggle(event.id, participant.memberId)}
-                        disabled={isLoading}
-                        className={`${styles.paymentToggleBtn} ${
-                          participant.hasPaid ? styles.paid : styles.unpaid
-                        }`}
-                        title={
-                          participant.hasPaid
-                            ? `✅ ${participant.member.name} đã thanh toán - Nhấn để hủy`
-                            : `💰 ${participant.member.name} chưa thanh toán - Nhấn để xác nhận đã trả`
-                        }
-                      >
-                        {isLoading ? (
-                          <div className={styles.paymentSpinner}></div>
-                        ) : (
-                          <>
-                            <span className={styles.paymentIcon}>
-                              {participant.hasPaid ? '✅' : '⏳'}
-                            </span>
-                            <span className={styles.paymentText}>
-                              {participant.hasPaid ? 'Đã trả' : 'Chưa trả'}
-                            </span>
-                          </>
+                      <div className={styles.paymentActions}>
+                        <button
+                          onClick={() => event && handlePaymentToggle(event.id, participant.memberId)}
+                          disabled={isLoading}
+                          className={`${styles.paymentToggleBtn} ${
+                            participant.hasPaid ? styles.paid : styles.unpaid
+                          }`}
+                          title={
+                            participant.hasPaid
+                              ? `✅ ${participant.member.name} đã thanh toán - Nhấn để hủy`
+                              : `💰 ${participant.member.name} chưa thanh toán - Nhấn để xác nhận đã trả`
+                          }
+                        >
+                          {isLoading ? (
+                            <div className={styles.paymentSpinner}></div>
+                          ) : (
+                            <>
+                              <span className={styles.paymentIcon}>
+                                {participant.hasPaid ? '✅' : '⏳'}
+                              </span>
+                              <span className={styles.paymentText}>
+                                {participant.hasPaid ? 'Đã trả' : 'Chưa trả'}
+                              </span>
+                            </>
+                          )}
+                        </button>
+                        
+                        {/* QR Payment Button */}
+                        {!participant.hasPaid && (
+                          <a
+                            href={`/payment?personalEventId=${event?.id}&participantId=${participant.memberId}&amount=${participant.customAmount}&memberName=${encodeURIComponent(participant.member.name)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.qrPaymentBtn}
+                            title={`Tạo mã QR thanh toán cho ${participant.member.name}`}
+                          >
+                            <span className={styles.qrIcon}>📱</span>
+                            <span className={styles.qrText}>QR Code</span>
+                          </a>
                         )}
-                      </button>
+                      </div>
                     </AuthorizedComponent>
                   </div>
                 )
