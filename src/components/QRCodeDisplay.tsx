@@ -2,15 +2,31 @@
 import React from 'react'
 import styles from '../app/payment/page.module.css'
 
+/**
+ * Props for QRCodeDisplay component
+ */
 interface QRCodeDisplayProps {
+  /** URL of the QR code image to display */
   qrCodeUrl: string
+  /** Whether the QR code is currently being generated */
   isLoading: boolean
+  /** Whether the payment information is valid and complete */
   hasValidPayment: boolean
+  /** Type of payment being made */
   paymentType: 'games' | 'personal-events'
+  /** Callback function to open banking app */
   onOpenBankingApp: () => void
+  /** Additional content to render below the QR code */
   children?: React.ReactNode
 }
 
+/**
+ * QRCodeDisplay component renders a QR code for payment processing
+ * with appropriate placeholders and error handling
+ * 
+ * @param props - Component props
+ * @returns JSX element containing QR code display interface
+ */
 const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
   qrCodeUrl,
   isLoading,
@@ -19,36 +35,69 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
   onOpenBankingApp,
   children
 }) => {
+  /**
+   * Renders loading state placeholder
+   */
+  const renderLoadingPlaceholder = () => (
+    <div className={styles.qrCalculatingState}>
+      <div className={styles.loadingSpinner}></div>
+      <p>Đang tạo mã QR...</p>
+    </div>
+  )
+
+  /**
+   * Renders invalid payment state placeholder
+   */
+  const renderInvalidPaymentPlaceholder = () => (
+    <div className={styles.noMemberSelected}>
+      <span className={styles.selectIcon}>👆</span>
+      <p>
+        {paymentType === 'games' 
+          ? "Vui lòng chọn thành viên để tạo mã QR thanh toán"
+          : "Vui lòng chọn sự kiện và thành viên để tạo mã QR thanh toán"
+        }
+      </p>
+    </div>
+  )
+
+  /**
+   * Renders default error state placeholder
+   */
+  const renderErrorPlaceholder = () => (
+    <div className={styles.noMemberSelected}>
+      <span className={styles.selectIcon}>👆</span>
+      <p>Vui lòng kiểm tra lại thông tin thanh toán</p>
+    </div>
+  )
+
+  /**
+   * Renders appropriate placeholder based on current state
+   */
   const renderPlaceholder = () => {
     if (isLoading) {
-      return (
-        <div className={styles.qrCalculatingState}>
-          <div className={styles.loadingSpinner}></div>
-          <p>Đang tạo mã QR...</p>
-        </div>
-      )
+      return renderLoadingPlaceholder()
     }
 
     if (!hasValidPayment) {
-      return (
-        <div className={styles.noMemberSelected}>
-          <span className={styles.selectIcon}>👆</span>
-          <p>
-            {paymentType === 'games' 
-              ? "Vui lòng chọn thành viên để tạo mã QR thanh toán"
-              : "Vui lòng chọn sự kiện và thành viên để tạo mã QR thanh toán"
-            }
-          </p>
-        </div>
-      )
+      return renderInvalidPaymentPlaceholder()
     }
 
-    return (
-      <div className={styles.noMemberSelected}>
-        <span className={styles.selectIcon}>👆</span>
-        <p>Vui lòng kiểm tra lại thông tin thanh toán</p>
-      </div>
-    )
+    return renderErrorPlaceholder()
+  }
+
+  /**
+   * Handles QR code image load error with user-friendly fallback
+   */
+  const handleQRImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    console.error("QR Code failed to load:", qrCodeUrl)
+    const target = e.currentTarget
+    target.style.display = "none"
+    
+    // Add error message to parent container
+    const errorDiv = document.createElement('div')
+    errorDiv.className = styles.qrError || styles.noMemberSelected
+    errorDiv.innerHTML = '<p>Không thể tải mã QR. Vui lòng thử lại.</p>'
+    target.parentNode?.appendChild(errorDiv)
   }
 
   return (
@@ -64,15 +113,11 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
               src={qrCodeUrl}
               alt='QR Code thanh toán'
               className={styles.qrImage}
-              onError={(e) => {
-                console.error("QR Code failed to load")
-                e.currentTarget.style.display = "none"
-              }}
+              onError={handleQRImageError}
             />
           ) : (
             <div className={styles.qrPlaceholder}>
-              <div className={styles.loadingSpinner}></div>
-              <p>Đang tạo mã QR...</p>
+              {renderLoadingPlaceholder()}
             </div>
           )}
           <div className={styles.qrOverlay}>
