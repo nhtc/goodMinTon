@@ -1,5 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiService } from '../lib/api'
+import type { 
+  PersonalEventFilters, 
+  CreatePersonalEventData, 
+  UpdatePersonalEventData,
+  PersonalEvent,
+  PersonalEventParticipant
+} from '../types'
 
 // Types
 interface Member {
@@ -35,6 +42,9 @@ export const queryKeys = {
   games: ['games'] as const,
   game: (id: string) => ['games', id] as const,
   memberOutstanding: (memberId: string) => ['member-outstanding', memberId] as const,
+  personalEvents: ['personalEvents'] as const,
+  personalEventsWithFilters: (filters?: PersonalEventFilters) => ['personalEvents', filters] as const,
+  personalEvent: (id: string) => ['personalEvents', id] as const,
 }
 
 // Members Hooks
@@ -215,6 +225,136 @@ export const useToggleMemberStatus = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.members })
       queryClient.invalidateQueries({ queryKey: queryKeys.activeMembers })
+    },
+  })
+}
+
+// Personal Events Hooks
+export const usePersonalEvents = (filters?: PersonalEventFilters) => {
+  return useQuery({
+    queryKey: queryKeys.personalEventsWithFilters(filters),
+    queryFn: () => apiService.personalEvents.getAll(filters),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  })
+}
+
+export const usePersonalEvent = (id: string) => {
+  return useQuery({
+    queryKey: queryKeys.personalEvent(id),
+    queryFn: () => apiService.personalEvents.getById(id),
+    enabled: !!id,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  })
+}
+
+export const useCreatePersonalEvent = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: (data: CreatePersonalEventData) => apiService.personalEvents.create(data),
+    onSuccess: () => {
+      // Invalidate and refetch personal events
+      queryClient.invalidateQueries({ queryKey: queryKeys.personalEvents })
+      // Also invalidate filtered queries
+      queryClient.invalidateQueries({ queryKey: ['personalEvents'] })
+    },
+  })
+}
+
+export const useUpdatePersonalEvent = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: ({ eventId, eventData }: { eventId: string; eventData: UpdatePersonalEventData }) => 
+      apiService.personalEvents.update(eventId, eventData),
+    onSuccess: (_, { eventId }) => {
+      // Invalidate specific event and all events
+      queryClient.invalidateQueries({ queryKey: queryKeys.personalEvent(eventId) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.personalEvents })
+      queryClient.invalidateQueries({ queryKey: ['personalEvents'] })
+    },
+  })
+}
+
+export const useDeletePersonalEvent = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: (eventId: string) => apiService.personalEvents.delete(eventId),
+    onSuccess: () => {
+      // Invalidate all personal events queries
+      queryClient.invalidateQueries({ queryKey: queryKeys.personalEvents })
+      queryClient.invalidateQueries({ queryKey: ['personalEvents'] })
+    },
+  })
+}
+
+export const useTogglePersonalEventPayment = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: ({ eventId, memberId }: { eventId: string; memberId: string }) => 
+      apiService.personalEvents.togglePayment(eventId, memberId),
+    // Optimistic updates
+    onMutate: async ({ eventId, memberId }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: queryKeys.personalEvent(eventId) })
+      await queryClient.cancelQueries({ queryKey: queryKeys.personalEvents })
+
+      // Snapshot the previous values
+      const previousEvent = queryClient.getQueryData<PersonalEvent>(queryKeys.personalEvent(eventId))
+      const previousEvents = queryClient.getQueryData<PersonalEvent[]>(queryKeys.personalEvents)
+
+      // Optimistically update the individual event
+      if (previousEvent) {
+        const updatedEvent = {
+          ...previousEvent,
+          participants: previousEvent.participants.map(p => 
+            p.memberId === memberId 
+              ? { ...p, hasPaid: !p.hasPaid, paidAt: !p.hasPaid ? new Date().toISOString() : undefined }
+              : p
+          )
+        }
+        queryClient.setQueryData(queryKeys.personalEvent(eventId), updatedEvent)
+      }
+
+      // Optimistically update the events list
+      if (previousEvents) {
+        const updatedEvents = previousEvents.map(event =>
+          event.id === eventId
+            ? {
+                ...event,
+                participants: event.participants.map(p =>
+                  p.memberId === memberId 
+                    ? { ...p, hasPaid: !p.hasPaid, paidAt: !p.hasPaid ? new Date().toISOString() : undefined }
+                    : p
+                )
+              }
+            : event
+        )
+        queryClient.setQueryData(queryKeys.personalEvents, updatedEvents)
+      }
+
+      // Return a context object with the snapshotted values
+      return { previousEvent, previousEvents, eventId, memberId }
+    },
+    // If the mutation fails, use the context returned from onMutate to roll back
+    onError: (err, { eventId, memberId }, context) => {
+      if (context?.previousEvent) {
+        queryClient.setQueryData(queryKeys.personalEvent(eventId), context.previousEvent)
+      }
+      if (context?.previousEvents) {
+        queryClient.setQueryData(queryKeys.personalEvents, context.previousEvents)
+      }
+      console.error('Payment toggle failed:', err)
+    },
+    // Always refetch after error or success
+    onSettled: (_, __, { eventId }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.personalEvent(eventId) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.personalEvents })
+      queryClient.invalidateQueries({ queryKey: ['personalEvents'] })
     },
   })
 }
