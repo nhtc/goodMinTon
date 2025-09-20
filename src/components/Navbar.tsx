@@ -17,6 +17,7 @@ const Navbar = () => {
     { name: "Thành Viên", href: "/members", icon: "👥" },
     { name: "Lịch sử trận", href: "/history", icon: "📅" },
     { name: "QR Thanh toán", href: "/payment", icon: "💳" },
+    { name: "Theo dõi cá nhân", href: "/personal-tracking", icon: "📊" },
   ]
 
   const isActive = (href: string) => {
