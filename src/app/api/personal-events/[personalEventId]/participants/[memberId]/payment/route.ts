@@ -58,13 +58,15 @@ async function togglePaymentStatus(
       }
     })
 
-    // Transform response to include member data
+    // Transform response to match PersonalEventParticipant interface
     const transformedParticipant = {
-      ...updatedParticipant.member,
-      participantId: updatedParticipant.id,
+      id: updatedParticipant.id,
+      personalEventId: updatedParticipant.personalEventId,
+      memberId: updatedParticipant.memberId,
       customAmount: updatedParticipant.customAmount,
       hasPaid: updatedParticipant.hasPaid,
       paidAt: updatedParticipant.paidAt,
+      member: updatedParticipant.member,
       personalEvent: {
         id: updatedParticipant.personalEvent.id,
         title: updatedParticipant.personalEvent.title

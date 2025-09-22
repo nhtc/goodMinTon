@@ -29,15 +29,19 @@ async function getPersonalEvent(
       )
     }
 
-    // Transform the response to include payment data
+    // Transform the response to match PersonalEventParticipant interface
     const transformedEvent = {
       ...personalEvent,
       participants: personalEvent.participants.map((p: any) => ({
-        ...p.member,
-        participantId: p.id,
+        id: p.id,
+        personalEventId: personalEvent.id,
+        memberId: p.member.id,
         customAmount: p.customAmount,
         hasPaid: p.hasPaid,
-        paidAt: p.paidAt
+        paidAt: p.paidAt,
+        prePaid: p.prePaid,
+        prePaidCategory: p.prePaidCategory,
+        member: p.member
       }))
     }
 
@@ -156,7 +160,9 @@ async function updatePersonalEvent(
                   memberId: participant.memberId,
                   customAmount: Number(participant.customAmount) || 0,
                   hasPaid: participant.hasPaid !== undefined ? participant.hasPaid : (existing?.hasPaid || false),
-                  paidAt: participant.paidAt ? new Date(participant.paidAt) : (existing?.paidAt || null)
+                  paidAt: participant.paidAt ? new Date(participant.paidAt) : (existing?.paidAt || null),
+                  prePaid: Number(participant.prePaid) || 0,
+                  prePaidCategory: participant.prePaidCategory || ""
                 }
               })
             })
@@ -165,21 +171,25 @@ async function updatePersonalEvent(
           // Only update custom amounts for unchanged participants
           const updates = participants
             .filter((p: any) => {
-              const existing = existingEvent.participants.find((ep: any) => ep.memberId === p.memberId)
+              const existing: any = existingEvent.participants.find((ep: any) => ep.memberId === p.memberId)
               return existing && (
                 p.customAmount !== existing.customAmount ||
                 p.hasPaid !== existing.hasPaid ||
-                p.paidAt !== existing.paidAt?.toISOString()
+                p.paidAt !== existing.paidAt?.toISOString() ||
+                (p.prePaid || 0) !== (existing.prePaid || 0) ||
+                (p.prePaidCategory || "") !== (existing.prePaidCategory || "")
               )
             })
             .map((p: any) => {
-              const existing = existingEvent.participants.find((ep: any) => ep.memberId === p.memberId)
+              const existing: any = existingEvent.participants.find((ep: any) => ep.memberId === p.memberId)
               return {
                 where: { id: existing!.id },
                 data: {
                   customAmount: Number(p.customAmount) || 0,
                   hasPaid: p.hasPaid !== undefined ? p.hasPaid : existing!.hasPaid,
-                  paidAt: p.paidAt ? new Date(p.paidAt) : (p.hasPaid === false ? null : existing!.paidAt)
+                  paidAt: p.paidAt ? new Date(p.paidAt) : (p.hasPaid === false ? null : existing!.paidAt),
+                  prePaid: Number(p.prePaid) || 0,
+                  prePaidCategory: p.prePaidCategory || ""
                 }
               }
             })
@@ -212,15 +222,19 @@ async function updatePersonalEvent(
     console.log(`🏁 Remote DB transaction: ${Date.now() - transactionStartTime}ms`)
 
     const transformStartTime = Date.now()
-    // Transform the response
+    // Transform the response to match PersonalEventParticipant interface
     const transformedEvent = {
       ...result,
       participants: result?.participants.map((p: any) => ({
-        ...p.member,
-        participantId: p.id,
+        id: p.id,
+        personalEventId: personalEventId,
+        memberId: p.member.id,
         customAmount: p.customAmount,
         hasPaid: p.hasPaid,
-        paidAt: p.paidAt
+        paidAt: p.paidAt,
+        prePaid: p.prePaid,
+        prePaidCategory: p.prePaidCategory,
+        member: p.member
       }))
     }
     console.log(`🔄 Transform response: ${Date.now() - transformStartTime}ms`)

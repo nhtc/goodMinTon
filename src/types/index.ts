@@ -96,6 +96,10 @@ export interface PersonalEventParticipant {
     hasPaid: boolean;
     /** When payment was made (if paid) */
     paidAt?: string;
+    /** Pre-paid amount for this event */
+    prePaid?: number;
+    /** Category of pre-payment (e.g., "Team Building", "Food") */
+    prePaidCategory?: string;
     /** Full member details */
     member: Member;
 }
@@ -134,6 +138,10 @@ export interface ParticipantData {
     hasPaid?: boolean;
     /** When payment was made (ISO string) */
     paidAt?: string;
+    /** Amount this participant has prepaid */
+    prePaid?: number;
+    /** Category or description of the prepaid amount */
+    prePaidCategory?: string;
 }
 
 // ====================================================
@@ -257,6 +265,8 @@ export interface PersonalEventCardProps {
     event: PersonalEvent;
     /** Click handler for event selection */
     onClick: (event: PersonalEvent) => void;
+    /** Payment toggle handler for participant */
+    onPaymentToggle?: (eventId: string, memberId: string) => void;
     /** Optional additional CSS classes */
     className?: string;
 }

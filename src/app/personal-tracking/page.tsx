@@ -10,6 +10,7 @@ import ConfirmationModal from '@/components/ConfirmationModal'
 import Modal from '@/components/Modal'
 import { usePersonalEvents, useDeletePersonalEvent, useUpdatePersonalEvent, useCreatePersonalEvent } from '@/hooks/useQueries'
 import { useToast } from '@/hooks/useToast'
+import { apiService } from '@/lib/api'
 import { PersonalEvent, PersonalEventFilters, CreatePersonalEventData, UpdatePersonalEventData } from '@/types'
 import styles from './page.module.css'
 
@@ -54,7 +55,7 @@ const PersonalTrackingPage: React.FC = () => {
   const hasActiveFilters = filters.search || filters.startDate || filters.endDate || filters.memberId
   
   // Hooks
-  const { data: personalEventsResponse, isLoading, error } = usePersonalEvents(hasActiveFilters ? filters : undefined)
+  const { data: personalEventsResponse, isLoading, error, refetch } = usePersonalEvents(hasActiveFilters ? filters : undefined)
   const personalEvents = personalEventsResponse?.data || []
   const deletePersonalEventMutation = useDeletePersonalEvent()
   const updatePersonalEventMutation = useUpdatePersonalEvent()
@@ -109,6 +110,20 @@ const PersonalTrackingPage: React.FC = () => {
     } catch (error) {
       console.error('Error deleting event:', error)
       addToast('error', 'Lỗi', TOAST_MESSAGES.DELETE_ERROR)
+    }
+  }
+
+  // Payment toggle handler for PersonalEventCard
+  const handlePaymentToggle = async (eventId: string, memberId: string) => {
+    try {
+      await apiService.personalEvents.togglePayment(eventId, memberId)
+      addToast('success', 'Thành công', 'Trạng thái thanh toán đã được cập nhật')
+      
+      // Refetch data to update the UI
+      await refetch()
+    } catch (error) {
+      console.error('Error toggling payment:', error)
+      addToast('error', 'Lỗi', 'Không thể cập nhật trạng thái thanh toán')
     }
   }
 
@@ -197,7 +212,7 @@ const PersonalTrackingPage: React.FC = () => {
               <div className={styles.statIcon}>💰</div>
               <div className={styles.statInfo}>
                 <div className={styles.statValue}>
-                  {totalAmount.toLocaleString('vi-VN')}đ
+                  {(totalAmount / 1000).toLocaleString('vi-VN')}k
                 </div>
                 <div className={styles.statLabel}>Tổng chi phí</div>
               </div>
@@ -224,7 +239,6 @@ const PersonalTrackingPage: React.FC = () => {
             onClose={handleFormCancel}
           >
             <PersonalEventForm
-              members={[]} // We'll need to get members from somewhere
               initialData={editingEvent || undefined}
               isEditing={!!editingEvent}
               isSubmitting={createPersonalEventMutation.isPending || updatePersonalEventMutation.isPending}
@@ -360,6 +374,7 @@ const PersonalTrackingPage: React.FC = () => {
                   key={event.id}
                   event={event}
                   onClick={(event) => setSelectedEvent(event)}
+                  onPaymentToggle={handlePaymentToggle}
                 />
               ))}
             </div>

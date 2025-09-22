@@ -6,6 +6,12 @@ import styles from "./page.module.css"
 import { useToast } from "../../context/ToastContext"
 import { useMembers, useMemberOutstanding, usePersonalEvents } from "../../hooks/useQueries"
 import MemberAutocomplete from "../../components/MemberAutocomplete"
+import type { Member, PersonalEvent, PersonalEventParticipant } from "../../types"
+
+// Type guard function
+const isValidPersonalEvent = (event: any): event is PersonalEvent => {
+  return event && typeof event === 'object' && 'id' in event && 'participants' in event && Array.isArray(event.participants)
+}
 
 interface PaymentInfo {
   bankName: string
@@ -13,14 +19,6 @@ interface PaymentInfo {
   accountHolder: string
   amount?: number
   content?: string
-}
-
-interface Member {
-  id: string
-  name: string
-  phone?: string
-  avatar?: string
-  createdAt: string
 }
 
 interface GameParticipant {
@@ -41,31 +39,6 @@ interface Game {
 }
 
 // Personal Event interfaces
-interface PersonalEventParticipant {
-  id: string
-  personalEventId: string
-  memberId: string
-  customAmount: number
-  hasPaid: boolean
-  paidAt?: string
-  member: Member
-}
-
-interface PersonalEvent {
-  id: string
-  title: string
-  description?: string
-  date: string
-  location?: string
-  totalCost: number
-  createdAt: string
-  updatedAt: string
-  participants: PersonalEventParticipant[]
-}
-
-// Payment selection types
-type PaymentType = 'games' | 'personal-events'
-type PaymentSource = 'member' | 'specific' | 'personal-event'
 
 const PaymentPageContent = () => {
   const searchParams = useSearchParams()
@@ -96,12 +69,7 @@ const PaymentPageContent = () => {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [isChangingMember, setIsChangingMember] = useState<boolean>(false)
   const [showAllGames, setShowAllGames] = useState<boolean>(false)
-  
-  // Payment type selection state
-  const [paymentType, setPaymentType] = useState<PaymentType>('games')
-  const [selectedPersonalEvent, setSelectedPersonalEvent] = useState<PersonalEvent | null>(null)
-  const [selectedParticipant, setSelectedParticipant] = useState<PersonalEventParticipant | null>(null)
-  const [paymentSource, setPaymentSource] = useState<PaymentSource>('member')
+  const [showAllPersonalEvents, setShowAllPersonalEvents] = useState<boolean>(false)
   
   // Use the custom hook for outstanding calculation - this will cache the calculation
   const { 
@@ -114,6 +82,29 @@ const PaymentPageContent = () => {
   const memberOutstandingAmount = outstandingData?.totalOutstanding || 0
   const unpaidGames = outstandingData?.unpaidGames || []
 
+  // Calculate member personal events data when member is selected
+  const memberPersonalEventsData = React.useMemo(() => {
+    if (!selectedMember) {
+      return { unpaidPersonalEvents: [], totalAmount: 0 }
+    }
+
+    const allPersonalEvents = personalEventsData?.data || []
+    const unpaidPersonalEvents = allPersonalEvents.filter(event => {
+      const participation = event.participants.find(p => p.memberId === selectedMember.id)
+      return participation && !participation.hasPaid
+    })
+
+    const totalAmount = unpaidPersonalEvents.reduce((sum, event) => {
+      const participation = event.participants.find(p => p.memberId === selectedMember.id)
+      return sum + (participation ? participation.customAmount : 0)
+    }, 0)
+
+    return { unpaidPersonalEvents, totalAmount }
+  }, [selectedMember, personalEventsData])
+
+  const unpaidPersonalEvents = memberPersonalEventsData.unpaidPersonalEvents
+  const memberPersonalEventsAmount = memberPersonalEventsData.totalAmount
+
   // Handle members loading error
   const error = membersError ? 'Failed to load members' : null
   const loading = membersLoading
@@ -124,6 +115,11 @@ const PaymentPageContent = () => {
   // Toggle function for showing all games
   const toggleShowAllGames = () => {
     setShowAllGames(prev => !prev)
+  }
+
+  // Toggle function for showing all personal events
+  const toggleShowAllPersonalEvents = () => {
+    setShowAllPersonalEvents(prev => !prev)
   }
   
   // Handler for member selection with smooth loading transition
@@ -150,7 +146,7 @@ const PaymentPageContent = () => {
   }
 
   // Handler for autocomplete component that accepts Member object
-  const handleAutocompleteChange = (member: Member | null) => {
+  const handleAutocompleteChange = (member: any) => {
     if (!member) {
       setSelectedMember(null)
       setIsChangingMember(false)
@@ -172,75 +168,38 @@ const PaymentPageContent = () => {
     }, 100)
   }
 
-  // Update payment info when member is selected
+  // Update payment info when member is selected - combines both badminton and personal events
   useEffect(() => {
-    if (selectedMember && unpaidGames.length > 0 && memberOutstandingAmount > 0) {
-      const paymentContent = generatePaymentContent(selectedMember, unpaidGames)
-      setPaymentInfo(prev => ({
-        ...prev,
-        amount: memberOutstandingAmount,
-        content: paymentContent,
-      }))
+    if (selectedMember) {
+      const totalBadmintonAmount = memberOutstandingAmount || 0
+      const totalPersonalEventsAmount = memberPersonalEventsAmount || 0
+      const totalAmount = totalBadmintonAmount + totalPersonalEventsAmount
+      
+      if (totalAmount > 0) {
+        // Generate payment content with current date
+        const currentDate = new Date()
+        const day = currentDate.getDate().toString().padStart(2, '0')
+        const month = (currentDate.getMonth() + 1).toString().padStart(2, '0')
+        const year = currentDate.getFullYear()
+        
+        let paymentContent = `${selectedMember.name.toUpperCase()} - Thanh toan toi ngay ${day}.${month}.${year}`
+        
+        setPaymentInfo(prev => ({
+          ...prev,
+          amount: totalAmount,
+          content: paymentContent,
+        }))
+      }
     }
-  }, [selectedMember, memberOutstandingAmount, unpaidGames])
+  }, [selectedMember, memberOutstandingAmount, memberPersonalEventsAmount, unpaidGames, unpaidPersonalEvents])  // Get amount and content from URL params (fallback if no member selected)
 
-  // Get amount and content from URL params (fallback if no member selected)
   useEffect(() => {
     const amount = searchParams.get("amount")
     const content = searchParams.get("content") || searchParams.get("message")
     const gameId = searchParams.get("gameId")
     const memberName = searchParams.get("memberName")
-    const personalEventId = searchParams.get("personalEventId")
-    const participantId = searchParams.get("participantId")
-    const payAll = searchParams.get("payAll")
 
-    // Handle personal event payment URL params
-    if (personalEventId) {
-      setPaymentSource('personal-event')
-      setPaymentType('personal-events')
-      
-      // Find the personal event and participant
-      const personalEvents = personalEventsData?.data || []
-      const personalEvent = personalEvents.find(e => e.id === personalEventId)
-      
-      if (personalEvent) {
-        setSelectedPersonalEvent(personalEvent)
-        
-        if (payAll === 'true') {
-          // Pay All mode - calculate total for all unpaid participants
-          const unpaidParticipants = personalEvent.participants.filter(p => !p.hasPaid)
-          if (unpaidParticipants.length > 0) {
-            const totalAmount = unpaidParticipants.reduce((sum, p) => sum + p.customAmount, 0)
-            const payAllContent = generatePayAllPersonalEventContent(personalEvent, unpaidParticipants)
-            
-            setPaymentInfo(prev => ({
-              ...prev,
-              amount: totalAmount,
-              content: payAllContent,
-            }))
-            return // Exit early for pay all
-          }
-        } else if (participantId) {
-          // Individual participant payment
-          const participant = personalEvent.participants.find(p => p.memberId === participantId)
-          
-          if (participant) {
-            setSelectedParticipant(participant)
-            setSelectedMember(participant.member)
-            
-            const personalEventContent = generatePersonalEventPaymentContent(personalEvent, participant.member)
-            setPaymentInfo(prev => ({
-              ...prev,
-              amount: participant.customAmount,
-              content: personalEventContent,
-            }))
-            return // Exit early for personal event payments
-          }
-        }
-      }
-    }
-
-    if (selectedMember) return // Don't override if member is selected for games
+    if (selectedMember) return // Don't override if member is selected
 
     if (amount) {
       setPaymentInfo(prev => ({ ...prev, amount: parseInt(amount) }))
@@ -257,7 +216,7 @@ const PaymentPageContent = () => {
       }
       setPaymentInfo(prev => ({ ...prev, content: paymentContent }))
     }
-  }, [searchParams, selectedMember, personalEventsData])
+  }, [searchParams, selectedMember])
 
   // Generate QR Code URL
   useEffect(() => {
@@ -286,15 +245,24 @@ const PaymentPageContent = () => {
 
   // Generate banking app URL for direct payment
   const generateBankingAppUrl = (amount?: number, content?: string): string => {
-    // Default to games logic if no parameters provided
-    const paymentAmount = amount || memberOutstandingAmount
-    const paymentContent = content || (selectedMember && unpaidGames.length > 0 
-      ? generatePaymentContent(selectedMember, unpaidGames)
-      : "Thanh toan")
+    // Default to combined amount if no parameters provided
+    const paymentAmount = amount || ((memberOutstandingAmount || 0) + (memberPersonalEventsAmount || 0))
+    
+    // Generate default content if not provided
+    let paymentContent = content
+    if (!paymentContent && selectedMember) {
+      const currentDate = new Date()
+      const day = currentDate.getDate().toString().padStart(2, '0')
+      const month = (currentDate.getMonth() + 1).toString().padStart(2, '0')
+      const year = currentDate.getFullYear()
+      paymentContent = `${selectedMember.name.toUpperCase()} - Thanh toan toi ngay ${day}.${month}.${year}`
+    }
+    
+    if (!paymentContent) {
+      paymentContent = "Thanh toan"
+    }
 
-    if (!selectedMember || paymentAmount === 0) return "#"
-
-    // VietQR format that works with most Vietnamese banking apps
+    if (!selectedMember || paymentAmount === 0) return "#"    // VietQR format that works with most Vietnamese banking apps
     const vietQRUrl = `https://qr.sepay.vn/img?acc=${
       paymentInfo.accountNumber
     }&bank=970436&amount=${paymentAmount}&des=${encodeURIComponent(paymentContent)}`
@@ -327,31 +295,24 @@ const PaymentPageContent = () => {
       return
     }
 
-    let amount = 0
-    let content = ""
+    const totalBadmintonAmount = memberOutstandingAmount || 0
+    const totalPersonalEventsAmount = memberPersonalEventsAmount || 0
+    const totalAmount = totalBadmintonAmount + totalPersonalEventsAmount
 
-    if (paymentType === 'games') {
-      if (memberOutstandingAmount === 0) {
-        showWarning("Thông tin thiếu", "Thành viên không có khoản nào cần thanh toán")
-        return
-      }
-      amount = memberOutstandingAmount
-      content = generatePaymentContent(selectedMember, unpaidGames)
-    } else if (paymentType === 'personal-events') {
-      if (!selectedPersonalEvent || !selectedParticipant) {
-        showWarning("Thông tin thiếu", "Vui lòng chọn sự kiện và thành viên cần thanh toán")
-        return
-      }
-      amount = selectedParticipant.customAmount
-      content = generatePersonalEventPaymentContent(selectedPersonalEvent, selectedMember)
-    }
-
-    if (amount === 0) {
-      showWarning("Thông tin thiếu", "Vui lòng đảm bảo có số tiền cần thanh toán")
+    if (totalAmount === 0) {
+      showWarning("Thông tin thiếu", "Thành viên không có khoản nào cần thanh toán")
       return
     }
 
-    const bankingUrl = generateBankingAppUrl(amount, content)
+    // Generate payment content with current date
+    const currentDate = new Date()
+    const day = currentDate.getDate().toString().padStart(2, '0')
+    const month = (currentDate.getMonth() + 1).toString().padStart(2, '0')
+    const year = currentDate.getFullYear()
+    
+    let content = `${selectedMember.name.toUpperCase()} - Thanh toan toi ngay ${day}.${month}.${year}`
+
+    const bankingUrl = generateBankingAppUrl(totalAmount, content)
     const userAgent = navigator.userAgent.toLowerCase()
     const isMobile = /android|iphone|ipad|ipod|mobile/.test(userAgent)
 
@@ -364,14 +325,14 @@ const PaymentPageContent = () => {
         setTimeout(() => {
           const fallbackUrl = `https://qr.sepay.vn/img?acc=${
             paymentInfo.accountNumber
-          }&bank=970436&amount=${amount}&des=${encodeURIComponent(content)}`
+          }&bank=970436&amount=${totalAmount}&des=${encodeURIComponent(content)}`
           window.open(fallbackUrl, "_blank")
         }, 1500)
       } else {
         // For desktop, open QR page in new tab
         const fallbackUrl = `https://qr.sepay.vn/img?acc=${
           paymentInfo.accountNumber
-        }&bank=970436&amount=${amount}&des=${encodeURIComponent(content)}`
+        }&bank=970436&amount=${totalAmount}&des=${encodeURIComponent(content)}`
         window.open(fallbackUrl, "_blank")
       }
     } catch (error) {
@@ -381,7 +342,7 @@ const PaymentPageContent = () => {
 Ngân hàng: ${paymentInfo.bankName}
 Số tài khoản: ${paymentInfo.accountNumber}
 Chủ tài khoản: ${paymentInfo.accountHolder}
-Số tiền: ${formatCurrency(amount)}
+Số tiền: ${formatCurrency(totalAmount)}
 Nội dung: ${content}
       `.trim()
 
@@ -412,14 +373,11 @@ Nội dung: ${content}
 
   /**
    * Formats number to Vietnamese currency format
-   * @param amount - Amount to format
-   * @returns Formatted currency string
+   * @param amount - Amount to format (in VND)
+   * @returns Formatted currency string (e.g., "500.000đ" for 500,000 VND)
    */
   const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount)
+    return `${amount.toLocaleString("vi-VN")}đ`
   }
 
   /**
@@ -445,59 +403,6 @@ Nội dung: ${content}
     if (content.length > 25) {
       // Ultra short fallback: "TT den DD.MM"
       content = `${member.name.toUpperCase()} - CL -> ${day}.${month}`
-    }
-    
-    return content
-  }
-
-  /**
-   * Generates optimized payment content for personal event payments
-   * @param personalEvent - The personal event
-   * @param member - The member making the payment
-   * @returns Formatted payment content string optimized for QR codes
-   */
-  const generatePersonalEventPaymentContent = (personalEvent: PersonalEvent, member: Member): string => {
-    if (!personalEvent || !member) return "Thanh toan ca nhan"
-
-    const eventDate = new Date(personalEvent.date)
-    const day = eventDate.getDate()
-    const month = eventDate.getMonth() + 1
-    
-    // Format: "MEMBER_NAME - EVENT_TITLE -> DD.MM" (optimized for QR code)
-    let content = `${member.name.toUpperCase()} - ${personalEvent.title.toUpperCase()} -> ${day}.${month}`
-    
-    // Ensure content is not too long for QR code (max ~25 characters)
-    if (content.length > 25) {
-      // Shorter fallback
-      content = `${member.name.toUpperCase()} - PE -> ${day}.${month}`
-    }
-    
-    return content
-  }
-
-  /**
-   * Generates payment content for pay all personal events
-   * @param personalEvent - The personal event
-   * @param unpaidParticipants - Array of unpaid participants
-   * @returns Formatted payment content string for group payments
-   */
-  const generatePayAllPersonalEventContent = (
-    personalEvent: PersonalEvent, 
-    unpaidParticipants: PersonalEventParticipant[]
-  ): string => {
-    if (!personalEvent || unpaidParticipants.length === 0) return "Thanh toan ca nhan"
-
-    const eventDate = new Date(personalEvent.date)
-    const day = eventDate.getDate()
-    const month = eventDate.getMonth() + 1
-    
-    // Format: "EVENT_TITLE - TAT CA -> DD.MM" (optimized for QR code)
-    let content = `${personalEvent.title.toUpperCase()} - TAT CA -> ${day}.${month}`
-    
-    // Ensure content is not too long for QR code (max ~25 characters)
-    if (content.length > 25) {
-      // Shorter fallback
-      content = `PE TAT CA -> ${day}.${month}`
     }
     
     return content
@@ -531,399 +436,233 @@ Nội dung: ${content}
             </div>
             <h1 className={styles.title}>Thanh Toán QR</h1>
             <p className={styles.subtitle}>
-              Chọn loại thanh toán và quét mã QR để thực hiện thanh toán
+              Chọn thành viên và quét mã QR để thanh toán cầu lông + sự kiện cá nhân
             </p>
           </div>
 
-          {/* Payment Type Selection */}
-          <div className={styles.paymentTypeSection}>
+          {/* Member Selection */}
+          <div className={styles.memberSection}>
             <h3 className={styles.sectionTitle}>
-              <span className={styles.sectionIcon}>🏷️</span>
-              Loại thanh toán
-            </h3>
-            <div className={styles.paymentTypeSelector}>
-              <button
-                onClick={() => {
-                  setPaymentType('games')
-                  setPaymentSource('member')
-                  setSelectedPersonalEvent(null)
-                  setSelectedParticipant(null)
-                }}
-                className={`${styles.paymentTypeBtn} ${
-                  paymentType === 'games' ? styles.active : ''
-                }`}
-              >
-                <span className={styles.typeIcon}>🏸</span>
-                <div className={styles.typeContent}>
-                  <span className={styles.typeTitle}>Cầu lông</span>
-                  <span className={styles.typeDesc}>Thanh toán phí thi đấu</span>
-                </div>
-              </button>
-              <button
-                onClick={() => {
-                  setPaymentType('personal-events')
-                  setPaymentSource('personal-event')
-                  setSelectedMember(null)
-                }}
-                className={`${styles.paymentTypeBtn} ${
-                  paymentType === 'personal-events' ? styles.active : ''
-                }`}
-              >
-                <span className={styles.typeIcon}>🎉</span>
-                <div className={styles.typeContent}>
-                  <span className={styles.typeTitle}>Sự kiện cá nhân</span>
-                  <span className={styles.typeDesc}>Thanh toán sự kiện nhóm</span>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Member Selection - Games */}
-          {paymentType === 'games' && (
-            <div className={styles.memberSection}>
-              <h3 className={styles.sectionTitle}>
-                <span className={styles.sectionIcon}>👤</span>
-                Chọn thành viên
-                {/* Show cache status for better UX - React Query automatically handles caching */}
-                {!membersLoading && members.length > 0 && !isCalculatingAmount && (
-                  <span className={styles.cacheIndicator} title="Dữ liệu đã được cache - thao tác nhanh hơn">
-                    ⚡
-                  </span>
-                )}
-                {/* Show calculating indicator */}
-                {isCalculatingAmount && (
-                  <span className={styles.calculatingIndicatorTitle} title="Đang xử lý...">
-                    <div className={styles.miniLoadingSpinner}></div>
-                  </span>
-                )}
-              </h3>
-
-              {loading ? (
-                <div className={styles.loadingState}>
-                  <div className={styles.loadingSpinner}></div>
-                  <p>Đang tải danh sách thành viên...</p>
-                </div>
-              ) : error ? (
-                <div className={styles.errorState}>
-                  <span className={styles.errorIcon}>⚠️</span>
-                  <p>{error}</p>
-                </div>
-              ) : (
-                <div className={styles.memberSelector}>
-                  <MemberAutocomplete
-                    members={members}
-                    selectedMember={selectedMember}
-                    onMemberChange={handleAutocompleteChange}
-                    placeholder="Tìm kiếm thành viên theo tên hoặc số điện thoại..."
-                    disabled={isChangingMember}
-                    isLoading={isChangingMember}
-                  />
-
-                  {selectedMember && (
-                    <div className={styles.memberInfo}>
-                      {isCalculatingAmount ? (
-                        <div className={styles.memberCalculatingState}>
-                          <div className={styles.memberCalculatingContent}>
-                            <div className={styles.memberPreview}>
-                              <div className={styles.memberName}>
-                                <span className={styles.memberIcon}>👤</span>
-                                <strong>{selectedMember.name}</strong>
-                              </div>
-                              {selectedMember.phone && (
-                                <div className={styles.memberPhone}>
-                                  <span className={styles.phoneIcon}>📱</span>
-                                  {selectedMember.phone}
-                                </div>
-                              )}
-                            </div>
-                            <div className={styles.calculatingIndicator}>
-                              <div className={styles.loadingSpinner}></div>
-                              <p>
-                                {isChangingMember 
-                                  ? "Đang chọn thành viên..." 
-                                  : "Đang tính toán số tiền cần thanh toán..."
-                                }
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ) : outstandingError ? (
-                        <div className={styles.errorState}>
-                          <span className={styles.errorIcon}>⚠️</span>
-                          <p>Không thể tính toán số tiền cần thanh toán</p>
-                        </div>
-                      ) : (
-                        <div className={styles.memberDetails}>
-                          <div className={styles.memberName}>
-                            <span className={styles.memberIcon}>👤</span>
-                            <strong>{selectedMember.name}</strong>
-                          </div>
-                          {selectedMember.phone && (
-                            <div className={styles.memberPhone}>
-                              <span className={styles.phoneIcon}>📱</span>
-                              {selectedMember.phone}
-                            </div>
-                          )}
-                          <div className={styles.memberAmount}>
-                            <span className={styles.amountIcon}>💰</span>
-                            <span className={styles.amountLabel}>
-                              Số tiền cần thanh toán:
-                            </span>
-                            <span className={styles.amountValue}>
-                              {formatCurrency(memberOutstandingAmount)}
-                            </span>
-                          </div>
-                          
-                          {/* Unpaid Games Breakdown */}
-                          {unpaidGames.length > 0 && (
-                            <div className={styles.unpaidGamesBreakdown}>
-                              <div className={styles.breakdownHeader}>
-                                <span className={styles.breakdownIcon}>📋</span>
-                                <span className={styles.breakdownTitle}>
-                                  Chi tiết các trận chưa thanh toán ({unpaidGames.length} trận):
-                                </span>
-                              </div>
-                              <div className={styles.gamesList}>
-                                {(showAllGames ? unpaidGames : unpaidGames.slice(0, 5)).map((game, index) => {
-                                  const participation = game.participants.find(p => p.id === selectedMember.id)
-                                  const gameAmount = participation ? game.costPerMember - participation.prePaid : game.costPerMember
-                                  const gameDate = new Date(game.date).toLocaleDateString("vi-VN", {
-                                    weekday: "short",
-                                    day: "2-digit",
-                                    month: "2-digit"
-                                  })
-                                  
-                                  return (
-                                    <div key={game.id} className={styles.gameItem}>
-                                      <span className={styles.gameDate}>📅 {gameDate}</span>
-                                      <span className={styles.gameAmount}>
-                                        {formatCurrency(gameAmount)}
-                                      </span>
-                                    </div>
-                                  )
-                                })}
-                                {unpaidGames.length > 5 && (
-                                  <div className={styles.showMoreContainer}>
-                                    {!showAllGames && (
-                                      <div className={styles.moreGames}>
-                                        + {unpaidGames.length - 5} trận khác...
-                                      </div>
-                                    )}
-                                    <button
-                                      onClick={toggleShowAllGames}
-                                      className={styles.showAllButton}
-                                      title={showAllGames ? 'Thu gọn danh sách' : 'Hiển thị tất cả trận đấu'}
-                                    >
-                                      <span className={styles.showAllIcon}>
-                                        {showAllGames ? '⬆️' : '⬇️'}
-                                      </span>
-                                      <span className={styles.showAllText}>
-                                        {showAllGames ? 'Thu gọn' : 'Xem tất cả'}
-                                      </span>
-                                      <span className={styles.showAllCount}>
-                                        ({unpaidGames.length})
-                                      </span>
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+              <span className={styles.sectionIcon}>👤</span>
+              Chọn thành viên
+              {!membersLoading && members.length > 0 && !isCalculatingAmount && (
+                <span className={styles.cacheIndicator} title="Dữ liệu đã được cache - thao tác nhanh hơn">
+                  ⚡
+                </span>
               )}
-            </div>
-          )}
+              {isCalculatingAmount && (
+                <span className={styles.calculatingIndicatorTitle} title="Đang xử lý...">
+                  <div className={styles.miniLoadingSpinner}></div>
+                </span>
+              )}
+            </h3>
 
-          {/* Personal Event Selection */}
-          {paymentType === 'personal-events' && (
-            <div className={styles.personalEventSection}>
-              <h3 className={styles.sectionTitle}>
-                <span className={styles.sectionIcon}>🎉</span>
-                Chọn sự kiện cá nhân
-                {personalEventsLoading && (
-                  <span className={styles.calculatingIndicatorTitle} title="Đang tải...">
-                    <div className={styles.miniLoadingSpinner}></div>
-                  </span>
-                )}
-              </h3>
+            {loading ? (
+              <div className={styles.loadingState}>
+                <div className={styles.loadingSpinner}></div>
+                <p>Đang tải danh sách thành viên...</p>
+              </div>
+            ) : error ? (
+              <div className={styles.errorState}>
+                <span className={styles.errorIcon}>⚠️</span>
+                <p>{error}</p>
+              </div>
+            ) : (
+              <div className={styles.memberSelector}>
+                <MemberAutocomplete
+                  members={members}
+                  selectedMember={selectedMember}
+                  onMemberChange={handleAutocompleteChange}
+                  placeholder="Tìm kiếm thành viên theo tên hoặc số điện thoại..."
+                  disabled={isChangingMember}
+                  isLoading={isChangingMember}
+                />
 
-              {personalEventsLoading ? (
-                <div className={styles.loadingState}>
-                  <div className={styles.loadingSpinner}></div>
-                  <p>Đang tải danh sách sự kiện...</p>
-                </div>
-              ) : personalEventsError ? (
-                <div className={styles.errorState}>
-                  <span className={styles.errorIcon}>⚠️</span>
-                  <p>Không thể tải danh sách sự kiện</p>
-                </div>
-              ) : (
-                <div className={styles.personalEventSelector}>
-                  {/* Show event info if coming from URL params */}
-                  {selectedPersonalEvent && (
-                    <div className={styles.selectedEventInfo}>
-                      <div className={styles.eventInfoHeader}>
-                        <span className={styles.eventIcon}>🎉</span>
-                        <div className={styles.eventDetails}>
-                          <h4 className={styles.eventTitle}>{selectedPersonalEvent.title}</h4>
-                          <p className={styles.eventDate}>
-                            📅 {new Date(selectedPersonalEvent.date).toLocaleDateString('vi-VN')}
-                          </p>
-                          {selectedPersonalEvent.location && (
-                            <p className={styles.eventLocation}>📍 {selectedPersonalEvent.location}</p>
-                          )}
+                {selectedMember && (
+                  <div className={styles.memberInfo}>
+                    {isCalculatingAmount ? (
+                      <div className={styles.memberCalculatingState}>
+                        <div className={styles.memberCalculatingContent}>
+                          <div className={styles.memberPreview}>
+                            <div className={styles.memberName}>
+                              <span className={styles.memberIcon}>👤</span>
+                              <strong>{selectedMember.name}</strong>
+                            </div>
+                            {selectedMember.phone && (
+                              <div className={styles.memberPhone}>
+                                <span className={styles.phoneIcon}>📱</span>
+                                {selectedMember.phone}
+                              </div>
+                            )}
+                          </div>
+                          <div className={styles.calculatingIndicator}>
+                            <div className={styles.loadingSpinner}></div>
+                            <p>
+                              {isChangingMember 
+                                ? "Đang chọn thành viên..." 
+                                : "Đang tính toán số tiền cần thanh toán..."
+                              }
+                            </p>
+                          </div>
                         </div>
                       </div>
-
-                      {/* Show pay all info if applicable */}
-                      {searchParams.get("payAll") === 'true' && (
-                        <div className={styles.payAllInfo}>
-                          <h5 className={styles.payAllTitle}>
-                            <span className={styles.payAllIcon}>💳</span>
-                            Thanh toán tập thể
-                          </h5>
-                          <div className={styles.payAllDetails}>
-                            {selectedPersonalEvent.participants
-                              .filter(p => !p.hasPaid)
-                              .map(participant => (
-                                <div key={participant.id} className={styles.payAllParticipant}>
-                                  <span className={styles.participantName}>{participant.member.name}</span>
-                                  <span className={styles.participantAmount}>
-                                    {participant.customAmount.toLocaleString("vi-VN")}đ
+                    ) : (outstandingError || personalEventsError) ? (
+                      <div className={styles.errorState}>
+                        <span className={styles.errorIcon}>⚠️</span>
+                        <p>Không thể tính toán số tiền cần thanh toán</p>
+                      </div>
+                    ) : (
+                      <div className={styles.memberDetails}>
+                        <div className={styles.memberName}>
+                          <span className={styles.memberIcon}>👤</span>
+                          <strong>{selectedMember.name}</strong>
+                        </div>
+                        {selectedMember.phone && (
+                          <div className={styles.memberPhone}>
+                            <span className={styles.phoneIcon}>📱</span>
+                            {selectedMember.phone}
+                          </div>
+                        )}
+                        <div className={styles.memberAmount}>
+                          <span className={styles.amountIcon}>💰</span>
+                          <span className={styles.amountLabel}>
+                            Số tiền cần thanh toán:
+                          </span>
+                          <span className={styles.amountValue}>
+                            {formatCurrency((memberOutstandingAmount || 0) + (memberPersonalEventsAmount || 0))}
+                          </span>
+                        </div>
+                        
+                        {/* Combined Breakdown */}
+                        {(unpaidGames.length > 0 || unpaidPersonalEvents.length > 0) && (
+                          <div className={styles.unpaidGamesBreakdown}>
+                            {/* Badminton Games Breakdown */}
+                            {unpaidGames.length > 0 && (
+                              <>
+                                <div className={styles.breakdownHeader}>
+                                  <span className={styles.breakdownIcon}>🏸</span>
+                                  <span className={styles.breakdownTitle}>
+                                    Cầu lông - {unpaidGames.length} trận chưa thanh toán:
                                   </span>
                                 </div>
-                              ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Show individual participant info if applicable */}
-                      {selectedParticipant && searchParams.get("payAll") !== 'true' && (
-                        <div className={styles.selectedParticipantInfo}>
-                          <h5 className={styles.participantInfoTitle}>
-                            <span className={styles.participantInfoIcon}>👤</span>
-                            Thành viên thanh toán
-                          </h5>
-                          <div className={styles.participantInfoDetails}>
-                            <div className={styles.participantInfoName}>{selectedParticipant.member.name}</div>
-                            <div className={styles.participantInfoAmount}>
-                              {selectedParticipant.customAmount.toLocaleString("vi-VN")}đ
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Manual selection if no URL params */}
-                  {!selectedPersonalEvent && (
-                    <>
-                      <select
-                        value={selectedPersonalEvent?.id || ''}
-                        onChange={(e) => {
-                          const eventId = e.target.value
-                          const personalEvents = personalEventsData?.data || []
-                          const event = personalEvents.find(e => e.id === eventId) || null
-                          setSelectedPersonalEvent(event)
-                          setSelectedParticipant(null)
-                          setSelectedMember(null)
-                        }}
-                        className={styles.personalEventSelect}
-                        title="Chọn sự kiện cá nhân để thanh toán"
-                        aria-label="Chọn sự kiện cá nhân để thanh toán"
-                      >
-                        <option value="">Chọn sự kiện...</option>
-                        {(personalEventsData?.data || []).map((event) => (
-                          <option key={event.id} value={event.id}>
-                            🎉 {event.title} - {new Date(event.date).toLocaleDateString('vi-VN')}
-                          </option>
-                        ))}
-                      </select>
-
-                      {selectedPersonalEvent && (
-                        <div className={styles.participantSelection}>
-                          <h4 className={styles.participantTitle}>
-                            <span className={styles.participantIcon}>👥</span>
-                            Chọn thành viên thanh toán
-                          </h4>
-                          <div className={styles.participantsList}>
-                            {selectedPersonalEvent.participants.map((participant: PersonalEventParticipant) => (
-                              <button
-                                key={participant.id}
-                                onClick={() => {
-                                  setSelectedParticipant(participant)
-                                  setSelectedMember(participant.member)
-                                  const personalEventContent = generatePersonalEventPaymentContent(selectedPersonalEvent, participant.member)
-                                  setPaymentInfo(prev => ({
-                                    ...prev,
-                                    amount: participant.customAmount,
-                                    content: personalEventContent,
-                                  }))
-                                }}
-                                className={`${styles.participantBtn} ${
-                                  selectedParticipant?.id === participant.id ? styles.active : ''
-                                } ${participant.hasPaid ? styles.paid : styles.unpaid}`}
-                                title={
-                                  participant.hasPaid 
-                                    ? `${participant.member.name} đã thanh toán ${formatCurrency(participant.customAmount)}`
-                                    : `${participant.member.name} chưa thanh toán ${formatCurrency(participant.customAmount)}`
-                                }
-                              >
-                                <div className={styles.participantInfo}>
-                                  <div className={styles.participantAvatar}>
-                                    {participant.member.avatar ? (
-                                      <img 
-                                        src={participant.member.avatar} 
-                                        alt={`${participant.member.name}'s avatar`}
-                                        className={styles.participantAvatarImage}
-                                        onError={(e) => {
-                                          e.currentTarget.style.display = 'none'
-                                          const fallback = e.currentTarget.nextElementSibling as HTMLElement
-                                          if (fallback) fallback.style.display = 'flex'
-                                        }}
-                                      />
-                                    ) : null}
-                                    <div 
-                                      className={`${styles.participantAvatarFallback} ${participant.member.avatar ? styles.hidden : styles.visible}`}
-                                    >
-                                      {participant.member.name.charAt(0).toUpperCase()}
+                                <div className={styles.gamesList}>
+                                  {(showAllGames ? unpaidGames : unpaidGames.slice(0, 3)).map((game, index) => {
+                                    const participation = game.participants.find(p => p.id === selectedMember.id)
+                                    const gameAmount = participation ? game.costPerMember - participation.prePaid : game.costPerMember
+                                    const gameDate = new Date(game.date).toLocaleDateString("vi-VN", {
+                                      weekday: "short",
+                                      day: "2-digit",
+                                      month: "2-digit"
+                                    })
+                                    
+                                    return (
+                                      <div key={game.id} className={styles.gameItem}>
+                                        <span className={styles.gameDate}>📅 {gameDate}</span>
+                                        <span className={styles.gameAmount}>
+                                          {formatCurrency(gameAmount)}
+                                        </span>
+                                      </div>
+                                    )
+                                  })}
+                                  {unpaidGames.length > 3 && (
+                                    <div className={styles.showMoreContainer}>
+                                      {!showAllGames && (
+                                        <div className={styles.moreGames}>
+                                          + {unpaidGames.length - 3} trận khác...
+                                        </div>
+                                      )}
+                                      <button
+                                        onClick={toggleShowAllGames}
+                                        className={styles.showAllButton}
+                                        title={showAllGames ? 'Thu gọn danh sách' : 'Hiển thị tất cả trận đấu'}
+                                      >
+                                        <span className={styles.showAllIcon}>
+                                          {showAllGames ? '⬆️' : '⬇️'}
+                                        </span>
+                                        <span className={styles.showAllText}>
+                                          {showAllGames ? 'Thu gọn' : 'Xem tất cả'}
+                                        </span>
+                                        <span className={styles.showAllCount}>
+                                          ({unpaidGames.length})
+                                        </span>
+                                      </button>
                                     </div>
-                                  </div>
-                                  <div className={styles.participantDetails}>
-                                    <div className={styles.participantName}>{participant.member.name}</div>
-                                    <div className={styles.participantAmount}>
-                                      {formatCurrency(participant.customAmount)}
-                                    </div>
-                                    <div className={styles.participantStatus}>
-                                      <span className={`${styles.statusBadge} ${participant.hasPaid ? styles.paid : styles.unpaid}`}>
-                                        {participant.hasPaid ? '✅ Đã trả' : '⏳ Chưa trả'}
-                                      </span>
-                                    </div>
-                                  </div>
+                                  )}
                                 </div>
-                              </button>
-                            ))}
+                              </>
+                            )}
+
+                            {/* Personal Events Breakdown */}
+                            {unpaidPersonalEvents.length > 0 && (
+                              <>
+                                <div className={styles.breakdownHeader}>
+                                  <span className={styles.breakdownIcon}>🎉</span>
+                                  <span className={styles.breakdownTitle}>
+                                    Sự kiện cá nhân - {unpaidPersonalEvents.length} sự kiện chưa thanh toán:
+                                  </span>
+                                </div>
+                                <div className={styles.gamesList}>
+                                  {(showAllPersonalEvents ? unpaidPersonalEvents : unpaidPersonalEvents.slice(0, 3)).map((event, index) => {
+                                    const participation = event.participants.find(p => p.memberId === selectedMember.id)
+                                    const eventAmount = participation ? participation.customAmount : 0
+                                    const eventDate = new Date(event.date).toLocaleDateString("vi-VN", {
+                                      weekday: "short",
+                                      day: "2-digit",
+                                      month: "2-digit"
+                                    })
+                                    
+                                    return (
+                                      <div key={event.id} className={styles.gameItem}>
+                                        <span className={styles.gameDate}>📅 {eventDate} - {event.title}</span>
+                                        <span className={styles.gameAmount}>
+                                          {formatCurrency(eventAmount)}
+                                        </span>
+                                      </div>
+                                    )
+                                  })}
+                                  {unpaidPersonalEvents.length > 3 && (
+                                    <div className={styles.showMoreContainer}>
+                                      {!showAllPersonalEvents && (
+                                        <div className={styles.moreGames}>
+                                          + {unpaidPersonalEvents.length - 3} sự kiện khác...
+                                        </div>
+                                      )}
+                                      <button
+                                        onClick={toggleShowAllPersonalEvents}
+                                        className={styles.showAllButton}
+                                        title={showAllPersonalEvents ? 'Thu gọn danh sách' : 'Hiển thị tất cả sự kiện'}
+                                      >
+                                        <span className={styles.showAllIcon}>
+                                          {showAllPersonalEvents ? '⬆️' : '⬇️'}
+                                        </span>
+                                        <span className={styles.showAllText}>
+                                          {showAllPersonalEvents ? 'Thu gọn' : 'Xem tất cả'}
+                                        </span>
+                                        <span className={styles.showAllCount}>
+                                          ({unpaidPersonalEvents.length})
+                                        </span>
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              </>
+                            )}
                           </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* QR Code Section */}
           <div className={styles.qrSection}>
             <div className={styles.qrContainer}>
               <div className={styles.qrWrapper}>
                 {(!selectedMember || 
-                  (paymentType === 'games' && memberOutstandingAmount === 0) ||
-                  (paymentType === 'personal-events' && !selectedParticipant) ||
+                  ((memberOutstandingAmount || 0) + (memberPersonalEventsAmount || 0) === 0) ||
                   isCalculatingAmount) ? (
                   <div className={styles.qrPlaceholder}>
                     {isCalculatingAmount ? (
@@ -931,7 +670,7 @@ Nội dung: ${content}
                         <div className={styles.loadingSpinner}></div>
                         <p>
                           {isChangingMember 
-                            ? "Đang chuẩn bị thông tin thanh toán..." 
+                            ? "Đang chuẩn bị thông tin thanh toán..."
                             : "Đang tạo mã QR..."
                           }
                         </p>
@@ -939,22 +678,12 @@ Nội dung: ${content}
                     ) : !selectedMember ? (
                       <div className={styles.noMemberSelected}>
                         <span className={styles.selectIcon}>👆</span>
-                        <p>
-                          {paymentType === 'games' 
-                            ? "Vui lòng chọn thành viên để tạo mã QR thanh toán"
-                            : "Vui lòng chọn sự kiện và thành viên để tạo mã QR thanh toán"
-                          }
-                        </p>
+                        <p>Vui lòng chọn thành viên để tạo mã QR thanh toán</p>
                       </div>
-                    ) : paymentType === 'games' && memberOutstandingAmount === 0 ? (
+                    ) : ((memberOutstandingAmount || 0) + (memberPersonalEventsAmount || 0) === 0) ? (
                       <div className={styles.noMemberSelected}>
                         <span className={styles.selectIcon}>✅</span>
                         <p>Thành viên này không có khoản nào cần thanh toán</p>
-                      </div>
-                    ) : paymentType === 'personal-events' && !selectedParticipant ? (
-                      <div className={styles.noMemberSelected}>
-                        <span className={styles.selectIcon}>👆</span>
-                        <p>Vui lòng chọn thành viên từ danh sách để tạo mã QR thanh toán</p>
                       </div>
                     ) : (
                       <div className={styles.noMemberSelected}>
@@ -991,8 +720,7 @@ Nội dung: ${content}
 
               {/* Banking App Button Moved Outside qrWrapper */}
               {selectedMember && 
-               ((paymentType === 'games' && memberOutstandingAmount > 0) ||
-                (paymentType === 'personal-events' && selectedParticipant)) &&
+               ((memberOutstandingAmount || 0) + (memberPersonalEventsAmount || 0) > 0) &&
                !isCalculatingAmount && (
                 <div className={styles.bankingAppSection}>
                   <div className={styles.orDivider}>
@@ -1026,12 +754,7 @@ Nội dung: ${content}
               <div className={styles.qrInstructions}>
                 <h3>📱 Cách thanh toán:</h3>
                 <ol className={styles.instructionsList}>
-                  <li>
-                    {paymentType === 'games' 
-                      ? 'Chọn thành viên cần thanh toán ở phần trên'
-                      : 'Chọn sự kiện và thành viên cần thanh toán ở phần trên'
-                    }
-                  </li>
+                  <li>Chọn thành viên cần thanh toán ở phần trên</li>
                   <li>Mở app ngân hàng hoặc ví điện tử</li>
                   <li>Quét mã QR được tạo</li>
                   <li>Kiểm tra thông tin và số tiền</li>
@@ -1208,3 +931,4 @@ Nội dung: ${content}
 }
 
 export default PaymentPageContent
+

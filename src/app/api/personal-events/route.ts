@@ -67,15 +67,19 @@ export async function GET(request: NextRequest) {
       prisma.personalEvent.count({ where })
     ])
 
-    // Transform the response to include payment data
+    // Transform the response to match PersonalEventParticipant interface
     const transformedEvents = personalEvents.map((event: any) => ({
       ...event,
       participants: event.participants.map((p: any) => ({
-        ...p.member,
-        participantId: p.id,
+        id: p.id,
+        personalEventId: event.id,
+        memberId: p.member.id,
         customAmount: p.customAmount,
         hasPaid: p.hasPaid,
-        paidAt: p.paidAt
+        paidAt: p.paidAt,
+        prePaid: p.prePaid,
+        prePaidCategory: p.prePaidCategory,
+        member: p.member
       }))
     }))
 
@@ -153,7 +157,9 @@ export async function POST(request: NextRequest) {
             },
             customAmount: Number(participant.customAmount) || 0,
             hasPaid: participant.hasPaid || false,
-            paidAt: participant.paidAt ? new Date(participant.paidAt) : null
+            paidAt: participant.paidAt ? new Date(participant.paidAt) : null,
+            prePaid: Number(participant.prePaid) || 0,
+            prePaidCategory: participant.prePaidCategory || ""
           }))
         }
       },
@@ -166,15 +172,19 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Transform response to include participant data
+    // Transform response to match PersonalEventParticipant interface
     const transformedEvent = {
       ...personalEvent,
       participants: personalEvent.participants.map((p: any) => ({
-        ...p.member,
-        participantId: p.id,
+        id: p.id,
+        personalEventId: personalEvent.id,
+        memberId: p.member.id,
         customAmount: p.customAmount,
         hasPaid: p.hasPaid,
-        paidAt: p.paidAt
+        paidAt: p.paidAt,
+        prePaid: p.prePaid,
+        prePaidCategory: p.prePaidCategory,
+        member: p.member
       }))
     }
 

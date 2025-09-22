@@ -5,6 +5,7 @@ import ConfirmationModal from './ConfirmationModal'
 import PersonalEventForm from './PersonalEventForm'
 import { AuthorizedComponent } from './AuthorizedComponent'
 import styles from './PersonalEventDetailsModal.module.css'
+import { apiService } from '../lib/api'
 import type { 
   PersonalEvent, 
   PersonalEventModalProps, 
@@ -28,6 +29,12 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [paymentLoading, setPaymentLoading] = useState<string | null>(null)
+  const [currentEvent, setCurrentEvent] = useState<PersonalEvent | undefined>(event)
+
+  // Update currentEvent when event prop changes
+  React.useEffect(() => {
+    setCurrentEvent(event)
+  }, [event])
 
   if (!isOpen) return null
 
@@ -48,10 +55,10 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
 
   // Handle delete confirmation
   const handleDeleteConfirm = async () => {
-    if (!event?.id || !onDelete) return
+    if (!currentEvent?.id || !onDelete) return
     
     try {
-      await onDelete(event.id)
+      await onDelete(currentEvent.id)
       setShowDeleteConfirm(false)
       onClose()
     } catch (error) {
@@ -69,12 +76,32 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
     setPaymentLoading(paymentKey)
     
     try {
-      // This would call an API to toggle payment status
-      // For now, just simulate loading
-      await new Promise(resolve => setTimeout(resolve, PAYMENT_TOGGLE_TIMEOUT))
-      console.log('Toggle payment for:', { eventId, memberId })
+      // Call the API to toggle payment status
+      const result = await apiService.personalEvents.togglePayment(eventId, memberId)
+      console.log('Payment toggled successfully:', result)
+      
+      // Update local state optimistically
+      if (currentEvent && currentEvent.participants) {
+        const updatedParticipants = currentEvent.participants.map(participant => {
+          if (participant.memberId === memberId) {
+            return {
+              ...participant,
+              hasPaid: !participant.hasPaid,
+              paidAt: !participant.hasPaid ? new Date().toISOString() : undefined
+            }
+          }
+          return participant
+        })
+        
+        setCurrentEvent({
+          ...currentEvent,
+          participants: updatedParticipants
+        })
+      }
+      
     } catch (error) {
       console.error('Error toggling payment:', error)
+      // You could add a toast notification here to show the error to the user
     } finally {
       setPaymentLoading(null)
     }
@@ -129,7 +156,7 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
     const totalUnpaid = event.participants.length - totalPaid
     const totalCollected = event.participants
       .filter(p => p.hasPaid)
-      .reduce((sum, p) => sum + p.customAmount, 0)
+      .reduce((sum, p) => sum + (p.customAmount - (p.prePaid || 0)), 0)
     const totalRemaining = event.totalCost - totalCollected
 
     return {
@@ -141,16 +168,15 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
   }
 
   // Calculate totals using the extracted function
-  const paymentStats = calculatePaymentStats(event)  // Calculate totals
-  const totalPaid = event?.participants?.filter(p => p.hasPaid).length || 0
-  const totalUnpaid = (event?.participants?.length || 0) - totalPaid
-  const totalCollected = event?.participants
+  const paymentStats = calculatePaymentStats(currentEvent)
+  // Remove duplicate calculations - using paymentStats instead
+  const totalCollected = currentEvent?.participants
     ?.filter(p => p.hasPaid)
-    .reduce((sum, p) => sum + p.customAmount, 0) || 0
-  const totalRemaining = (event?.totalCost || 0) - totalCollected
+    .reduce((sum, p) => sum + (p.customAmount - (p.prePaid || 0)), 0) || 0
+  const totalRemaining = (currentEvent?.totalCost || 0) - totalCollected
 
   // If showing edit form
-  if (showEditForm && event) {
+  if (showEditForm && currentEvent) {
     return (
       <Modal 
         isOpen={isOpen} 
@@ -159,9 +185,8 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
         size="large"
       >
         <PersonalEventForm
-          members={[]} // You would pass actual members from parent
           onSubmit={handleFormSubmit}
-          initialData={event}
+          initialData={currentEvent}
           isEditing={true}
           isSubmitting={isSubmitting}
         />
@@ -175,7 +200,7 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
         isOpen={isOpen} 
         onClose={onClose}
         size="large"
-        title={event?.title}
+        title={currentEvent?.title}
       >
         <div className={styles.modalContent}>
           {/* Event Header */}
@@ -183,19 +208,19 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
             <div className={styles.headerInfo}>
               <div className={styles.eventIcon}>🎉</div>
               <div className={styles.eventDetails}>
-                <h2 className={styles.eventTitle}>{event?.title}</h2>
+                <h2 className={styles.eventTitle}>{currentEvent?.title}</h2>
                 <div className={styles.eventMeta}>
                   <span className={styles.eventDate}>
-                    📅 {event?.date && formatDate(event.date)}
+                    📅 {currentEvent?.date && formatDate(currentEvent.date)}
                   </span>
-                  {event?.location && (
+                  {currentEvent?.location && (
                     <span className={styles.eventLocation}>
-                      📍 {event.location}
+                      📍 {currentEvent.location}
                     </span>
                   )}
                 </div>
-                {event?.description && (
-                  <p className={styles.eventDescription}>{event.description}</p>
+                {currentEvent?.description && (
+                  <p className={styles.eventDescription}>{currentEvent.description}</p>
                 )}
               </div>
             </div>
@@ -241,18 +266,18 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
               <div className={styles.costItem}>
                 <span className={styles.costLabel}>💰 Tổng chi phí:</span>
                 <span className={styles.costValue}>
-                  {event?.totalCost?.toLocaleString("vi-VN")}đ
+                  {currentEvent?.totalCost ? currentEvent.totalCost.toLocaleString("vi-VN") : '0'}đ
                 </span>
               </div>
               <div className={styles.costItem}>
                 <span className={styles.costLabel}>👥 Số người tham gia:</span>
-                <span className={styles.costValue}>{event?.participants?.length || 0} người</span>
+                <span className={styles.costValue}>{currentEvent?.participants?.length || 0} người</span>
               </div>
               <div className={styles.costItem}>
                 <span className={styles.costLabel}>💳 Chi phí trung bình/người:</span>
                 <span className={styles.costValue}>
-                  {event?.totalCost && event?.participants?.length 
-                    ? Math.round(event.totalCost / event.participants.length).toLocaleString("vi-VN")
+                  {currentEvent?.totalCost && currentEvent?.participants?.length
+                    ? Math.round(currentEvent.totalCost / currentEvent.participants.length).toLocaleString("vi-VN")
                     : 0
                   }đ
                 </span>
@@ -305,7 +330,7 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
             <div className={styles.participantsHeader}>
               <h3 className={styles.sectionTitle}>
                 <span className={styles.sectionIcon}>👥</span>
-                Thành Viên Tham Gia ({event?.participants?.length || 0})
+                Thành Viên Tham Gia ({currentEvent?.participants?.length || 0})
               </h3>
               
               {/* Pay All Button */}
@@ -313,9 +338,9 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
                 requireEdit={true}
                 viewOnlyFallback={null}
               >
-                {event && event.participants && event.participants.some(p => !p.hasPaid) && (
+                {currentEvent && currentEvent.participants && currentEvent.participants.some(p => !p.hasPaid) && (
                   <a
-                    href={`/payment?personalEventId=${event.id}&payAll=true`}
+                    href={`/payment?personalEventId=${currentEvent.id}&payAll=true`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={styles.payAllBtn}
@@ -328,8 +353,8 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
               </AuthorizedComponent>
             </div>
             <div className={styles.participantsList}>
-              {event?.participants?.map((participant) => {
-                const paymentKey = `${event.id}-${participant.memberId}`
+              {currentEvent?.participants?.map((participant) => {
+                const paymentKey = `${currentEvent.id}-${participant.memberId}`
                 const isLoading = paymentLoading === paymentKey
                 
                 return (
@@ -367,7 +392,7 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
                           <div className={styles.participantPhone}>📱 {participant.member.phone}</div>
                         )}
                         <div className={styles.participantAmount}>
-                          💰 Số tiền: <strong>{participant.customAmount.toLocaleString("vi-VN")}đ</strong>
+                          💰 Số tiền: <strong>{(participant.customAmount - (participant.prePaid || 0)).toLocaleString("vi-VN")}đ</strong>
                         </div>
                         {participant.hasPaid && participant.paidAt && (
                           <div className={styles.participantPaidTime}>
@@ -396,7 +421,7 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
                     >
                       <div className={styles.paymentActions}>
                         <button
-                          onClick={() => event && handlePaymentToggle(event.id, participant.memberId)}
+                          onClick={() => currentEvent && handlePaymentToggle(currentEvent.id, participant.memberId)}
                           disabled={isLoading}
                           className={`${styles.paymentToggleBtn} ${
                             participant.hasPaid ? styles.paid : styles.unpaid
@@ -424,7 +449,7 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
                         {/* QR Payment Button */}
                         {!participant.hasPaid && (
                           <a
-                            href={`/payment?personalEventId=${event?.id}&participantId=${participant.memberId}&amount=${participant.customAmount}&memberName=${encodeURIComponent(participant.member.name)}`}
+                            href={`/payment?personalEventId=${event?.id}&participantId=${participant.memberId}&amount=${participant.customAmount - (participant.prePaid || 0)}&memberName=${encodeURIComponent(participant.member.name)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className={styles.qrPaymentBtn}
@@ -452,13 +477,13 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>📅 Thời gian tạo:</span>
                 <span className={styles.infoValue}>
-                  {event?.createdAt && formatDate(event.createdAt)}
+                  {currentEvent?.createdAt && formatDate(currentEvent.createdAt)}
                 </span>
               </div>
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>🔄 Cập nhật lần cuối:</span>
                 <span className={styles.infoValue}>
-                  {event?.updatedAt && formatDate(event.updatedAt)}
+                  {currentEvent?.updatedAt && formatDate(currentEvent.updatedAt)}
                 </span>
               </div>
               <div className={styles.infoItem}>
@@ -478,7 +503,7 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
         title="Xóa sự kiện"
         message={
           event
-            ? `Bạn có chắc muốn xóa sự kiện "${event.title}" không? Tất cả dữ liệu thanh toán sẽ bị mất và không thể khôi phục.`
+            ? `Bạn có chắc muốn xóa sự kiện "${currentEvent?.title}" không? Tất cả dữ liệu thanh toán sẽ bị mất và không thể khôi phục.`
             : ""
         }
         confirmText="Xóa sự kiện"

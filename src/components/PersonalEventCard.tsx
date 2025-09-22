@@ -6,6 +6,7 @@ import type { PersonalEvent, PersonalEventCardProps } from '../types'
 const PersonalEventCard: React.FC<PersonalEventCardProps> = ({
   event,
   onClick,
+  onPaymentToggle,
   className = ""
 }) => {
   // Calculate payment statistics
@@ -14,7 +15,7 @@ const PersonalEventCard: React.FC<PersonalEventCardProps> = ({
   const unpaidCount = totalParticipants - paidCount
   const totalPaid = event.participants
     .filter(p => p.hasPaid)
-    .reduce((sum, p) => sum + p.customAmount, 0)
+    .reduce((sum, p) => sum + (p.customAmount - (p.prePaid || 0)), 0)
   const totalRemaining = event.totalCost - totalPaid
 
   // Format date display
@@ -29,6 +30,14 @@ const PersonalEventCard: React.FC<PersonalEventCardProps> = ({
 
   // Payment completion percentage
   const paymentPercentage = totalParticipants > 0 ? Math.round((paidCount / totalParticipants) * 100) : 0
+
+  // Handle payment status click
+  const handlePaymentStatusClick = (e: React.MouseEvent, participant: any) => {
+    e.stopPropagation() // Prevent card click
+    if (onPaymentToggle) {
+      onPaymentToggle(event.id, participant.member.id)
+    }
+  }
 
   return (
     <div 
@@ -150,10 +159,18 @@ const PersonalEventCard: React.FC<PersonalEventCardProps> = ({
               <div className={styles.participantInfo}>
                 <div className={styles.participantName}>{participant.member.name}</div>
                 <div className={styles.participantAmount}>
-                  {participant.customAmount.toLocaleString("vi-VN")}đ
+                  {(participant.customAmount - (participant.prePaid || 0)).toLocaleString("vi-VN")}đ
                 </div>
               </div>
-              <div className={`${styles.participantPaymentStatus} ${participant.hasPaid ? styles.paid : styles.unpaid}`}>
+              <div 
+                className={`${styles.participantPaymentStatus} ${participant.hasPaid ? styles.paid : styles.unpaid}`}
+                onClick={onPaymentToggle ? (e) => handlePaymentStatusClick(e, participant) : undefined}
+                style={onPaymentToggle ? { cursor: 'pointer' } : {}}
+                title={onPaymentToggle ? 
+                  (participant.hasPaid ? "Nhấn để chuyển sang chưa thanh toán" : "Nhấn để chuyển sang đã thanh toán") : 
+                  (participant.hasPaid ? "Đã thanh toán" : "Chưa thanh toán")
+                }
+              >
                 {participant.hasPaid ? (
                   <span className={styles.statusIcon} title="Đã thanh toán">✅</span>
                 ) : (
