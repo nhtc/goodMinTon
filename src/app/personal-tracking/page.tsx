@@ -10,38 +10,43 @@ import ConfirmationModal from '@/components/ConfirmationModal'
 import Modal from '@/components/Modal'
 import { usePersonalEvents, useDeletePersonalEvent, useUpdatePersonalEvent, useCreatePersonalEvent } from '@/hooks/useQueries'
 import { useToast } from '@/hooks/useToast'
+import { useAuth } from '@/context/AuthContext'
 import { apiService } from '@/lib/api'
 import { PersonalEvent, PersonalEventFilters, CreatePersonalEventData, UpdatePersonalEventData } from '@/types'
-import styles from './page.module.css'
-
-// Constants
+import { filterPersonalEventsByPaymentStatus, PaymentStatusFilter } from '@/utils/paymentFilters'
+import { CompoundSelect } from '@/components/ui/select'
+import { TEXT_CONSTANTS } from '@/lib/constants/text'
+import styles from './page.module.css'// Constants
 const PAYMENT_STATUS_OPTIONS = {
   ALL: 'all' as const,
   PAID: 'paid' as const,
   UNPAID: 'unpaid' as const
-} as const
-
-const TOAST_MESSAGES = {
-  EVENT_DELETED: 'Sự kiện đã được xóa thành công',
-  EVENT_UPDATED: 'Sự kiện đã được cập nhật thành công',
-  EVENT_CREATED: 'Sự kiện đã được tạo thành công',
-  DELETE_ERROR: 'Có lỗi xảy ra khi xóa sự kiện',
-  SAVE_ERROR: 'Có lỗi xảy ra khi lưu sự kiện'
-} as const
+}
 
 const PersonalTrackingPage: React.FC = () => {
+  // Auth
+  const { isAuthorized } = useAuth()
+  
   // State management
   const [selectedEvent, setSelectedEvent] = useState<PersonalEvent | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [editingEvent, setEditingEvent] = useState<PersonalEvent | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [eventToDelete, setEventToDelete] = useState<PersonalEvent | null>(null)
+  const [paymentLoading, setPaymentLoading] = useState<string | null>(null)
   
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [dateRange, setDateRange] = useState<{ start?: string; end?: string }>({})
   const [paymentStatus, setPaymentStatus] = useState<'all' | 'paid' | 'unpaid'>(PAYMENT_STATUS_OPTIONS.ALL)
   const [selectedMember, setSelectedMember] = useState<string>('')
+
+  // Payment status filter options
+  const paymentStatusOptions = [
+    { value: 'all', label: TEXT_CONSTANTS.personalEvent.filters.paymentStatus.all },
+    { value: 'paid', label: TEXT_CONSTANTS.personalEvent.filters.paymentStatus.paid },
+    { value: 'unpaid', label: TEXT_CONSTANTS.personalEvent.filters.paymentStatus.unpaid }
+  ]
 
   // Create filters object
   const filters: PersonalEventFilters = {
@@ -65,22 +70,34 @@ const PersonalTrackingPage: React.FC = () => {
   // Filter events based on search term
   const filteredEvents = personalEvents.filter(event => {
     const matchesSearch = searchTerm === '' || 
-      event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (event.description && event.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      event.participants.some(p => p.member.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||                                                              
+      (event.description && event.description.toLowerCase().includes(searchTerm.toLowerCase())) ||                                 
+      event.participants.some(p => p.member.name.toLowerCase().includes(searchTerm.toLowerCase()))                                 
 
     return matchesSearch
   })
 
+  // Apply payment status filter
+  const finalFilteredEvents = filterPersonalEventsByPaymentStatus(filteredEvents, paymentStatus as PaymentStatusFilter)
+
   // Calculate statistics
-  const totalEvents = filteredEvents.length
-  const totalParticipants = filteredEvents.reduce((sum, event) => sum + event.participants.length, 0)
-  const totalAmount = filteredEvents.reduce((sum, event) => sum + event.totalCost, 0)
-  const paidParticipants = filteredEvents.reduce((sum, event) => 
+  const totalEvents = finalFilteredEvents.length
+  const totalParticipants = finalFilteredEvents.reduce((sum, event) => sum + event.participants.length, 0)
+  const totalAmount = finalFilteredEvents.reduce((sum, event) => sum + event.totalCost, 0)
+  const paidParticipants = finalFilteredEvents.reduce((sum, event) =>
     sum + event.participants.filter(p => p.hasPaid).length, 0
   )
-
-  // Event handlers
+  // Calculate total paid amount (correctly subtracting prepaid amounts)
+  // If member filter is active, only calculate for that specific member
+  const totalPaidAmount = finalFilteredEvents.reduce((sum, event) => {
+    const participantsToCalculate = selectedMember 
+      ? event.participants.filter(p => p.memberId === selectedMember)
+      : event.participants
+    
+    return sum + participantsToCalculate
+      .filter(p => p.hasPaid)
+      .reduce((participantSum, p) => participantSum + (p.customAmount - (p.prePaid || 0)), 0)
+  }, 0)// Event handlers
   const handleCreateEvent = () => {
     setEditingEvent(null)
     setShowForm(true)
@@ -101,7 +118,7 @@ const PersonalTrackingPage: React.FC = () => {
     
     try {
       await deletePersonalEventMutation.mutateAsync(eventToDelete.id)
-      addToast('success', 'Thành công', TOAST_MESSAGES.EVENT_DELETED)
+      addToast('success', TEXT_CONSTANTS.common.messages.success, TEXT_CONSTANTS.personalEvent.messages.eventDeleted)
       setShowDeleteConfirm(false)
       setEventToDelete(null)
       if (selectedEvent && selectedEvent.id === eventToDelete.id) {
@@ -109,21 +126,40 @@ const PersonalTrackingPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Error deleting event:', error)
-      addToast('error', 'Lỗi', TOAST_MESSAGES.DELETE_ERROR)
+      addToast('error', TEXT_CONSTANTS.common.messages.error, TEXT_CONSTANTS.personalEvent.messages.deleteError)
     }
   }
 
-  // Payment toggle handler for PersonalEventCard
+    // Payment toggle handler for PersonalEventCard
   const handlePaymentToggle = async (eventId: string, memberId: string) => {
+    // Check authorization first
+    if (!isAuthorized) {
+      addToast('error', TEXT_CONSTANTS.common.messages.error, TEXT_CONSTANTS.personalEvent.messages.noPermissionPayment)
+      return
+    }
+
+    const paymentKey = `${eventId}-${memberId}`
+    setPaymentLoading(paymentKey)
+    
     try {
       await apiService.personalEvents.togglePayment(eventId, memberId)
-      addToast('success', 'Thành công', 'Trạng thái thanh toán đã được cập nhật')
+      addToast('success', TEXT_CONSTANTS.common.messages.success, TEXT_CONSTANTS.personalEvent.messages.paymentStatusUpdated)
       
-      // Refetch data to update the UI
-      await refetch()
+      // Refetch data and get fresh results
+      const refetchResult = await refetch()
+      
+      // Update selectedEvent with fresh data if it's the same event
+      if (selectedEvent && selectedEvent.id === eventId && refetchResult.data) {
+        const updatedEvent = refetchResult.data.data.find((e: PersonalEvent) => e.id === eventId)
+        if (updatedEvent) {
+          setSelectedEvent(updatedEvent)
+        }
+      }
     } catch (error) {
       console.error('Error toggling payment:', error)
-      addToast('error', 'Lỗi', 'Không thể cập nhật trạng thái thanh toán')
+      addToast('error', TEXT_CONSTANTS.common.messages.error, TEXT_CONSTANTS.personalEvent.messages.paymentUpdateError)
+    } finally {
+      setPaymentLoading(null)
     }
   }
 
@@ -139,16 +175,16 @@ const PersonalTrackingPage: React.FC = () => {
           eventId: editingEvent.id,
           eventData: eventData as UpdatePersonalEventData
         })
-        addToast('success', 'Thành công', TOAST_MESSAGES.EVENT_UPDATED)
+        addToast('success', TEXT_CONSTANTS.common.messages.success, TEXT_CONSTANTS.personalEvent.messages.eventUpdated)
       } else {
         await createPersonalEventMutation.mutateAsync(eventData as CreatePersonalEventData)
-        addToast('success', 'Thành công', TOAST_MESSAGES.EVENT_CREATED)
+        addToast('success', TEXT_CONSTANTS.common.messages.success, TEXT_CONSTANTS.personalEvent.messages.eventCreated)
       }
       setShowForm(false)
       setEditingEvent(null)
     } catch (error) {
       console.error('Error saving event:', error)
-      addToast('error', 'Lỗi', TOAST_MESSAGES.SAVE_ERROR)
+      addToast('error', TEXT_CONSTANTS.common.messages.error, TEXT_CONSTANTS.personalEvent.messages.saveError)
     }
   }
 
@@ -185,7 +221,7 @@ const PersonalTrackingPage: React.FC = () => {
             <button
               onClick={handleCreateEvent}
               className={styles.createEventBtn}
-              title="Tạo sự kiện mới"
+              title={TEXT_CONSTANTS.personalEvent.titles.createEvent}
             >
               <span className={styles.btnIcon}>➕</span>
               <span>Tạo Sự Kiện</span>
@@ -228,6 +264,15 @@ const PersonalTrackingPage: React.FC = () => {
                 <div className={styles.statLabel}>Đã thanh toán</div>
               </div>
             </div>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon}>💵</div>
+              <div className={styles.statInfo}>
+                <div className={styles.statValue}>
+                  {(totalPaidAmount / 1000).toLocaleString('vi-VN')}k
+                </div>
+                <div className={styles.statLabel}>Đã thu thực tế</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -235,7 +280,7 @@ const PersonalTrackingPage: React.FC = () => {
         {showForm && (
           <Modal
             isOpen={showForm}
-            title={editingEvent ? 'Chỉnh Sửa Sự Kiện' : 'Tạo Sự Kiện Mới'}
+            title={editingEvent ? TEXT_CONSTANTS.personalEvent.titles.editEvent : TEXT_CONSTANTS.personalEvent.titles.createNewEvent}
             onClose={handleFormCancel}
           >
             <PersonalEventForm
@@ -254,7 +299,7 @@ const PersonalTrackingPage: React.FC = () => {
               <div className={styles.searchIcon}>🔍</div>
               <input
                 type="text"
-                placeholder="Tìm kiếm theo tên sự kiện, mô tả hoặc tên thành viên..."
+                placeholder={TEXT_CONSTANTS.personalEvent.form.placeholders.searchEvent}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={styles.searchInput}
@@ -279,7 +324,7 @@ const PersonalTrackingPage: React.FC = () => {
                     value={dateRange.start || ''}
                     onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
                     className={styles.dateInput}
-                    title="Từ ngày"
+                    title={TEXT_CONSTANTS.personalEvent.form.placeholders.startDate}
                   />
                   <span className={styles.dateSeparator}>đến</span>
                   <input
@@ -287,23 +332,20 @@ const PersonalTrackingPage: React.FC = () => {
                     value={dateRange.end || ''}
                     onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
                     className={styles.dateInput}
-                    title="Đến ngày"
+                    title={TEXT_CONSTANTS.personalEvent.form.placeholders.endDate}
                   />
                 </div>
               </div>
 
               <div className={styles.filterGroup}>
                 <label className={styles.filterLabel}>Trạng thái thanh toán:</label>
-                <select
+                <CompoundSelect
                   value={paymentStatus}
-                  onChange={(e) => setPaymentStatus(e.target.value as 'all' | 'paid' | 'unpaid')}
+                  onValueChange={(value) => setPaymentStatus(value as 'all' | 'paid' | 'unpaid')}
+                  options={paymentStatusOptions}
                   className={styles.filterSelect}
-                  title="Chọn trạng thái thanh toán"
-                >
-                  <option value="all">Tất cả</option>
-                  <option value="paid">Đã thanh toán</option>
-                  <option value="unpaid">Chưa thanh toán</option>
-                </select>
+                  placeholder={TEXT_CONSTANTS.personalEvent.form.placeholders.selectPaymentStatus}
+                />
               </div>
 
               {(dateRange.start || dateRange.end || paymentStatus !== PAYMENT_STATUS_OPTIONS.ALL || selectedMember) && (
@@ -318,7 +360,7 @@ const PersonalTrackingPage: React.FC = () => {
 
             {searchTerm && (
               <div className={styles.searchResults}>
-                Tìm thấy {filteredEvents.length} sự kiện
+                Tìm thấy {finalFilteredEvents.length} sự kiện
               </div>
             )}
           </div>
@@ -336,18 +378,18 @@ const PersonalTrackingPage: React.FC = () => {
             <h3>Có lỗi xảy ra</h3>
             <p>Không thể tải danh sách sự kiện. Vui lòng thử lại.</p>
           </div>
-        ) : filteredEvents.length === 0 ? (
+        ) : finalFilteredEvents.length === 0 ? (
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>👥</div>
             <h3 className={styles.emptyTitle}>
               {personalEvents.length === 0
-                ? "Chưa có sự kiện nào"
-                : "Không tìm thấy sự kiện nào"}
+                ? TEXT_CONSTANTS.personalEvent.messages.noEventsFound
+                : TEXT_CONSTANTS.personalEvent.messages.noEventsFoundFiltered}
             </h3>
             <p className={styles.emptyDescription}>
               {personalEvents.length === 0
-                ? "Hãy tạo sự kiện cá nhân đầu tiên của bạn!"
-                : "Thử tìm kiếm với từ khóa khác hoặc thay đổi bộ lọc"}
+                ? TEXT_CONSTANTS.personalEvent.messages.createFirstEvent
+                : TEXT_CONSTANTS.personalEvent.messages.tryDifferentSearch}
             </p>
             {personalEvents.length === 0 && (
               <button
@@ -364,17 +406,19 @@ const PersonalTrackingPage: React.FC = () => {
             <div className={styles.sectionHeader}>
               <h2>📅 Danh Sách Sự Kiện</h2>
               <div className={styles.eventsCount}>
-                {filteredEvents.length} sự kiện
+                {finalFilteredEvents.length} sự kiện
               </div>
             </div>
 
             <div className={styles.eventsGrid}>
-              {filteredEvents.map((event, index) => (
+              {finalFilteredEvents.map((event, index) => (
                 <PersonalEventCard
                   key={event.id}
                   event={event}
                   onClick={(event) => setSelectedEvent(event)}
-                  onPaymentToggle={handlePaymentToggle}
+                  onPaymentToggle={isAuthorized ? handlePaymentToggle : undefined}
+                  paymentLoading={paymentLoading}
+                  selectedMemberId={selectedMember || undefined}
                 />
               ))}
             </div>
@@ -398,6 +442,7 @@ const PersonalTrackingPage: React.FC = () => {
               }
               setSelectedEvent(null)
             }}
+            onPaymentToggle={isAuthorized ? handlePaymentToggle : undefined}
           />
         )}
 
@@ -406,14 +451,14 @@ const PersonalTrackingPage: React.FC = () => {
           isOpen={showDeleteConfirm}
           onClose={handleCancelDeleteEvent}
           onConfirm={handleConfirmDeleteEvent}
-          title="Xóa sự kiện"
+          title={TEXT_CONSTANTS.personalEvent.confirmations.deleteEvent}
           message={
             eventToDelete
-              ? `Bạn có chắc muốn xóa sự kiện "${eventToDelete.title}" không? Tất cả dữ liệu thanh toán sẽ bị mất và không thể khôi phục.`
+              ? `Bạn có chắc muốn xóa sự kiện "${eventToDelete.title}" không? ${TEXT_CONSTANTS.personalEvent.confirmations.deleteEventMessage}`
               : ""
           }
-          confirmText="Xóa sự kiện"
-          cancelText="Hủy bỏ"
+          confirmText={TEXT_CONSTANTS.personalEvent.confirmations.confirmDelete}
+          cancelText={TEXT_CONSTANTS.personalEvent.confirmations.cancelDelete}
           type="danger"
           isLoading={deletePersonalEventMutation.isPending}
         />

@@ -23,7 +23,8 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
   event,
   mode = 'view',
   onSave,
-  onDelete
+  onDelete,
+  onPaymentToggle
 }) => {
   const [showEditForm, setShowEditForm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -76,7 +77,14 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
     setPaymentLoading(paymentKey)
     
     try {
-      // Call the API to toggle payment status
+      // Use parent's payment toggle handler if provided, otherwise handle locally
+      if (onPaymentToggle) {
+        await onPaymentToggle(eventId, memberId)
+        // The parent handler should trigger refetch, so we don't need to update local state
+        return
+      }
+      
+      // Fallback to local API call if no parent handler (backwards compatibility)
       const result = await apiService.personalEvents.togglePayment(eventId, memberId)
       console.log('Payment toggled successfully:', result)
       
@@ -183,6 +191,7 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
         onClose={() => setShowEditForm(false)}
         title="Chỉnh sửa sự kiện"
         size="large"
+        disableOverlayClose={true}
       >
         <PersonalEventForm
           onSubmit={handleFormSubmit}
@@ -201,6 +210,7 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
         onClose={onClose}
         size="large"
         title={currentEvent?.title}
+        disableOverlayClose={true}
       >
         <div className={styles.modalContent}>
           {/* Event Header */}
@@ -422,12 +432,14 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
                       <div className={styles.paymentActions}>
                         <button
                           onClick={() => currentEvent && handlePaymentToggle(currentEvent.id, participant.memberId)}
-                          disabled={isLoading}
+                          disabled={isLoading || !onPaymentToggle}
                           className={`${styles.paymentToggleBtn} ${
                             participant.hasPaid ? styles.paid : styles.unpaid
-                          }`}
+                          } ${!onPaymentToggle ? styles.disabled : ''}`}
                           title={
-                            participant.hasPaid
+                            !onPaymentToggle 
+                              ? "Bạn không có quyền thay đổi trạng thái thanh toán"
+                              : participant.hasPaid
                               ? `✅ ${participant.member.name} đã thanh toán - Nhấn để hủy`
                               : `💰 ${participant.member.name} chưa thanh toán - Nhấn để xác nhận đã trả`
                           }

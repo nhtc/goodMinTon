@@ -96,7 +96,7 @@ const PaymentPageContent = () => {
 
     const totalAmount = unpaidPersonalEvents.reduce((sum, event) => {
       const participation = event.participants.find(p => p.memberId === selectedMember.id)
-      return sum + (participation ? participation.customAmount : 0)
+      return sum + (participation ? participation.customAmount - (participation.prePaid || 0) : 0)
     }, 0)
 
     return { unpaidPersonalEvents, totalAmount }
@@ -548,7 +548,7 @@ Nội dung: ${content}
                                 <div className={styles.gamesList}>
                                   {(showAllGames ? unpaidGames : unpaidGames.slice(0, 3)).map((game, index) => {
                                     const participation = game.participants.find(p => p.id === selectedMember.id)
-                                    const gameAmount = participation ? game.costPerMember - participation.prePaid : game.costPerMember
+                                    const gameAmount = participation ? game.costPerMember - participation.prePaid + (participation.customAmount || 0) : game.costPerMember
                                     const gameDate = new Date(game.date).toLocaleDateString("vi-VN", {
                                       weekday: "short",
                                       day: "2-digit",
@@ -604,7 +604,7 @@ Nội dung: ${content}
                                 <div className={styles.gamesList}>
                                   {(showAllPersonalEvents ? unpaidPersonalEvents : unpaidPersonalEvents.slice(0, 3)).map((event, index) => {
                                     const participation = event.participants.find(p => p.memberId === selectedMember.id)
-                                    const eventAmount = participation ? participation.customAmount : 0
+                                    const eventAmount = participation ? participation.customAmount - (participation.prePaid || 0) : 0
                                     const eventDate = new Date(event.date).toLocaleDateString("vi-VN", {
                                       weekday: "short",
                                       day: "2-digit",

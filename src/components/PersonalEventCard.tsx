@@ -7,16 +7,28 @@ const PersonalEventCard: React.FC<PersonalEventCardProps> = ({
   event,
   onClick,
   onPaymentToggle,
+  paymentLoading,
+  selectedMemberId,
   className = ""
 }) => {
   // Calculate payment statistics
+  // If selectedMemberId is provided, filter calculations to only that member
+  const participantsForCalculation = selectedMemberId 
+    ? event.participants.filter(p => p.memberId === selectedMemberId)
+    : event.participants
+    
   const totalParticipants = event.participants.length
-  const paidCount = event.participants.filter(p => p.hasPaid).length
-  const unpaidCount = totalParticipants - paidCount
-  const totalPaid = event.participants
+  const paidCount = participantsForCalculation.filter(p => p.hasPaid).length
+  const unpaidCount = participantsForCalculation.length - paidCount
+  const totalPaid = participantsForCalculation
     .filter(p => p.hasPaid)
     .reduce((sum, p) => sum + (p.customAmount - (p.prePaid || 0)), 0)
-  const totalRemaining = event.totalCost - totalPaid
+  
+  // Calculate total expected amount for the filtered participants
+  const totalExpected = participantsForCalculation.reduce((sum, p) => sum + (p.customAmount - (p.prePaid || 0)), 0)
+  const totalRemaining = selectedMemberId
+    ? totalExpected - totalPaid
+    : event.totalCost - totalPaid
 
   // Format date display
   const eventDate = new Date(event.date)
@@ -29,11 +41,17 @@ const PersonalEventCard: React.FC<PersonalEventCardProps> = ({
   })
 
   // Payment completion percentage
-  const paymentPercentage = totalParticipants > 0 ? Math.round((paidCount / totalParticipants) * 100) : 0
+  const paymentPercentage = participantsForCalculation.length > 0 
+    ? Math.round((paidCount / participantsForCalculation.length) * 100) 
+    : 0
 
   // Handle payment status click
   const handlePaymentStatusClick = (e: React.MouseEvent, participant: any) => {
     e.stopPropagation() // Prevent card click
+    const paymentKey = `${event.id}-${participant.member.id}`
+    // Don't allow clicks if this payment toggle is loading
+    if (paymentLoading === paymentKey) return
+    
     if (onPaymentToggle) {
       onPaymentToggle(event.id, participant.member.id)
     }
@@ -42,7 +60,6 @@ const PersonalEventCard: React.FC<PersonalEventCardProps> = ({
   return (
     <div 
       className={`${styles.eventCard} ${className}`}
-      onClick={() => onClick(event)}
     >
       {/* Event Header */}
       <div className={styles.eventHeader}>
@@ -163,19 +180,28 @@ const PersonalEventCard: React.FC<PersonalEventCardProps> = ({
                 </div>
               </div>
               <div 
-                className={`${styles.participantPaymentStatus} ${participant.hasPaid ? styles.paid : styles.unpaid}`}
+                className={`${styles.participantPaymentStatus} ${participant.hasPaid ? styles.paid : styles.unpaid} ${!onPaymentToggle ? styles.disabled : ''}`}
                 onClick={onPaymentToggle ? (e) => handlePaymentStatusClick(e, participant) : undefined}
-                style={onPaymentToggle ? { cursor: 'pointer' } : {}}
-                title={onPaymentToggle ? 
-                  (participant.hasPaid ? "Nhấn để chuyển sang chưa thanh toán" : "Nhấn để chuyển sang đã thanh toán") : 
-                  (participant.hasPaid ? "Đã thanh toán" : "Chưa thanh toán")
+                style={onPaymentToggle ? { cursor: 'pointer' } : { cursor: 'not-allowed', opacity: 0.6 }}
+                title={!onPaymentToggle ? 
+                  "Bạn không có quyền thay đổi trạng thái thanh toán" :
+                  (participant.hasPaid ? "Nhấn để chuyển sang chưa thanh toán" : "Nhấn để chuyển sang đã thanh toán")
                 }
               >
-                {participant.hasPaid ? (
-                  <span className={styles.statusIcon} title="Đã thanh toán">✅</span>
-                ) : (
-                  <span className={styles.statusIcon} title="Chưa thanh toán">⏳</span>
-                )}
+                {(() => {
+                  const paymentKey = `${event.id}-${participant.member.id}`
+                  const isLoading = paymentLoading === paymentKey
+                  
+                  if (isLoading) {
+                    return <span className={styles.statusIcon} title="Đang xử lý...">⏳</span>
+                  }
+                  
+                  return participant.hasPaid ? (
+                    <span className={styles.statusIcon} title="Đã thanh toán">✅</span>
+                  ) : (
+                    <span className={styles.statusIcon} title="Chưa thanh toán">❌</span>
+                  )
+                })()}
               </div>
             </div>
           ))}
@@ -191,7 +217,10 @@ const PersonalEventCard: React.FC<PersonalEventCardProps> = ({
 
       {/* Card Actions */}
       <div className={styles.eventActions}>
-        <div className={styles.actionPrimary}>
+        <div 
+          className={`${styles.actionPrimary} ${styles.clickable}`}
+          onClick={() => onClick(event)}
+        >
           <div className={styles.actionBtn}>
             <span className={styles.actionIcon}>👁️</span>
             <span className={styles.actionText}>Xem chi tiết</span>

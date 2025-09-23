@@ -568,6 +568,12 @@
   transform: none;
 }
 
+.paymentToggleBtn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .paymentSpinner {
   width: 16px;
   height: 16px;

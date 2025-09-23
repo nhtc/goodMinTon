@@ -409,7 +409,6 @@ const PersonalEventForm: React.FC<PersonalEventFormProps> = ({
               </label>
               <div className={styles.inputWrapper}>
                 <div className={styles.customAmountInputWrapper}>
-                  <div className={styles.inputPrefix}>×1000</div>
                   <input
                     type="text"
                     id="totalAmount"
@@ -424,7 +423,7 @@ const PersonalEventForm: React.FC<PersonalEventFormProps> = ({
                     className={`${styles.customAmountInput} ${errors.totalAmount ? 'error' : ''}`}
                     placeholder="0"
                   />
-                  <span className={styles.customAmountSuffix}>đ</span>
+                  <span className={styles.customAmountSuffix}>×1000 đ</span>
                 </div>
                 <div className={styles.inputGlow}></div>
               </div>
@@ -644,7 +643,6 @@ const PersonalEventForm: React.FC<PersonalEventFormProps> = ({
                             </label>
 
                             <div className={styles.customAmountInputWrapper}>
-                              <div className={styles.inputPrefix}>×1000</div>
                               <input
                                 type="text"
                                 value={customAmount === 0 ? "" : (customAmount / 1000).toString()}
@@ -656,7 +654,7 @@ const PersonalEventForm: React.FC<PersonalEventFormProps> = ({
                                 className={styles.customAmountInput}
                                 placeholder="0"
                               />
-                              <span className={styles.customAmountSuffix}>đ</span>
+                              <span className={styles.customAmountSuffix}>×1000 đ</span>
                             </div>
                             
                             <div className={styles.fieldTip}>
@@ -671,7 +669,6 @@ const PersonalEventForm: React.FC<PersonalEventFormProps> = ({
                               </label>
 
                               <div className={styles.customAmountInputWrapper}>
-                                <div className={styles.inputPrefix}>×1000</div>
                                 <input
                                   type="text"
                                   value={memberPrepaidAmounts[member.id] === 0 ? "" : (memberPrepaidAmounts[member.id] / 1000).toString()}
@@ -683,7 +680,7 @@ const PersonalEventForm: React.FC<PersonalEventFormProps> = ({
                                   className={styles.customAmountInput}
                                   placeholder="0"
                                 />
-                                <span className={styles.customAmountSuffix}>đ</span>
+                                <span className={styles.customAmountSuffix}>×1000 đ</span>
                               </div>
 
                               {/* Amount to Pay Calculation */}

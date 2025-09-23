@@ -267,6 +267,10 @@ export interface PersonalEventCardProps {
     onClick: (event: PersonalEvent) => void;
     /** Payment toggle handler for participant */
     onPaymentToggle?: (eventId: string, memberId: string) => void;
+    /** Loading state key for payment operations (format: "eventId-memberId") */
+    paymentLoading?: string | null;
+    /** Selected member ID for filtering calculations */
+    selectedMemberId?: string;
     /** Optional additional CSS classes */
     className?: string;
 }
@@ -287,6 +291,8 @@ export interface PersonalEventModalProps {
     onSave?: (data: CreatePersonalEventData | UpdatePersonalEventData) => void;
     /** Handler for deleting an event */
     onDelete?: (eventId: string) => void;
+    /** Handler for payment status toggle */
+    onPaymentToggle?: (eventId: string, memberId: string) => Promise<void>;
 }
 
 /**

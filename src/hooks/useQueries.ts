@@ -172,7 +172,7 @@ export const useMemberOutstanding = (memberId: string | null) => {
           p => p.id === memberId
         )
         if (participation && !participation.hasPaid) {
-          const gameOutstanding = game.costPerMember - participation.prePaid
+          const gameOutstanding = game.costPerMember - participation.prePaid + (participation.customAmount || 0)
           totalOutstanding += gameOutstanding
           unpaidGames.push(game)
         }

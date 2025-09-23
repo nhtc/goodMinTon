@@ -643,7 +643,7 @@
 
 .customAmountInput {
   width: 100%;
-  padding: 0.625rem 2.5rem 0.625rem 3.5rem;
+  padding: 0.625rem 2.5rem 0.625rem 1.25rem;
   border: 2px solid rgba(102, 126, 234, 0.2);
   border-radius: 8px;
   font-size: 0.875rem;
