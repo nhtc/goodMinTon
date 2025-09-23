@@ -12,6 +12,8 @@ import { useToast } from "../../context/ToastContext"
 import { capitalize } from "lodash"
 import Modal from "../../components/Modal"
 import ConfirmationModal from "../../components/ConfirmationModal"
+import { CompoundSelect } from "../../components/ui/select"
+import { filterGamesByPaymentStatus, PaymentStatusFilter } from "../../utils/paymentFilters"
 
 // Lazy load heavy components for better performance
 const GameForm = lazy(() => import("../../components/GameForm"))
@@ -56,7 +58,17 @@ const HistoryPage = () => {
     id: string
     date: string
   } | null>(null)
+
+  // Filter states
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatusFilter>('all')
   const [searchTerm, setSearchTerm] = useState("")
+
+  // Payment status filter options
+  const paymentStatusOptions = [
+    { value: 'all', label: 'Tất cả' },
+    { value: 'paid', label: 'Đã thanh toán đầy đủ' },
+    { value: 'unpaid', label: 'Còn người chưa trả' }
+  ]
   const [paymentLoading, setPaymentLoading] = useState<string | null>(null)
   const { canEdit, userRole } = usePermissions()
   const { showSuccess, showError } = useToast()
@@ -307,6 +319,9 @@ const HistoryPage = () => {
       )
   )
 
+  // Apply payment status filter
+  const finalFilteredGames = filterGamesByPaymentStatus(filteredGames, paymentStatus)
+
   const stats = getTotalStats()
 
   // Modal close handlers
@@ -500,7 +515,6 @@ const HistoryPage = () => {
           </div>
 
           {/* Game Form Modal */}
-          {showForm && (
             <Modal
               isOpen={showForm}
               onClose={handleCloseEditGame}
@@ -538,7 +552,6 @@ const HistoryPage = () => {
                 </Suspense>
               </EditableContent>
             </Modal>
-          )}
 
           {/* Search and Filter */}
           {games.length > 0 && (
@@ -561,16 +574,40 @@ const HistoryPage = () => {
                   </button>
                 )}
               </div>
-              {searchTerm && (
+
+              {/* Payment Status Filter */}
+              <div className={styles.filterControls}>
+                <div className={styles.filterGroup}>
+                  <label className={styles.filterLabel}>Trạng thái thanh toán:</label>
+                  <CompoundSelect
+                    value={paymentStatus}
+                    onValueChange={(value) => setPaymentStatus(value as PaymentStatusFilter)}
+                    options={paymentStatusOptions}
+                    className={styles.filterSelect}
+                    placeholder="Chọn trạng thái thanh toán"
+                  />
+                </div>
+
+                {paymentStatus !== 'all' && (
+                  <button
+                    onClick={() => setPaymentStatus('all')}
+                    className={styles.clearFiltersBtn}
+                  >
+                    Xóa bộ lọc
+                  </button>
+                )}
+              </div>
+
+              {(searchTerm || paymentStatus !== 'all') && (
                 <div className={styles.searchResults}>
-                  Tìm thấy {filteredGames.length} trận đấu
+                  Tìm thấy {finalFilteredGames.length} trận đấu
                 </div>
               )}
             </div>
           )}
 
           {/* Games List */}
-          {filteredGames.length === 0 ? (
+          {finalFilteredGames.length === 0 ? (
             <div className={styles.emptyState}>
               <div className={styles.emptyIcon}>🏸</div>
               <h3 className={styles.emptyTitle}>
@@ -598,12 +635,12 @@ const HistoryPage = () => {
               <div className={styles.sectionHeader}>
                 <h2>📅 Danh Sách Trận Đấu</h2>
                 <div className={styles.gamesCount}>
-                  {filteredGames.length} trận đấu
+                  {finalFilteredGames.length} trận đấu
                 </div>
               </div>
 
               <div className={styles.gamesGrid}>
-                {filteredGames.map((game, index) => {
+                {finalFilteredGames.map((game, index) => {
                   const paidCount = game.participants.filter(
                     p => p.hasPaid
                   ).length

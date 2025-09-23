@@ -18,6 +18,7 @@ model Member {
   updatedAt DateTime @updatedAt
 
   participants GameParticipant[]
+  personalEventParticipants PersonalEventParticipant[]
 
   @@map("members")
 }
@@ -56,4 +57,36 @@ model GameParticipant {
 
   @@unique([gameId, memberId])
   @@map("game_participants")
+}
+
+model PersonalEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  date        DateTime
+  location    String?
+  totalCost   Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  participants PersonalEventParticipant[]
+
+  @@map("personal_events")
+}
+
+model PersonalEventParticipant {
+  id              String    @id @default(cuid())
+  personalEventId String
+  memberId        String
+  customAmount    Float
+  hasPaid         Boolean   @default(false)
+  paidAt          DateTime?
+  prePaid         Float     @default(0)
+  prePaidCategory String    @default("")
+
+  personalEvent PersonalEvent @relation(fields: [personalEventId], references: [id], onDelete: Cascade)
+  member        Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  
+  @@unique([personalEventId, memberId])
+  @@map("personal_event_participants")
 }

@@ -4,8 +4,14 @@ import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import styles from "./page.module.css"
 import { useToast } from "../../context/ToastContext"
-import { useMembers, useMemberOutstanding } from "../../hooks/useQueries"
+import { useMembers, useMemberOutstanding, usePersonalEvents } from "../../hooks/useQueries"
 import MemberAutocomplete from "../../components/MemberAutocomplete"
+import type { Member, PersonalEvent, PersonalEventParticipant } from "../../types"
+
+// Type guard function
+const isValidPersonalEvent = (event: any): event is PersonalEvent => {
+  return event && typeof event === 'object' && 'id' in event && 'participants' in event && Array.isArray(event.participants)
+}
 
 interface PaymentInfo {
   bankName: string
@@ -13,13 +19,6 @@ interface PaymentInfo {
   accountHolder: string
   amount?: number
   content?: string
-}
-
-interface Member {
-  id: string
-  name: string
-  phone?: string
-  createdAt: string
 }
 
 interface GameParticipant {
@@ -39,6 +38,8 @@ interface Game {
   participants: GameParticipant[]
 }
 
+// Personal Event interfaces
+
 const PaymentPageContent = () => {
   const searchParams = useSearchParams()
   const { showWarning, showError } = useToast()
@@ -49,6 +50,12 @@ const PaymentPageContent = () => {
     isLoading: membersLoading, 
     error: membersError 
   } = useMembers()
+
+  const { 
+    data: personalEventsData,
+    isLoading: personalEventsLoading,
+    error: personalEventsError
+  } = usePersonalEvents()
   
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
     bankName: "Vietcombank",
@@ -62,6 +69,7 @@ const PaymentPageContent = () => {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [isChangingMember, setIsChangingMember] = useState<boolean>(false)
   const [showAllGames, setShowAllGames] = useState<boolean>(false)
+  const [showAllPersonalEvents, setShowAllPersonalEvents] = useState<boolean>(false)
   
   // Use the custom hook for outstanding calculation - this will cache the calculation
   const { 
@@ -74,6 +82,29 @@ const PaymentPageContent = () => {
   const memberOutstandingAmount = outstandingData?.totalOutstanding || 0
   const unpaidGames = outstandingData?.unpaidGames || []
 
+  // Calculate member personal events data when member is selected
+  const memberPersonalEventsData = React.useMemo(() => {
+    if (!selectedMember) {
+      return { unpaidPersonalEvents: [], totalAmount: 0 }
+    }
+
+    const allPersonalEvents = personalEventsData?.data || []
+    const unpaidPersonalEvents = allPersonalEvents.filter(event => {
+      const participation = event.participants.find(p => p.memberId === selectedMember.id)
+      return participation && !participation.hasPaid
+    })
+
+    const totalAmount = unpaidPersonalEvents.reduce((sum, event) => {
+      const participation = event.participants.find(p => p.memberId === selectedMember.id)
+      return sum + (participation ? participation.customAmount - (participation.prePaid || 0) : 0)
+    }, 0)
+
+    return { unpaidPersonalEvents, totalAmount }
+  }, [selectedMember, personalEventsData])
+
+  const unpaidPersonalEvents = memberPersonalEventsData.unpaidPersonalEvents
+  const memberPersonalEventsAmount = memberPersonalEventsData.totalAmount
+
   // Handle members loading error
   const error = membersError ? 'Failed to load members' : null
   const loading = membersLoading
@@ -84,6 +115,11 @@ const PaymentPageContent = () => {
   // Toggle function for showing all games
   const toggleShowAllGames = () => {
     setShowAllGames(prev => !prev)
+  }
+
+  // Toggle function for showing all personal events
+  const toggleShowAllPersonalEvents = () => {
+    setShowAllPersonalEvents(prev => !prev)
   }
   
   // Handler for member selection with smooth loading transition
@@ -110,7 +146,7 @@ const PaymentPageContent = () => {
   }
 
   // Handler for autocomplete component that accepts Member object
-  const handleAutocompleteChange = (member: Member | null) => {
+  const handleAutocompleteChange = (member: any) => {
     if (!member) {
       setSelectedMember(null)
       setIsChangingMember(false)
@@ -132,26 +168,38 @@ const PaymentPageContent = () => {
     }, 100)
   }
 
-  // Update payment info when member is selected
+  // Update payment info when member is selected - combines both badminton and personal events
   useEffect(() => {
-    if (selectedMember && unpaidGames.length > 0 && memberOutstandingAmount > 0) {
-      const paymentContent = generatePaymentContent(selectedMember, unpaidGames)
-      setPaymentInfo(prev => ({
-        ...prev,
-        amount: memberOutstandingAmount,
-        content: paymentContent,
-      }))
+    if (selectedMember) {
+      const totalBadmintonAmount = memberOutstandingAmount || 0
+      const totalPersonalEventsAmount = memberPersonalEventsAmount || 0
+      const totalAmount = totalBadmintonAmount + totalPersonalEventsAmount
+      
+      if (totalAmount > 0) {
+        // Generate payment content with current date
+        const currentDate = new Date()
+        const day = currentDate.getDate().toString().padStart(2, '0')
+        const month = (currentDate.getMonth() + 1).toString().padStart(2, '0')
+        const year = currentDate.getFullYear()
+        
+        let paymentContent = `${selectedMember.name.toUpperCase()} - Thanh toan toi ngay ${day}.${month}.${year}`
+        
+        setPaymentInfo(prev => ({
+          ...prev,
+          amount: totalAmount,
+          content: paymentContent,
+        }))
+      }
     }
-  }, [selectedMember, memberOutstandingAmount, unpaidGames])
+  }, [selectedMember, memberOutstandingAmount, memberPersonalEventsAmount, unpaidGames, unpaidPersonalEvents])  // Get amount and content from URL params (fallback if no member selected)
 
-  // Get amount and content from URL params (fallback if no member selected)
   useEffect(() => {
-    if (selectedMember) return // Don't override if member is selected
-
     const amount = searchParams.get("amount")
     const content = searchParams.get("content") || searchParams.get("message")
     const gameId = searchParams.get("gameId")
     const memberName = searchParams.get("memberName")
+
+    if (selectedMember) return // Don't override if member is selected
 
     if (amount) {
       setPaymentInfo(prev => ({ ...prev, amount: parseInt(amount) }))
@@ -196,17 +244,28 @@ const PaymentPageContent = () => {
   }, [paymentInfo])
 
   // Generate banking app URL for direct payment
-  const generateBankingAppUrl = () => {
-    if (!selectedMember || memberOutstandingAmount === 0) return "#"
+  const generateBankingAppUrl = (amount?: number, content?: string): string => {
+    // Default to combined amount if no parameters provided
+    const paymentAmount = amount || ((memberOutstandingAmount || 0) + (memberPersonalEventsAmount || 0))
+    
+    // Generate default content if not provided
+    let paymentContent = content
+    if (!paymentContent && selectedMember) {
+      const currentDate = new Date()
+      const day = currentDate.getDate().toString().padStart(2, '0')
+      const month = (currentDate.getMonth() + 1).toString().padStart(2, '0')
+      const year = currentDate.getFullYear()
+      paymentContent = `${selectedMember.name.toUpperCase()} - Thanh toan toi ngay ${day}.${month}.${year}`
+    }
+    
+    if (!paymentContent) {
+      paymentContent = "Thanh toan"
+    }
 
-    // VietQR universal banking URL format
-    const amount = memberOutstandingAmount
-    const content = generatePaymentContent(selectedMember, unpaidGames)
-
-    // VietQR format that works with most Vietnamese banking apps
+    if (!selectedMember || paymentAmount === 0) return "#"    // VietQR format that works with most Vietnamese banking apps
     const vietQRUrl = `https://qr.sepay.vn/img?acc=${
       paymentInfo.accountNumber
-    }&bank=970436&amount=${amount}&des=${encodeURIComponent(content)}`
+    }&bank=970436&amount=${paymentAmount}&des=${encodeURIComponent(paymentContent)}`
 
     // Try to detect the user's banking app and use deep linking
     // For mobile devices, we can use intent URLs that will open the banking app
@@ -217,21 +276,43 @@ const PaymentPageContent = () => {
       // For mobile, use intent URL that will prompt to open banking app
       return `intent://payment?bank=970436&account=${
         paymentInfo.accountNumber
-      }&amount=${amount}&content=${encodeURIComponent(
-        content
+      }&amount=${paymentAmount}&content=${encodeURIComponent(
+        paymentContent
       )}#Intent;scheme=vietqr;package=com.vietcombank.mobile;end`
     }
 
     return vietQRUrl
   }
 
+  /**
+   * Handles opening banking app with appropriate payment information
+   * Supports both game and personal event payments
+   */
+
   const openBankingApp = () => {
-    if (!selectedMember || memberOutstandingAmount === 0) {
-      showWarning("Thông tin thiếu", "Vui lòng chọn thành viên và đảm bảo có số tiền cần thanh toán")
+    if (!selectedMember) {
+      showWarning("Thông tin thiếu", "Vui lòng chọn thành viên cần thanh toán")
       return
     }
 
-    const bankingUrl = generateBankingAppUrl()
+    const totalBadmintonAmount = memberOutstandingAmount || 0
+    const totalPersonalEventsAmount = memberPersonalEventsAmount || 0
+    const totalAmount = totalBadmintonAmount + totalPersonalEventsAmount
+
+    if (totalAmount === 0) {
+      showWarning("Thông tin thiếu", "Thành viên không có khoản nào cần thanh toán")
+      return
+    }
+
+    // Generate payment content with current date
+    const currentDate = new Date()
+    const day = currentDate.getDate().toString().padStart(2, '0')
+    const month = (currentDate.getMonth() + 1).toString().padStart(2, '0')
+    const year = currentDate.getFullYear()
+    
+    let content = `${selectedMember.name.toUpperCase()} - Thanh toan toi ngay ${day}.${month}.${year}`
+
+    const bankingUrl = generateBankingAppUrl(totalAmount, content)
     const userAgent = navigator.userAgent.toLowerCase()
     const isMobile = /android|iphone|ipad|ipod|mobile/.test(userAgent)
 
@@ -242,29 +323,26 @@ const PaymentPageContent = () => {
 
         // Fallback: If banking app is not installed, open browser after delay
         setTimeout(() => {
-          const content = generatePaymentContent(selectedMember, unpaidGames)
           const fallbackUrl = `https://qr.sepay.vn/img?acc=${
             paymentInfo.accountNumber
-          }&bank=970436&amount=${memberOutstandingAmount}&des=${encodeURIComponent(content)}`
+          }&bank=970436&amount=${totalAmount}&des=${encodeURIComponent(content)}`
           window.open(fallbackUrl, "_blank")
         }, 1500)
       } else {
         // For desktop, open QR page in new tab
-        const content = generatePaymentContent(selectedMember, unpaidGames)
         const fallbackUrl = `https://qr.sepay.vn/img?acc=${
           paymentInfo.accountNumber
-        }&bank=970436&amount=${memberOutstandingAmount}&des=${encodeURIComponent(content)}`
+        }&bank=970436&amount=${totalAmount}&des=${encodeURIComponent(content)}`
         window.open(fallbackUrl, "_blank")
       }
     } catch (error) {
       console.error("Error opening banking app:", error)
       // Final fallback - copy payment info to clipboard
-      const content = generatePaymentContent(selectedMember, unpaidGames)
       const paymentDetails = `
 Ngân hàng: ${paymentInfo.bankName}
 Số tài khoản: ${paymentInfo.accountNumber}
 Chủ tài khoản: ${paymentInfo.accountHolder}
-Số tiền: ${formatCurrency(memberOutstandingAmount)}
+Số tiền: ${formatCurrency(totalAmount)}
 Nội dung: ${content}
       `.trim()
 
@@ -276,7 +354,12 @@ Nội dung: ${content}
     }
   }
 
-  const copyToClipboard = async (text: string, type: string) => {
+  /**
+   * Copies text to clipboard with error handling
+   * @param text - Text to copy to clipboard
+   * @param type - Type identifier for UI feedback
+   */
+  const copyToClipboard = async (text: string, type: string): Promise<void> => {
     try {
       await navigator.clipboard.writeText(text)
       setCopySuccess(type)
@@ -288,15 +371,22 @@ Nội dung: ${content}
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount)
+  /**
+   * Formats number to Vietnamese currency format
+   * @param amount - Amount to format (in VND)
+   * @returns Formatted currency string (e.g., "500.000đ" for 500,000 VND)
+   */
+  const formatCurrency = (amount: number): string => {
+    return `${amount.toLocaleString("vi-VN")}đ`
   }
 
-  // Generate payment content with match dates (optimized for QR code length)
-  const generatePaymentContent = (member: Member, games: Game[]) => {
+  /**
+   * Generates optimized payment content for game payments
+   * @param member - The member making the payment
+   * @param games - Array of unpaid games
+   * @returns Formatted payment content string optimized for QR codes
+   */
+  const generatePaymentContent = (member: Member, games: Game[]): string => {
     if (!member || games.length === 0) return "Thanh toan cau long"
 
     // Get the most recent game date to use as "den ngay" (until date)
@@ -346,7 +436,7 @@ Nội dung: ${content}
             </div>
             <h1 className={styles.title}>Thanh Toán QR</h1>
             <p className={styles.subtitle}>
-              Chọn thành viên và quét mã QR để thanh toán phí cầu lông
+              Chọn thành viên và quét mã QR để thanh toán cầu lông + sự kiện cá nhân
             </p>
           </div>
 
@@ -355,13 +445,11 @@ Nội dung: ${content}
             <h3 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>👤</span>
               Chọn thành viên
-              {/* Show cache status for better UX - React Query automatically handles caching */}
               {!membersLoading && members.length > 0 && !isCalculatingAmount && (
                 <span className={styles.cacheIndicator} title="Dữ liệu đã được cache - thao tác nhanh hơn">
                   ⚡
                 </span>
               )}
-              {/* Show calculating indicator */}
               {isCalculatingAmount && (
                 <span className={styles.calculatingIndicatorTitle} title="Đang xử lý...">
                   <div className={styles.miniLoadingSpinner}></div>
@@ -418,7 +506,7 @@ Nội dung: ${content}
                           </div>
                         </div>
                       </div>
-                    ) : outstandingError ? (
+                    ) : (outstandingError || personalEventsError) ? (
                       <div className={styles.errorState}>
                         <span className={styles.errorIcon}>⚠️</span>
                         <p>Không thể tính toán số tiền cần thanh toán</p>
@@ -441,63 +529,124 @@ Nội dung: ${content}
                             Số tiền cần thanh toán:
                           </span>
                           <span className={styles.amountValue}>
-                            {formatCurrency(memberOutstandingAmount)}
+                            {formatCurrency((memberOutstandingAmount || 0) + (memberPersonalEventsAmount || 0))}
                           </span>
                         </div>
                         
-                        {/* Unpaid Games Breakdown */}
-                        {unpaidGames.length > 0 && (
+                        {/* Combined Breakdown */}
+                        {(unpaidGames.length > 0 || unpaidPersonalEvents.length > 0) && (
                           <div className={styles.unpaidGamesBreakdown}>
-                            <div className={styles.breakdownHeader}>
-                              <span className={styles.breakdownIcon}>📋</span>
-                              <span className={styles.breakdownTitle}>
-                                Chi tiết các trận chưa thanh toán ({unpaidGames.length} trận):
-                              </span>
-                            </div>
-                            <div className={styles.gamesList}>
-                              {(showAllGames ? unpaidGames : unpaidGames.slice(0, 5)).map((game, index) => {
-                                const participation = game.participants.find(p => p.id === selectedMember.id)
-                                const gameAmount = participation ? game.costPerMember - participation.prePaid : game.costPerMember
-                                const gameDate = new Date(game.date).toLocaleDateString("vi-VN", {
-                                  weekday: "short",
-                                  day: "2-digit",
-                                  month: "2-digit"
-                                })
-                                
-                                return (
-                                  <div key={game.id} className={styles.gameItem}>
-                                    <span className={styles.gameDate}>📅 {gameDate}</span>
-                                    <span className={styles.gameAmount}>
-                                      {formatCurrency(gameAmount)}
-                                    </span>
-                                  </div>
-                                )
-                              })}
-                              {unpaidGames.length > 5 && (
-                                <div className={styles.showMoreContainer}>
-                                  {!showAllGames && (
-                                    <div className={styles.moreGames}>
-                                      + {unpaidGames.length - 5} trận khác...
+                            {/* Badminton Games Breakdown */}
+                            {unpaidGames.length > 0 && (
+                              <>
+                                <div className={styles.breakdownHeader}>
+                                  <span className={styles.breakdownIcon}>🏸</span>
+                                  <span className={styles.breakdownTitle}>
+                                    Cầu lông - {unpaidGames.length} trận chưa thanh toán:
+                                  </span>
+                                </div>
+                                <div className={styles.gamesList}>
+                                  {(showAllGames ? unpaidGames : unpaidGames.slice(0, 3)).map((game, index) => {
+                                    const participation = game.participants.find(p => p.id === selectedMember.id)
+                                    const gameAmount = participation ? game.costPerMember - participation.prePaid + (participation.customAmount || 0) : game.costPerMember
+                                    const gameDate = new Date(game.date).toLocaleDateString("vi-VN", {
+                                      weekday: "short",
+                                      day: "2-digit",
+                                      month: "2-digit"
+                                    })
+                                    
+                                    return (
+                                      <div key={game.id} className={styles.gameItem}>
+                                        <span className={styles.gameDate}>📅 {gameDate}</span>
+                                        <span className={styles.gameAmount}>
+                                          {formatCurrency(gameAmount)}
+                                        </span>
+                                      </div>
+                                    )
+                                  })}
+                                  {unpaidGames.length > 3 && (
+                                    <div className={styles.showMoreContainer}>
+                                      {!showAllGames && (
+                                        <div className={styles.moreGames}>
+                                          + {unpaidGames.length - 3} trận khác...
+                                        </div>
+                                      )}
+                                      <button
+                                        onClick={toggleShowAllGames}
+                                        className={styles.showAllButton}
+                                        title={showAllGames ? 'Thu gọn danh sách' : 'Hiển thị tất cả trận đấu'}
+                                      >
+                                        <span className={styles.showAllIcon}>
+                                          {showAllGames ? '⬆️' : '⬇️'}
+                                        </span>
+                                        <span className={styles.showAllText}>
+                                          {showAllGames ? 'Thu gọn' : 'Xem tất cả'}
+                                        </span>
+                                        <span className={styles.showAllCount}>
+                                          ({unpaidGames.length})
+                                        </span>
+                                      </button>
                                     </div>
                                   )}
-                                  <button
-                                    onClick={toggleShowAllGames}
-                                    className={styles.showAllButton}
-                                    title={showAllGames ? 'Thu gọn danh sách' : 'Hiển thị tất cả trận đấu'}
-                                  >
-                                    <span className={styles.showAllIcon}>
-                                      {showAllGames ? '⬆️' : '⬇️'}
-                                    </span>
-                                    <span className={styles.showAllText}>
-                                      {showAllGames ? 'Thu gọn' : 'Xem tất cả'}
-                                    </span>
-                                    <span className={styles.showAllCount}>
-                                      ({unpaidGames.length})
-                                    </span>
-                                  </button>
                                 </div>
-                              )}
-                            </div>
+                              </>
+                            )}
+
+                            {/* Personal Events Breakdown */}
+                            {unpaidPersonalEvents.length > 0 && (
+                              <>
+                                <div className={styles.breakdownHeader}>
+                                  <span className={styles.breakdownIcon}>🎉</span>
+                                  <span className={styles.breakdownTitle}>
+                                    Sự kiện cá nhân - {unpaidPersonalEvents.length} sự kiện chưa thanh toán:
+                                  </span>
+                                </div>
+                                <div className={styles.gamesList}>
+                                  {(showAllPersonalEvents ? unpaidPersonalEvents : unpaidPersonalEvents.slice(0, 3)).map((event, index) => {
+                                    const participation = event.participants.find(p => p.memberId === selectedMember.id)
+                                    const eventAmount = participation ? participation.customAmount - (participation.prePaid || 0) : 0
+                                    const eventDate = new Date(event.date).toLocaleDateString("vi-VN", {
+                                      weekday: "short",
+                                      day: "2-digit",
+                                      month: "2-digit"
+                                    })
+                                    
+                                    return (
+                                      <div key={event.id} className={styles.gameItem}>
+                                        <span className={styles.gameDate}>📅 {eventDate} - {event.title}</span>
+                                        <span className={styles.gameAmount}>
+                                          {formatCurrency(eventAmount)}
+                                        </span>
+                                      </div>
+                                    )
+                                  })}
+                                  {unpaidPersonalEvents.length > 3 && (
+                                    <div className={styles.showMoreContainer}>
+                                      {!showAllPersonalEvents && (
+                                        <div className={styles.moreGames}>
+                                          + {unpaidPersonalEvents.length - 3} sự kiện khác...
+                                        </div>
+                                      )}
+                                      <button
+                                        onClick={toggleShowAllPersonalEvents}
+                                        className={styles.showAllButton}
+                                        title={showAllPersonalEvents ? 'Thu gọn danh sách' : 'Hiển thị tất cả sự kiện'}
+                                      >
+                                        <span className={styles.showAllIcon}>
+                                          {showAllPersonalEvents ? '⬆️' : '⬇️'}
+                                        </span>
+                                        <span className={styles.showAllText}>
+                                          {showAllPersonalEvents ? 'Thu gọn' : 'Xem tất cả'}
+                                        </span>
+                                        <span className={styles.showAllCount}>
+                                          ({unpaidPersonalEvents.length})
+                                        </span>
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              </>
+                            )}
                           </div>
                         )}
                       </div>
@@ -512,14 +661,16 @@ Nội dung: ${content}
           <div className={styles.qrSection}>
             <div className={styles.qrContainer}>
               <div className={styles.qrWrapper}>
-                {!selectedMember || memberOutstandingAmount === 0 || isCalculatingAmount ? (
+                {(!selectedMember || 
+                  ((memberOutstandingAmount || 0) + (memberPersonalEventsAmount || 0) === 0) ||
+                  isCalculatingAmount) ? (
                   <div className={styles.qrPlaceholder}>
                     {isCalculatingAmount ? (
                       <div className={styles.qrCalculatingState}>
                         <div className={styles.loadingSpinner}></div>
                         <p>
                           {isChangingMember 
-                            ? "Đang chuẩn bị thông tin thanh toán..." 
+                            ? "Đang chuẩn bị thông tin thanh toán..."
                             : "Đang tạo mã QR..."
                           }
                         </p>
@@ -529,10 +680,15 @@ Nội dung: ${content}
                         <span className={styles.selectIcon}>👆</span>
                         <p>Vui lòng chọn thành viên để tạo mã QR thanh toán</p>
                       </div>
+                    ) : ((memberOutstandingAmount || 0) + (memberPersonalEventsAmount || 0) === 0) ? (
+                      <div className={styles.noMemberSelected}>
+                        <span className={styles.selectIcon}>✅</span>
+                        <p>Thành viên này không có khoản nào cần thanh toán</p>
+                      </div>
                     ) : (
                       <div className={styles.noMemberSelected}>
                         <span className={styles.selectIcon}>👆</span>
-                        <p>Thành viên này không có khoản nào cần thanh toán</p>
+                        <p>Vui lòng kiểm tra lại thông tin thanh toán</p>
                       </div>
                     )}
                   </div>
@@ -563,7 +719,9 @@ Nội dung: ${content}
               </div>
 
               {/* Banking App Button Moved Outside qrWrapper */}
-              {selectedMember && memberOutstandingAmount > 0 && !isCalculatingAmount && (
+              {selectedMember && 
+               ((memberOutstandingAmount || 0) + (memberPersonalEventsAmount || 0) > 0) &&
+               !isCalculatingAmount && (
                 <div className={styles.bankingAppSection}>
                   <div className={styles.orDivider}>
                     <span className={styles.orText}>hoặc</span>
@@ -773,3 +931,4 @@ Nội dung: ${content}
 }
 
 export default PaymentPageContent
+

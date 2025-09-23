@@ -15,7 +15,8 @@ const Navbar = () => {
   const navigation = [
     { name: "Nhà", href: "/", icon: "🏠" },
     { name: "Thành Viên", href: "/members", icon: "👥" },
-    { name: "Lịch sử trận", href: "/history", icon: "📅" },
+    { name: "Cầu lông", href: "/history", icon: "🏸" },
+    { name: "Tiệc tùng", href: "/personal-tracking", icon: "🎉" },
     { name: "QR Thanh toán", href: "/payment", icon: "💳" },
   ]
 

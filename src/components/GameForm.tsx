@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react"
 import { apiService } from "../lib/api"
 import _ from "lodash"
 import { EditableContent, usePermissions } from "./AuthorizedComponent"
+import { useText } from "../hooks/useText"
+import { TEXT_CONSTANTS } from "../lib/constants/text"
 import styles from "./GameForm.module.css"
 
 interface Member {
@@ -29,6 +31,9 @@ const GameForm: React.FC<GameFormProps> = ({
   gameData = null,
   isEditing = false,
 }) => {
+  // Text constants hook
+  const text = useText();
+  
   const [date, setDate] = useState(new Date().toISOString().split("T")[0])
   const [location, setLocation] = useState("")
   const [yardCost, setYardCost] = useState<number>(0)
@@ -284,60 +289,60 @@ const GameForm: React.FC<GameFormProps> = ({
     oneYearAgo.setFullYear(today.getFullYear() - 1)
 
     if (gameDate > today) {
-      newErrors.date = "Ngày trận đấu không thể là tương lai"
+      newErrors.date = text.game.validation.dateFuture();
     }
     if (gameDate < oneYearAgo) {
-      newErrors.date = "Ngày trận đấu không thể quá 1 năm trước"
+      newErrors.date = text.game.validation.dateTooOld();
     }
 
     // Validate location
     if (!location.trim()) {
-      newErrors.location = "Địa điểm thi đấu là bắt buộc"
+      newErrors.location = text.game.validation.locationRequired();
     } else if (location.trim().length < 3) {
-      newErrors.location = "Địa điểm phải có ít nhất 3 ký tự"
+      newErrors.location = text.game.validation.locationTooShort();
     }
 
     // Validate costs
     if (yardCost < 0) {
-      newErrors.yardCost = "Chi phí sân không được âm"
+      newErrors.yardCost = text.game.validation.yardCostNegative();
     }
     if (yardCost > 1000000) {
-      newErrors.yardCost = "Chi phí sân quá cao (tối đa 1,000,000đ)"
+      newErrors.yardCost = text.game.validation.yardCostTooHigh();
     }
 
     if (shuttleCockQuantity < 0) {
-      newErrors.shuttleCockQuantity = "Số lượng cầu không được âm"
+      newErrors.shuttleCockQuantity = text.game.validation.shuttleCockQuantityNegative();
     }
     if (shuttleCockQuantity > 20) {
-      newErrors.shuttleCockQuantity = "Số lượng cầu quá nhiều (tối đa 20 quả)"
+      newErrors.shuttleCockQuantity = text.game.validation.shuttleCockQuantityTooHigh();
     }
 
     if (shuttleCockPrice < 0) {
-      newErrors.shuttleCockPrice = "Giá cầu không được âm"
+      newErrors.shuttleCockPrice = text.game.validation.shuttlePriceNegative();
     }
     if (shuttleCockPrice > 100000) {
-      newErrors.shuttleCockPrice = "Giá cầu quá cao (tối đa 100,000đ/quả)"
+      newErrors.shuttleCockPrice = text.game.validation.shuttlePriceTooHigh();
     }
 
     // Validate other fees - now required
     if (otherFees <= 0) {
-      newErrors.otherFees = "Chi phí khác là bắt buộc"
+      newErrors.otherFees = text.game.validation.otherFeesRequired();
     }
     if (otherFees > 500000) {
-      newErrors.otherFees = "Chi phí khác quá cao (tối đa 500,000đ)"
+      newErrors.otherFees = text.game.validation.otherFeesTooHigh();
     }
 
     // Validate members
     if (selectedMembers.length === 0) {
-      newErrors.members = "Vui lòng chọn ít nhất 1 thành viên"
+      newErrors.members = text.game.validation.noMembersSelected();
     }
     if (selectedMembers.length > 20) {
-      newErrors.members = "Số lượng thành viên quá nhiều (tối đa 20 người)"
+      newErrors.members = text.game.validation.tooManyMembers();
     }
 
     // Validate total cost
     if (totalCost <= 0) {
-      newErrors.totalCost = "Tổng chi phí phải lớn hơn 0"
+      newErrors.totalCost = text.game.validation.totalCostInvalid();
     }
 
     setErrors(newErrors)
@@ -426,7 +431,7 @@ const GameForm: React.FC<GameFormProps> = ({
           memberPrePays: apiPrePays,
           memberCustomAmounts: memberCustomAmounts, // These are extra amounts, not total amounts
         })
-        setSuccess("🎉 Cập nhật trận đấu thành công!")
+        setSuccess(text.game.messages.updateSuccess);
       } else {
         // Transform memberPrePays to the format expected by API
         const apiPrePays: {
@@ -468,7 +473,7 @@ const GameForm: React.FC<GameFormProps> = ({
         setErrors({})
         setMemberPaymentStatus({})
 
-        setSuccess("🎉 Ghi nhận trận đấu thành công!")
+        setSuccess(text.game.messages.createSuccess);
       }
 
       onGameCreated()
@@ -543,7 +548,7 @@ const GameForm: React.FC<GameFormProps> = ({
           <div className={styles.sectionHeader}>
             <div className={styles.sectionIcon}>📅</div>
             <div className={styles.sectionTitle}>
-              <h3>Thông Tin Cơ Bản</h3>
+              <h3>{text.game.section.basicInfo().title}</h3>
               <p>Cho chúng mình biết khi nào và ở đâu bạn chơi nhé!</p>
             </div>
           </div>
@@ -557,7 +562,7 @@ const GameForm: React.FC<GameFormProps> = ({
                   className={`${styles.fieldLabel} ${styles.friendly}`}
                 >
                   <span className={styles.labelIcon}>📅</span>
-                  <span className={styles.labelText}>Ngày chơi</span>
+                  <span className={styles.labelText}>{text.field.gameDate()}</span>
                   <span className={styles.requiredStar}>*</span>
                 </label>
                 <div className={styles.inputWrapper}>
@@ -592,7 +597,7 @@ const GameForm: React.FC<GameFormProps> = ({
                   className={`${styles.fieldLabel} ${styles.friendly}`}
                 >
                   <span className={styles.labelIcon}>📍</span>
-                  <span className={styles.labelText}>Địa điểm chơi</span>
+                  <span className={styles.labelText}>{text.field.gameLocation()}</span>
                   <span className={styles.requiredStar}>*</span>
                 </label>
 
@@ -656,7 +661,7 @@ const GameForm: React.FC<GameFormProps> = ({
           <div className={styles.sectionHeader}>
             <div className={styles.sectionIcon}>💰</div>
             <div className={styles.sectionTitle}>
-              <h3>Chi Phí</h3>
+              <h3>{text.game.section.costs().title}</h3>
               <p>Hãy nhập chi phí để chia đều cho mọi người!</p>
             </div>
           </div>
@@ -666,7 +671,7 @@ const GameForm: React.FC<GameFormProps> = ({
             <div className={styles.subsection}>
               <h4 className={styles.subsectionTitle}>
                 <span>🏟️</span>
-                Chi phí thuê sân
+                {text.field.yardCost()}
               </h4>
 
               {/* Preset buttons */}
@@ -742,7 +747,7 @@ const GameForm: React.FC<GameFormProps> = ({
             <div className={styles.subsection}>
               <h4 className={styles.subsectionTitle}>
                 <span>🏸</span>
-                Chi phí cầu lông
+                {text.field.shuttleCockCost()}
               </h4>
 
               {/* Preset shuttlecock combinations */}
@@ -788,7 +793,7 @@ const GameForm: React.FC<GameFormProps> = ({
                     className={`${styles.fieldLabel} ${styles.friendly}`}
                   >
                     <span className={styles.labelIcon}>🔢</span>
-                    <span className={styles.labelText}>Số lượng cầu</span>
+                    <span className={styles.labelText}>{text.field.shuttleCockQuantity()}</span>
                   </label>
 
                   {/* Quick quantity selection buttons */}
@@ -1057,7 +1062,7 @@ const GameForm: React.FC<GameFormProps> = ({
           <div className={styles.sectionHeader}>
             <div className={styles.sectionIcon}>👥</div>
             <div className={styles.sectionTitle}>
-              <h3>Thành Viên Tham Gia</h3>
+              <h3>{text.game.section.members().title}</h3>
               <p>
                 {isEditing
                   ? "Theo dõi và cập nhật trạng thái thanh toán!"
@@ -1637,7 +1642,7 @@ const GameForm: React.FC<GameFormProps> = ({
                     <div className={styles.btnContentFriendly}>
                       <span className={styles.btnEmoji}>🎯</span>
                       <span>
-                        {isEditing ? "Cập nhật trận đấu" : "Ghi nhận trận đấu"}
+                        {text.game.button(isEditing)}
                       </span>
                       <div className={styles.btnSparkle}>✨</div>
                     </div>
