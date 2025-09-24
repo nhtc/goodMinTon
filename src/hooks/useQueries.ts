@@ -480,3 +480,42 @@ export const useTogglePersonalEventPayment = () => {
     },
   })
 }
+
+/**
+ * Hook for bulk payment operations on a member's games and/or personal events
+ * Handles marking all unpaid items as paid or vice versa
+ * @returns Mutation hook for bulk payment operations
+ */
+export const useBulkPaymentOperation = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: ({ 
+      memberId, 
+      operation, 
+      type 
+    }: { 
+      memberId: string
+      operation: 'mark_all_paid' | 'mark_all_unpaid'
+      type: 'games' | 'personal_events' | 'both'
+    }) => apiService.members.bulkPaymentOperation(memberId, operation, type),
+    
+    onSuccess: (data, { type }) => {
+      // Invalidate all related queries to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ['member-outstanding'] })
+      
+      if (type === 'games' || type === 'both') {
+        queryClient.invalidateQueries({ queryKey: queryKeys.games })
+      }
+      
+      if (type === 'personal_events' || type === 'both') {
+        queryClient.invalidateQueries({ queryKey: queryKeys.personalEvents })
+        queryClient.invalidateQueries({ queryKey: ['personalEvents'] })
+      }
+    },
+    
+    onError: (error) => {
+      console.error('Bulk payment operation failed:', error)
+    }
+  })
+}

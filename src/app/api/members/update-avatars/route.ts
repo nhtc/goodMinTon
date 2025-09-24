@@ -6,17 +6,10 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🚀 Starting avatar update for existing members...')
     
-    // Get all members without avatars
-    const members = await prisma.member.findMany({
-      where: {
-        OR: [
-          { avatar: null } as any,
-          { avatar: '' } as any
-        ]
-      }
-    })
+    // Get all members (to update all with new animal avatars)
+    const members = await prisma.member.findMany()
 
-    console.log(`📋 Found ${members.length} members without avatars`)
+    console.log(`📋 Found ${members.length} members to update with new animal avatars`)
 
     const updatedMembers = []
     
@@ -31,17 +24,18 @@ export async function POST(request: NextRequest) {
       updatedMembers.push({
         id: member.id,
         name: member.name,
-        avatar: avatarUrl
+        oldAvatar: member.avatar,
+        newAvatar: avatarUrl
       })
       
-      console.log(`✅ Updated avatar for ${member.name}`)
+      console.log(`✅ Updated avatar for ${member.name}: ${avatarUrl}`)
     }
 
-    console.log(`🎉 Successfully updated ${members.length} members with avatars!`)
+    console.log(`🎉 Successfully updated ${members.length} members with new animal avatars!`)
     
     return NextResponse.json({
       success: true,
-      message: `Successfully updated ${members.length} members with avatars`,
+      message: `Successfully updated ${members.length} members with new animal avatars`,
       updatedMembers
     })
     

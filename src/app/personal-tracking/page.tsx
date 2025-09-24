@@ -25,7 +25,7 @@ const PAYMENT_STATUS_OPTIONS = {
 
 const PersonalTrackingPage: React.FC = () => {
   // Auth
-  const { isAuthorized } = useAuth()
+  const { isAuthorized, isAuthenticated } = useAuth()
   
   // State management
   const [selectedEvent, setSelectedEvent] = useState<PersonalEvent | null>(null)
@@ -99,11 +99,23 @@ const PersonalTrackingPage: React.FC = () => {
       .reduce((participantSum, p) => participantSum + (p.customAmount - (p.prePaid || 0)), 0)
   }, 0)// Event handlers
   const handleCreateEvent = () => {
+    // Double-check authentication
+    if (!isAuthenticated || !isAuthorized) {
+      addToast('error', TEXT_CONSTANTS.common.messages.error, 'Bạn cần đăng nhập để tạo sự kiện')
+      return
+    }
+    
     setEditingEvent(null)
     setShowForm(true)
   }
 
   const handleEditEvent = (event: PersonalEvent) => {
+    // Double-check authentication
+    if (!isAuthenticated || !isAuthorized) {
+      addToast('error', TEXT_CONSTANTS.common.messages.error, 'Bạn cần đăng nhập để chỉnh sửa sự kiện')
+      return
+    }
+    
     setEditingEvent(event)
     setShowForm(true)
   }
@@ -218,14 +230,24 @@ const PersonalTrackingPage: React.FC = () => {
                 </p>
               </div>
             </div>
-            <button
-              onClick={handleCreateEvent}
-              className={styles.createEventBtn}
-              title={TEXT_CONSTANTS.personalEvent.titles.createEvent}
+            <AuthorizedComponent 
+              requireEdit={true}
+              viewOnlyFallback={
+                <div className={styles.disabledCreateBtn} title="Đăng nhập để tạo sự kiện">
+                  <span className={styles.btnIcon}>🔒</span>
+                  <span>Đăng nhập để tạo</span>
+                </div>
+              }
             >
-              <span className={styles.btnIcon}>➕</span>
-              <span>Tạo Sự Kiện</span>
-            </button>
+              <button
+                onClick={handleCreateEvent}
+                className={styles.createEventBtn}
+                title={TEXT_CONSTANTS.personalEvent.titles.createEvent}
+              >
+                <span className={styles.btnIcon}>➕</span>
+                <span>Tạo Sự Kiện</span>
+              </button>
+            </AuthorizedComponent>
           </div>
 
           {/* Statistics */}
@@ -278,22 +300,27 @@ const PersonalTrackingPage: React.FC = () => {
 
         {/* Form Modal */}
         {showForm && (
-          <Modal
-            isOpen={showForm}
-            title={editingEvent ? TEXT_CONSTANTS.personalEvent.titles.editEvent : TEXT_CONSTANTS.personalEvent.titles.createNewEvent}
-            onClose={handleFormCancel}
+          <AuthorizedComponent 
+            requireEdit={true}
+            fallback={null}
           >
-            <PersonalEventForm
-              initialData={editingEvent || undefined}
-              isEditing={!!editingEvent}
-              isSubmitting={createPersonalEventMutation.isPending || updatePersonalEventMutation.isPending}
-              onSubmit={handleFormSubmit}
-            />
-          </Modal>
+            <Modal
+              isOpen={showForm}
+              title={editingEvent ? TEXT_CONSTANTS.personalEvent.titles.editEvent : TEXT_CONSTANTS.personalEvent.titles.createNewEvent}
+              onClose={handleFormCancel}
+            >
+              <PersonalEventForm
+                initialData={editingEvent || undefined}
+                isEditing={!!editingEvent}
+                isSubmitting={createPersonalEventMutation.isPending || updatePersonalEventMutation.isPending}
+                onSubmit={handleFormSubmit}
+              />
+            </Modal>
+          </AuthorizedComponent>
         )}
 
         {/* Search and Filter */}
-        {personalEvents.length > 0 && (
+        {(personalEvents.length > 0 || hasActiveFilters) && (
           <div className={styles.searchSection}>
             <div className={styles.searchWrapper}>
               <div className={styles.searchIcon}>🔍</div>
@@ -392,13 +419,23 @@ const PersonalTrackingPage: React.FC = () => {
                 : TEXT_CONSTANTS.personalEvent.messages.tryDifferentSearch}
             </p>
             {personalEvents.length === 0 && (
-              <button
-                onClick={handleCreateEvent}
-                className={styles.emptyAction}
+              <AuthorizedComponent 
+                requireEdit={true}
+                viewOnlyFallback={
+                  <div className={styles.disabledEmptyAction} title="Đăng nhập để tạo sự kiện">
+                    <span className={styles.btnIcon}>🔒</span>
+                    Đăng nhập để tạo sự kiện
+                  </div>
+                }
               >
-                <span className={styles.btnIcon}>➕</span>
-                Tạo sự kiện đầu tiên
-              </button>
+                <button
+                  onClick={handleCreateEvent}
+                  className={styles.emptyAction}
+                >
+                  <span className={styles.btnIcon}>➕</span>
+                  Tạo sự kiện đầu tiên
+                </button>
+              </AuthorizedComponent>
             )}
           </div>
         ) : (

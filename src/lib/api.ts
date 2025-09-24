@@ -227,6 +227,21 @@ export const apiService = {
         headers: { 'Content-Type': 'application/json' },
       })
     },
+
+    /**
+     * Bulk payment operation for a member's games and/or personal events
+     * @param memberId - Member identifier
+     * @param operation - 'mark_all_paid' or 'mark_all_unpaid'
+     * @param type - 'games', 'personal_events', or 'both'
+     * @returns Promise resolving to operation result
+     */
+    async bulkPaymentOperation(memberId: string, operation: 'mark_all_paid' | 'mark_all_unpaid', type: 'games' | 'personal_events' | 'both') {
+      return fetchWithErrorHandling(`/api/members/${memberId}/payments/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operation, type }),
+      })
+    },
   },
 
   personalEvents: {

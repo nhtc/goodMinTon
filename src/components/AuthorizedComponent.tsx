@@ -28,8 +28,44 @@ export const AuthorizedComponent: React.FC<AuthorizedComponentProps> = ({
     )
   }
 
-  // Check authentication first (only if explicitly required)
-  if (requireAuth && !isAuthenticated) {
+  // Check edit permissions first (this covers both auth and authorization)
+  if (requireEdit) {
+    // If not authenticated at all, show fallback
+    if (!isAuthenticated) {
+      return (
+        viewOnlyFallback || fallback || (
+          <div className='auth-error'>
+            <span className='auth-icon'>🔐</span>
+            <h3>Cần đăng nhập</h3>
+            <p>Vui lòng đăng nhập để sử dụng tính năng này</p>
+            <a href='/login' className='auth-login-btn'>
+              Đăng nhập
+            </a>
+          </div>
+        )
+      )
+    }
+    
+    // If authenticated but not authorized, show view-only fallback
+    if (!isAuthorized) {
+      return (
+        viewOnlyFallback || (
+          <div className='auth-view-only'>
+            <span className='auth-icon'>👁️</span>
+            <h3>Chế độ xem</h3>
+            <p>Bạn chỉ có quyền xem. Liên hệ quản trị viên để chỉnh sửa.</p>
+            <div className='auth-user-info'>
+              <span>Đăng nhập như: {user?.name || "Người dùng"}</span>
+              <span className='auth-role'>({user?.role || "viewer"})</span>
+            </div>
+          </div>
+        )
+      )
+    }
+  }
+
+  // Check authentication only (only if explicitly required and not already checked above)
+  if (requireAuth && !requireEdit && !isAuthenticated) {
     return (
       fallback || (
         <div className='auth-error'>
@@ -39,23 +75,6 @@ export const AuthorizedComponent: React.FC<AuthorizedComponentProps> = ({
           <a href='/login' className='auth-login-btn'>
             Đăng nhập
           </a>
-        </div>
-      )
-    )
-  }
-
-  // Check edit permissions (only if user is authenticated)
-  if (requireEdit && isAuthenticated && !isAuthorized) {
-    return (
-      viewOnlyFallback || (
-        <div className='auth-view-only'>
-          <span className='auth-icon'>👁️</span>
-          <h3>Chế độ xem</h3>
-          <p>Bạn chỉ có quyền xem. Liên hệ quản trị viên để chỉnh sửa.</p>
-          <div className='auth-user-info'>
-            <span>Đăng nhập như: {user?.name || "Người dùng"}</span>
-            <span className='auth-role'>({user?.role || "viewer"})</span>
-          </div>
         </div>
       )
     )

@@ -1,12 +1,14 @@
 "use client"
-import React, { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import React, {useState, useEffect} from "react"
+import {useSearchParams} from "next/navigation"
 import Link from "next/link"
 import styles from "./page.module.css"
-import { useToast } from "../../context/ToastContext"
-import { useMembers, useMemberOutstanding, usePersonalEvents } from "../../hooks/useQueries"
+import {useToast} from "../../context/ToastContext"
+import {useMembers, useMemberOutstanding, usePersonalEvents, useBulkPaymentOperation} from "../../hooks/useQueries"
 import MemberAutocomplete from "../../components/MemberAutocomplete"
-import type { Member, PersonalEvent, PersonalEventParticipant } from "../../types"
+import ConfirmationModal from "../../components/ConfirmationModal"
+import {useAuth} from "../../context/AuthContext"
+import type {Member, PersonalEvent, PersonalEventParticipant} from "../../types"
 
 // Type guard function
 const isValidPersonalEvent = (event: any): event is PersonalEvent => {
@@ -42,21 +44,25 @@ interface Game {
 
 const PaymentPageContent = () => {
   const searchParams = useSearchParams()
-  const { showWarning, showError } = useToast()
-  
+  const {showWarning, showError} = useToast()
+  const {isAuthenticated} = useAuth()
+
   // React Query hooks - these will cache the data
-  const { 
-    data: members = [], 
-    isLoading: membersLoading, 
-    error: membersError 
+  const {
+    data: members = [],
+    isLoading: membersLoading,
+    error: membersError
   } = useMembers()
 
-  const { 
+  const {
     data: personalEventsData,
     isLoading: personalEventsLoading,
     error: personalEventsError
   } = usePersonalEvents()
-  
+
+  // Bulk payment operation hook
+  const bulkPaymentMutation = useBulkPaymentOperation()
+
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
     bankName: "Vietcombank",
     accountNumber: "9937822899",
@@ -70,22 +76,39 @@ const PaymentPageContent = () => {
   const [isChangingMember, setIsChangingMember] = useState<boolean>(false)
   const [showAllGames, setShowAllGames] = useState<boolean>(false)
   const [showAllPersonalEvents, setShowAllPersonalEvents] = useState<boolean>(false)
-  
+
+  // Confirmation modal state
+  const [confirmationModal, setConfirmationModal] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    operation: 'mark_all_paid' | 'mark_all_unpaid'
+    type: 'games' | 'personal_events' | 'both'
+    confirmText: string
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    operation: 'mark_all_paid',
+    type: 'games',
+    confirmText: ''
+  })
+
   // Use the custom hook for outstanding calculation - this will cache the calculation
-  const { 
-    data: outstandingData, 
+  const {
+    data: outstandingData,
     isLoading: outstandingLoading,
     error: outstandingError,
     isFetching: outstandingFetching
   } = useMemberOutstanding(selectedMember?.id || null)
-  
+
   const memberOutstandingAmount = outstandingData?.totalOutstanding || 0
   const unpaidGames = outstandingData?.unpaidGames || []
 
   // Calculate member personal events data when member is selected
   const memberPersonalEventsData = React.useMemo(() => {
     if (!selectedMember) {
-      return { unpaidPersonalEvents: [], totalAmount: 0 }
+      return {unpaidPersonalEvents: [], totalAmount: 0}
     }
 
     const allPersonalEvents = personalEventsData?.data || []
@@ -99,7 +122,7 @@ const PaymentPageContent = () => {
       return sum + (participation ? participation.customAmount - (participation.prePaid || 0) : 0)
     }, 0)
 
-    return { unpaidPersonalEvents, totalAmount }
+    return {unpaidPersonalEvents, totalAmount}
   }, [selectedMember, personalEventsData])
 
   const unpaidPersonalEvents = memberPersonalEventsData.unpaidPersonalEvents
@@ -111,7 +134,7 @@ const PaymentPageContent = () => {
 
   // Combined loading state for better UX
   const isCalculatingAmount = outstandingLoading || outstandingFetching || isChangingMember
-  
+
   // Toggle function for showing all games
   const toggleShowAllGames = () => {
     setShowAllGames(prev => !prev)
@@ -121,20 +144,132 @@ const PaymentPageContent = () => {
   const toggleShowAllPersonalEvents = () => {
     setShowAllPersonalEvents(prev => !prev)
   }
-  
+
+  // Bulk payment handlers
+  const executeBulkPaymentOperation = async (
+    operation: 'mark_all_paid' | 'mark_all_unpaid',
+    type: 'games' | 'personal_events' | 'both'
+  ) => {
+    if (!selectedMember) {
+      showWarning("Thông tin thiếu", "Vui lòng chọn thành viên")
+      return
+    }
+
+    try {
+      const result = await bulkPaymentMutation.mutateAsync({
+        memberId: selectedMember.id,
+        operation,
+        type
+      })
+
+      const operationText = operation === 'mark_all_paid' ? 'đã thanh toán' : 'chưa thanh toán'
+      const typeText = type === 'games' ? 'trận cầu lông' : type === 'personal_events' ? 'sự kiện cá nhân' : 'tất cả'
+
+      if (result.updates.totalUpdated > 0) {
+        showWarning(
+          "Cập nhật thành công",
+          `Đã đánh dấu ${result.updates.totalUpdated} mục ${typeText} là ${operationText}`
+        )
+      } else {
+        showWarning(
+          "Không có gì thay đổi",
+          `Không có mục nào cần cập nhật trạng thái`
+        )
+      }
+
+      // Close the confirmation modal
+      setConfirmationModal(prev => ({...prev, isOpen: false}))
+    } catch (error) {
+      showError("Lỗi", "Không thể cập nhật trạng thái thanh toán")
+      console.error('Bulk payment operation failed:', error)
+      // Close the confirmation modal on error too
+      setConfirmationModal(prev => ({...prev, isOpen: false}))
+    }
+  }
+
+  const showBulkPaymentConfirmation = (
+    operation: 'mark_all_paid' | 'mark_all_unpaid',
+    type: 'games' | 'personal_events' | 'both'
+  ) => {
+    if (!isAuthenticated) {
+      showWarning("Cần đăng nhập", "Vui lòng đăng nhập để sử dụng chức năng thanh toán hàng loạt")
+      return
+    }
+
+    if (!selectedMember) {
+      showWarning("Thông tin thiếu", "Vui lòng chọn thành viên")
+      return
+    }
+
+    // Calculate counts for the confirmation message
+    let gameCount = 0
+    let eventCount = 0
+
+    if (type === 'games' || type === 'both') {
+      gameCount = unpaidGames.length
+    }
+
+    if (type === 'personal_events' || type === 'both') {
+      eventCount = unpaidPersonalEvents.length
+    }
+
+    // Generate confirmation message
+    const operationText = operation === 'mark_all_paid' ? 'đã thanh toán' : 'chưa thanh toán'
+    const isPaid = operation === 'mark_all_paid'
+
+    let title = ''
+    let message = ''
+    let confirmText = ''
+
+    if (type === 'games') {
+      title = `Xác nhận ${isPaid ? 'đánh dấu đã thanh toán' : 'đánh dấu chưa thanh toán'}`
+      message = `Bạn có chắc chắn muốn đánh dấu ${gameCount} trận cầu lông là ${operationText} cho ${selectedMember.name}?`
+      confirmText = isPaid ? 'Đánh dấu đã thanh toán' : 'Đánh dấu chưa thanh toán'
+    } else if (type === 'personal_events') {
+      title = `Xác nhận ${isPaid ? 'đánh dấu đã thanh toán' : 'đánh dấu chưa thanh toán'}`
+      message = `Bạn có chắc chắn muốn đánh dấu ${eventCount} sự kiện cá nhân là ${operationText} cho ${selectedMember.name}?`
+      confirmText = isPaid ? 'Đánh dấu đã thanh toán' : 'Đánh dấu chưa thanh toán'
+    } else {
+      title = `Xác nhận ${isPaid ? 'đánh dấu đã thanh toán' : 'đánh dấu chưa thanh toán'}`
+      message = `Bạn có chắc chắn muốn đánh dấu ${gameCount} trận cầu lông và ${eventCount} sự kiện cá nhân là ${operationText} cho ${selectedMember.name}?`
+      confirmText = isPaid ? 'Đánh dấu tất cả đã thanh toán' : 'Đánh dấu tất cả chưa thanh toán'
+    }
+
+    setConfirmationModal({
+      isOpen: true,
+      title,
+      message,
+      operation,
+      type,
+      confirmText
+    })
+  }
+
+  const handleMarkAllGamesPaid = () => showBulkPaymentConfirmation('mark_all_paid', 'games')
+  const handleMarkAllPersonalEventsPaid = () => showBulkPaymentConfirmation('mark_all_paid', 'personal_events')
+  const handleMarkAllPaid = () => showBulkPaymentConfirmation('mark_all_paid', 'both')
+
+  const handleConfirmBulkPayment = () => {
+    executeBulkPaymentOperation(confirmationModal.operation, confirmationModal.type)
+  }
+
+  const handleCloseConfirmationModal = () => {
+    setConfirmationModal(prev => ({...prev, isOpen: false}))
+  }
+
   // Handler for member selection with smooth loading transition
   const handleMemberChange = async (memberId: string) => {
     const member = members.find((m: Member) => m.id === memberId)
-    
+
     if (!member) {
       setSelectedMember(null)
       setIsChangingMember(false)
       return
     }
-    
+
     // Set changing state immediately for smooth UX
     setIsChangingMember(true)
-    
+
     // Small delay to prevent flash and show loading state
     setTimeout(() => {
       setSelectedMember(member)
@@ -153,11 +288,11 @@ const PaymentPageContent = () => {
       setShowAllGames(false) // Reset show all games when member changes
       return
     }
-    
+
     // Set changing state immediately for smooth UX
     setIsChangingMember(true)
     setShowAllGames(false) // Reset show all games when member changes
-    
+
     // Small delay to prevent flash and show loading state
     setTimeout(() => {
       setSelectedMember(member)
@@ -174,16 +309,16 @@ const PaymentPageContent = () => {
       const totalBadmintonAmount = memberOutstandingAmount || 0
       const totalPersonalEventsAmount = memberPersonalEventsAmount || 0
       const totalAmount = totalBadmintonAmount + totalPersonalEventsAmount
-      
+
       if (totalAmount > 0) {
         // Generate payment content with current date
         const currentDate = new Date()
         const day = currentDate.getDate().toString().padStart(2, '0')
         const month = (currentDate.getMonth() + 1).toString().padStart(2, '0')
         const year = currentDate.getFullYear()
-        
+
         let paymentContent = `${selectedMember.name.toUpperCase()} - Thanh toan toi ngay ${day}.${month}.${year}`
-        
+
         setPaymentInfo(prev => ({
           ...prev,
           amount: totalAmount,
@@ -202,7 +337,7 @@ const PaymentPageContent = () => {
     if (selectedMember) return // Don't override if member is selected
 
     if (amount) {
-      setPaymentInfo(prev => ({ ...prev, amount: parseInt(amount) }))
+      setPaymentInfo(prev => ({...prev, amount: parseInt(amount)}))
     }
 
     if (content || gameId || memberName) {
@@ -214,7 +349,7 @@ const PaymentPageContent = () => {
       } else if (memberName) {
         paymentContent = `CL ${memberName}`
       }
-      setPaymentInfo(prev => ({ ...prev, content: paymentContent }))
+      setPaymentInfo(prev => ({...prev, content: paymentContent}))
     }
   }, [searchParams, selectedMember])
 
@@ -231,11 +366,9 @@ const PaymentPageContent = () => {
       }
 
       // Create QR data string
-      const qrData = `https://qr.sepay.vn/img?acc=${
-        vietQRData.accountNumber
-      }&bank=${vietQRData.bankCode}&amount=${
-        vietQRData.amount
-      }&des=${encodeURIComponent(vietQRData.content)}`
+      const qrData = `https://qr.sepay.vn/img?acc=${vietQRData.accountNumber
+        }&bank=${vietQRData.bankCode}&amount=${vietQRData.amount
+        }&des=${encodeURIComponent(vietQRData.content)}`
 
       setQrCodeUrl(qrData)
     }
@@ -247,7 +380,7 @@ const PaymentPageContent = () => {
   const generateBankingAppUrl = (amount?: number, content?: string): string => {
     // Default to combined amount if no parameters provided
     const paymentAmount = amount || ((memberOutstandingAmount || 0) + (memberPersonalEventsAmount || 0))
-    
+
     // Generate default content if not provided
     let paymentContent = content
     if (!paymentContent && selectedMember) {
@@ -257,15 +390,14 @@ const PaymentPageContent = () => {
       const year = currentDate.getFullYear()
       paymentContent = `${selectedMember.name.toUpperCase()} - Thanh toan toi ngay ${day}.${month}.${year}`
     }
-    
+
     if (!paymentContent) {
       paymentContent = "Thanh toan"
     }
 
     if (!selectedMember || paymentAmount === 0) return "#"    // VietQR format that works with most Vietnamese banking apps
-    const vietQRUrl = `https://qr.sepay.vn/img?acc=${
-      paymentInfo.accountNumber
-    }&bank=970436&amount=${paymentAmount}&des=${encodeURIComponent(paymentContent)}`
+    const vietQRUrl = `https://qr.sepay.vn/img?acc=${paymentInfo.accountNumber
+      }&bank=970436&amount=${paymentAmount}&des=${encodeURIComponent(paymentContent)}`
 
     // Try to detect the user's banking app and use deep linking
     // For mobile devices, we can use intent URLs that will open the banking app
@@ -274,11 +406,10 @@ const PaymentPageContent = () => {
 
     if (isMobile) {
       // For mobile, use intent URL that will prompt to open banking app
-      return `intent://payment?bank=970436&account=${
-        paymentInfo.accountNumber
-      }&amount=${paymentAmount}&content=${encodeURIComponent(
-        paymentContent
-      )}#Intent;scheme=vietqr;package=com.vietcombank.mobile;end`
+      return `intent://payment?bank=970436&account=${paymentInfo.accountNumber
+        }&amount=${paymentAmount}&content=${encodeURIComponent(
+          paymentContent
+        )}#Intent;scheme=vietqr;package=com.vietcombank.mobile;end`
     }
 
     return vietQRUrl
@@ -309,7 +440,7 @@ const PaymentPageContent = () => {
     const day = currentDate.getDate().toString().padStart(2, '0')
     const month = (currentDate.getMonth() + 1).toString().padStart(2, '0')
     const year = currentDate.getFullYear()
-    
+
     let content = `${selectedMember.name.toUpperCase()} - Thanh toan toi ngay ${day}.${month}.${year}`
 
     const bankingUrl = generateBankingAppUrl(totalAmount, content)
@@ -323,16 +454,14 @@ const PaymentPageContent = () => {
 
         // Fallback: If banking app is not installed, open browser after delay
         setTimeout(() => {
-          const fallbackUrl = `https://qr.sepay.vn/img?acc=${
-            paymentInfo.accountNumber
-          }&bank=970436&amount=${totalAmount}&des=${encodeURIComponent(content)}`
+          const fallbackUrl = `https://qr.sepay.vn/img?acc=${paymentInfo.accountNumber
+            }&bank=970436&amount=${totalAmount}&des=${encodeURIComponent(content)}`
           window.open(fallbackUrl, "_blank")
         }, 1500)
       } else {
         // For desktop, open QR page in new tab
-        const fallbackUrl = `https://qr.sepay.vn/img?acc=${
-          paymentInfo.accountNumber
-        }&bank=970436&amount=${totalAmount}&des=${encodeURIComponent(content)}`
+        const fallbackUrl = `https://qr.sepay.vn/img?acc=${paymentInfo.accountNumber
+          }&bank=970436&amount=${totalAmount}&des=${encodeURIComponent(content)}`
         window.open(fallbackUrl, "_blank")
       }
     } catch (error) {
@@ -395,16 +524,16 @@ Nội dung: ${content}
     const gameDate = new Date(latestGame.date)
     const day = gameDate.getDate()
     const month = gameDate.getMonth() + 1 // getMonth() returns 0-11, so add 1
-    
+
     // Shorter format: "Thanh toan den ngay DD.MM" - optimized for QR code
     let content = `${member.name.toUpperCase()} - CL -> ${day}.${month}`
-    
+
     // Ensure content is not too long for QR code (max ~25 characters for better QR generation)
     if (content.length > 25) {
       // Ultra short fallback: "TT den DD.MM"
       content = `${member.name.toUpperCase()} - CL -> ${day}.${month}`
     }
-    
+
     return content
   }
 
@@ -498,8 +627,8 @@ Nội dung: ${content}
                           <div className={styles.calculatingIndicator}>
                             <div className={styles.loadingSpinner}></div>
                             <p>
-                              {isChangingMember 
-                                ? "Đang chọn thành viên..." 
+                              {isChangingMember
+                                ? "Đang chọn thành viên..."
                                 : "Đang tính toán số tiền cần thanh toán..."
                               }
                             </p>
@@ -532,7 +661,7 @@ Nội dung: ${content}
                             {formatCurrency((memberOutstandingAmount || 0) + (memberPersonalEventsAmount || 0))}
                           </span>
                         </div>
-                        
+
                         {/* Combined Breakdown */}
                         {(unpaidGames.length > 0 || unpaidPersonalEvents.length > 0) && (
                           <div className={styles.unpaidGamesBreakdown}>
@@ -542,9 +671,26 @@ Nội dung: ${content}
                                 <div className={styles.breakdownHeader}>
                                   <span className={styles.breakdownIcon}>🏸</span>
                                   <span className={styles.breakdownTitle}>
-                                    Cầu lông - {unpaidGames.length} trận chưa thanh toán:
+                                    Cầu lông - {unpaidGames.length} trận chưa thanh toán: {formatCurrency(memberOutstandingAmount)}
                                   </span>
                                 </div>
+
+                                {/* Bulk Actions for Badminton Games */}
+                                {isAuthenticated && (
+                                  <div className={styles.bulkActions}>
+                                    <button
+                                      onClick={handleMarkAllGamesPaid}
+                                      disabled={bulkPaymentMutation.isPending}
+                                      className={`${styles.bulkActionBtn} ${styles.markPaidBtn}`}
+                                      title="Đánh dấu tất cả trận cầu lông đã thanh toán"
+                                    >
+                                      <span className={styles.bulkActionIcon}>✅</span>
+                                      <span className={styles.bulkActionText}>
+                                        {bulkPaymentMutation.isPending ? 'Đang xử lý...' : 'Đánh dấu tất cả đã thanh toán'}
+                                      </span>
+                                    </button>
+                                  </div>
+                                )}
                                 <div className={styles.gamesList}>
                                   {(showAllGames ? unpaidGames : unpaidGames.slice(0, 3)).map((game, index) => {
                                     const participation = game.participants.find(p => p.id === selectedMember.id)
@@ -554,7 +700,7 @@ Nội dung: ${content}
                                       day: "2-digit",
                                       month: "2-digit"
                                     })
-                                    
+
                                     return (
                                       <div key={game.id} className={styles.gameItem}>
                                         <span className={styles.gameDate}>📅 {gameDate}</span>
@@ -591,16 +737,34 @@ Nội dung: ${content}
                                 </div>
                               </>
                             )}
-
+                            <br />
+                            <br />
                             {/* Personal Events Breakdown */}
                             {unpaidPersonalEvents.length > 0 && (
                               <>
                                 <div className={styles.breakdownHeader}>
                                   <span className={styles.breakdownIcon}>🎉</span>
                                   <span className={styles.breakdownTitle}>
-                                    Sự kiện cá nhân - {unpaidPersonalEvents.length} sự kiện chưa thanh toán:
+                                    Sự kiện cá nhân - {unpaidPersonalEvents.length} sự kiện chưa thanh toán: {formatCurrency(memberPersonalEventsAmount)}
                                   </span>
                                 </div>
+
+                                {/* Bulk Actions for Personal Events */}
+                                {isAuthenticated && (
+                                  <div className={styles.bulkActions}>
+                                    <button
+                                      onClick={handleMarkAllPersonalEventsPaid}
+                                      disabled={bulkPaymentMutation.isPending}
+                                      className={`${styles.bulkActionBtn} ${styles.markPaidBtn}`}
+                                      title="Đánh dấu tất cả sự kiện cá nhân đã thanh toán"
+                                    >
+                                      <span className={styles.bulkActionIcon}>✅</span>
+                                      <span className={styles.bulkActionText}>
+                                        {bulkPaymentMutation.isPending ? 'Đang xử lý...' : 'Đánh dấu tất cả đã thanh toán'}
+                                      </span>
+                                    </button>
+                                  </div>
+                                )}
                                 <div className={styles.gamesList}>
                                   {(showAllPersonalEvents ? unpaidPersonalEvents : unpaidPersonalEvents.slice(0, 3)).map((event, index) => {
                                     const participation = event.participants.find(p => p.memberId === selectedMember.id)
@@ -610,7 +774,7 @@ Nội dung: ${content}
                                       day: "2-digit",
                                       month: "2-digit"
                                     })
-                                    
+
                                     return (
                                       <div key={event.id} className={styles.gameItem}>
                                         <span className={styles.gameDate}>📅 {eventDate} - {event.title}</span>
@@ -647,6 +811,33 @@ Nội dung: ${content}
                                 </div>
                               </>
                             )}
+
+                            {/* Global Bulk Actions - Only show if both games and personal events exist */}
+                                    {unpaidGames.length > 0 && unpaidPersonalEvents.length > 0 && isAuthenticated && (
+                              <div className={styles.globalBulkActions}>
+                                <div className={styles.breakdownHeader}>
+                                  <span className={styles.breakdownIcon}>🔄</span>
+                                  <span className={styles.breakdownTitle}>
+                                    Thao tác hàng loạt:
+                                  </span>
+                                </div>
+                                {isAuthenticated && (
+                                  <div className={styles.bulkActions}>
+                                    <button
+                                      onClick={handleMarkAllPaid}
+                                      disabled={bulkPaymentMutation.isPending}
+                                      className={`${styles.bulkActionBtn} ${styles.markAllPaidBtn}`}
+                                      title="Đánh dấu tất cả (trận cầu lông và sự kiện) đã thanh toán"
+                                    >
+                                      <span className={styles.bulkActionIcon}>✅</span>
+                                      <span className={styles.bulkActionText}>
+                                        {bulkPaymentMutation.isPending ? 'Đang xử lý...' : 'Đánh dấu tất cả đã thanh toán'}
+                                      </span>
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -661,7 +852,7 @@ Nội dung: ${content}
           <div className={styles.qrSection}>
             <div className={styles.qrContainer}>
               <div className={styles.qrWrapper}>
-                {(!selectedMember || 
+                {(!selectedMember ||
                   ((memberOutstandingAmount || 0) + (memberPersonalEventsAmount || 0) === 0) ||
                   isCalculatingAmount) ? (
                   <div className={styles.qrPlaceholder}>
@@ -669,7 +860,7 @@ Nội dung: ${content}
                       <div className={styles.qrCalculatingState}>
                         <div className={styles.loadingSpinner}></div>
                         <p>
-                          {isChangingMember 
+                          {isChangingMember
                             ? "Đang chuẩn bị thông tin thanh toán..."
                             : "Đang tạo mã QR..."
                           }
@@ -719,37 +910,37 @@ Nội dung: ${content}
               </div>
 
               {/* Banking App Button Moved Outside qrWrapper */}
-              {selectedMember && 
-               ((memberOutstandingAmount || 0) + (memberPersonalEventsAmount || 0) > 0) &&
-               !isCalculatingAmount && (
-                <div className={styles.bankingAppSection}>
-                  <div className={styles.orDivider}>
-                    <span className={styles.orText}>hoặc</span>
-                  </div>
-                  <button
-                    onClick={openBankingApp}
-                    className={styles.bankingAppBtn}
-                    title='Mở ứng dụng ngân hàng để thanh toán'
-                  >
-                    <span className={styles.bankAppIcon}>🏦</span>
-                    <div className={styles.bankAppContent}>
-                      <span className={styles.bankAppTitle}>
-                        Mở App Ngân Hàng
-                      </span>
-                      <span className={styles.bankAppSubtitle}>
-                        Thanh toán nhanh chóng
+              {selectedMember &&
+                ((memberOutstandingAmount || 0) + (memberPersonalEventsAmount || 0) > 0) &&
+                !isCalculatingAmount && (
+                  <div className={styles.bankingAppSection}>
+                    <div className={styles.orDivider}>
+                      <span className={styles.orText}>hoặc</span>
+                    </div>
+                    <button
+                      onClick={openBankingApp}
+                      className={styles.bankingAppBtn}
+                      title='Mở ứng dụng ngân hàng để thanh toán'
+                    >
+                      <span className={styles.bankAppIcon}>🏦</span>
+                      <div className={styles.bankAppContent}>
+                        <span className={styles.bankAppTitle}>
+                          Mở App Ngân Hàng
+                        </span>
+                        <span className={styles.bankAppSubtitle}>
+                          Thanh toán nhanh chóng
+                        </span>
+                      </div>
+                      <span className={styles.bankAppArrow}>→</span>
+                    </button>
+                    <div className={styles.bankAppHint}>
+                      <span className={styles.hintIcon}>💡</span>
+                      <span className={styles.hintText}>
+                        Nhấn để mở app ngân hàng với thông tin đã điền sẵn
                       </span>
                     </div>
-                    <span className={styles.bankAppArrow}>→</span>
-                  </button>
-                  <div className={styles.bankAppHint}>
-                    <span className={styles.hintIcon}>💡</span>
-                    <span className={styles.hintText}>
-                      Nhấn để mở app ngân hàng với thông tin đã điền sẵn
-                    </span>
                   </div>
-                </div>
-              )}
+                )}
 
               <div className={styles.qrInstructions}>
                 <h3>📱 Cách thanh toán:</h3>
@@ -926,6 +1117,19 @@ Nội dung: ${content}
           <p className={styles.footerText}>🏸 Badminton Club Payment System</p>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmationModal.isOpen}
+        onClose={handleCloseConfirmationModal}
+        onConfirm={handleConfirmBulkPayment}
+        title={confirmationModal.title}
+        message={confirmationModal.message}
+        confirmText={confirmationModal.confirmText}
+        cancelText="Hủy bỏ"
+        type="warning"
+        isLoading={bulkPaymentMutation.isPending}
+      />
     </div>
   )
 }

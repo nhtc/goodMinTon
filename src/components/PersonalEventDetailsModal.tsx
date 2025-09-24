@@ -343,24 +343,6 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
                 Thành Viên Tham Gia ({currentEvent?.participants?.length || 0})
               </h3>
               
-              {/* Pay All Button */}
-              <AuthorizedComponent 
-                requireEdit={true}
-                viewOnlyFallback={null}
-              >
-                {currentEvent && currentEvent.participants && currentEvent.participants.some(p => !p.hasPaid) && (
-                  <a
-                    href={`/payment?personalEventId=${currentEvent.id}&payAll=true`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.payAllBtn}
-                    title="Tạo mã QR thanh toán cho tất cả thành viên chưa trả"
-                  >
-                    <span className={styles.payAllIcon}>💳</span>
-                    <span className={styles.payAllText}>QR Thanh Toán Tập Thể</span>
-                  </a>
-                )}
-              </AuthorizedComponent>
             </div>
             <div className={styles.participantsList}>
               {currentEvent?.participants?.map((participant) => {
