@@ -273,6 +273,48 @@
   letter-spacing: 0.05em;
 }
 
+/* Prepaid Summary Styles */
+.prepaidSummary {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.prepaidTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 1rem 0;
+}
+
+.prepaidIcon {
+  font-size: 1.1rem;
+}
+
+.prepaidStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0;
+}
+
+.paymentStat.prepaid {
+  background: linear-gradient(135deg, rgba(139, 95, 191, 0.05), rgba(102, 126, 234, 0.05));
+  border-bottom: 2px solid #8b5fbf;
+}
+
+.paymentStat.prepaidCount {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(5, 150, 105, 0.05));
+  border-bottom: 2px solid #10b981;
+}
+
+.paymentStat.totalCustom {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(217, 119, 6, 0.05));
+  border-bottom: 2px solid #f59e0b;
+}
+
 /* Participants List */
 .participantsList {
   display: flex;
@@ -466,11 +508,56 @@
   }
 }
 
+/* Payment Breakdown Styles */
+.paymentBreakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .participantAmount {
   color: #4b5563;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 0.25rem;
+}
+
+.prepaidInfo {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(5, 150, 105, 0.05));
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin: 0.25rem 0;
+}
+
+.prepaidAmount {
+  color: #059669;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.prepaidCategory {
+  color: #047857;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.remainingAmount {
+  color: #1f2937;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(29, 78, 216, 0.05));
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 6px;
+  margin-top: 0.25rem;
+}
+
+.amountToPayHighlight {
+  color: #1d4ed8;
+  font-weight: 700;
 }
 
 .participantPaidTime {
@@ -667,7 +754,7 @@
     justify-content: center;
   }
   
-  .paymentStats {
+  .paymentStats, .prepaidStats {
     grid-template-columns: repeat(2, 1fr);
   }
   
@@ -679,6 +766,11 @@
   
   .paymentStat:nth-child(odd) {
     border-right: 1px solid #e5e7eb;
+  }
+  
+  .prepaidSummary {
+    padding-top: 1rem;
+    margin-top: 1rem;
   }
   
   .participantItem {

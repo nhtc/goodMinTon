@@ -156,7 +156,10 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
         totalPaid: 0,
         totalUnpaid: 0,
         totalCollected: 0,
-        totalRemaining: 0
+        totalRemaining: 0,
+        totalPrepaid: 0,
+        totalCustomAmount: 0,
+        participantsWithPrepaid: 0
       }
     }
 
@@ -166,12 +169,23 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
       .filter(p => p.hasPaid)
       .reduce((sum, p) => sum + (p.customAmount - (p.prePaid || 0)), 0)
     const totalRemaining = event.totalCost - totalCollected
+    
+    // New prepaid calculations
+    const totalPrepaid = event.participants
+      .reduce((sum, p) => sum + (p.prePaid || 0), 0)
+    const totalCustomAmount = event.participants
+      .reduce((sum, p) => sum + p.customAmount, 0)
+    const participantsWithPrepaid = event.participants
+      .filter(p => p.prePaid && p.prePaid > 0).length
 
     return {
       totalPaid,
       totalUnpaid,
       totalCollected,
-      totalRemaining
+      totalRemaining,
+      totalPrepaid,
+      totalCustomAmount,
+      participantsWithPrepaid
     }
   }
 
@@ -332,6 +346,39 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
                   </div>
                 </div>
               </div>
+              
+              {/* Prepaid Information */}
+              {paymentStats.totalPrepaid > 0 && (
+                <div className={styles.prepaidSummary}>
+                  <h4 className={styles.prepaidTitle}>
+                    <span className={styles.prepaidIcon}>🏦</span>
+                    Thông Tin Thanh Toán Trước
+                  </h4>
+                  <div className={styles.prepaidStats}>
+                    <div className={`${styles.paymentStat} ${styles.prepaid}`}>
+                      <span className={styles.statIcon}>💳</span>
+                      <div className={styles.statInfo}>
+                        <span className={styles.statNumber}>{paymentStats.totalPrepaid.toLocaleString("vi-VN")}đ</span>
+                        <span className={styles.statLabel}>tổng trả trước</span>
+                      </div>
+                    </div>
+                    <div className={`${styles.paymentStat} ${styles.prepaidCount}`}>
+                      <span className={styles.statIcon}>👥</span>
+                      <div className={styles.statInfo}>
+                        <span className={styles.statNumber}>{paymentStats.participantsWithPrepaid}</span>
+                        <span className={styles.statLabel}>người đã trả trước</span>
+                      </div>
+                    </div>
+                    <div className={`${styles.paymentStat} ${styles.totalCustom}`}>
+                      <span className={styles.statIcon}>💰</span>
+                      <div className={styles.statInfo}>
+                        <span className={styles.statNumber}>{paymentStats.totalCustomAmount.toLocaleString("vi-VN")}đ</span>
+                        <span className={styles.statLabel}>tổng phải trả</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -383,9 +430,32 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
                         {participant.member.phone && (
                           <div className={styles.participantPhone}>📱 {participant.member.phone}</div>
                         )}
-                        <div className={styles.participantAmount}>
-                          💰 Số tiền: <strong>{(participant.customAmount - (participant.prePaid || 0)).toLocaleString("vi-VN")}đ</strong>
+                        
+                        {/* Payment Breakdown */}
+                        <div className={styles.paymentBreakdown}>
+                          <div className={styles.participantAmount}>
+                            💰 Tổng số tiền: <strong>{participant.customAmount.toLocaleString("vi-VN")}đ</strong>
+                          </div>
+                          
+                          {!!participant.prePaid && participant.prePaid > 0 && (
+                            <div className={styles.prepaidInfo}>
+                              <div className={styles.prepaidAmount}>
+                                ✅ Đã trả trước: <strong>{participant.prePaid.toLocaleString("vi-VN")}đ</strong>
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className={styles.remainingAmount}>
+                            {participant.prePaid && participant.prePaid > 0 
+                              ? `💳 Còn phải trả: ` 
+                              : `💳 Cần thanh toán: `
+                            }
+                            <strong className={styles.amountToPayHighlight}>
+                              {(participant.customAmount - (participant.prePaid || 0)).toLocaleString("vi-VN")}đ
+                            </strong>
+                          </div>
                         </div>
+                        
                         {participant.hasPaid && participant.paidAt && (
                           <div className={styles.participantPaidTime}>
                             ✅ Đã trả lúc {formatTime(participant.paidAt)}
