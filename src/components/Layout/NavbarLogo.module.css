@@ -1,0 +1,47 @@
+/* NavbarLogo Component Styles with Design Tokens */
+@import '../../styles/design-tokens.css';
+
+.navbarLogo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-xl);
+  color: var(--color-primary-600);
+  text-decoration: none;
+  transition: all var(--transition-duration-base) var(--transition-timing-ease);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--border-radius-xl);
+  position: relative;
+  overflow: hidden;
+}
+
+.navbarLogo:hover {
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: var(--shadow-md);
+}
+
+.navbarLogoIcon {
+  font-size: var(--font-size-2xl);
+  transition: transform var(--transition-duration-base) var(--transition-timing-ease);
+}
+
+.navbarLogo:hover .navbarLogoIcon {
+  transform: rotate(10deg) scale(1.1);
+}
+
+.navbarLogoText {
+  font-weight: var(--font-weight-extrabold);
+  background: linear-gradient(45deg, var(--color-primary-600), var(--color-accent-600));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Hide logo text on small screens */
+@media (max-width: 640px) {
+  .navbarLogoText {
+    display: none;
+  }
+}

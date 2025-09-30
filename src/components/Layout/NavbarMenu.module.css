@@ -1,0 +1,96 @@
+/* NavbarMenu Component Styles with Design Tokens */
+@import '../../styles/design-tokens.css';
+
+.navbarMenu {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .navbarMenu {
+    display: block;
+  }
+}
+
+/* Radix UI NavigationMenu Styles */
+.navbarNav {
+  display: flex;
+  background: rgba(255, 255, 255, 0.8);
+  padding: var(--spacing-2);
+  border-radius: var(--border-radius-2xl);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-secondary-200);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.navbarNavList {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbarNavItem {
+  position: relative;
+}
+
+.navbarNavLink {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--border-radius-xl);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-secondary-700);
+  text-decoration: none;
+  transition: all var(--transition-duration-base) var(--transition-timing-ease);
+  border: 1px solid var(--color-secondary-200);
+  background: rgba(255, 255, 255, 0.9);
+  position: relative;
+  overflow: hidden;
+}
+
+.navbarNavLink:hover {
+  background: linear-gradient(to right, var(--color-primary-50), var(--color-accent-50));
+  color: var(--color-primary-700);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary-300);
+}
+
+.navbarNavLinkActive {
+  background: linear-gradient(to right, var(--color-primary-500), var(--color-accent-600));
+  color: white;
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary-400);
+}
+
+.navbarNavIcon {
+  font-size: var(--font-size-lg);
+  transition: transform var(--transition-duration-base) var(--transition-timing-ease);
+}
+
+.navbarNavLink:hover .navbarNavIcon {
+  transform: scale(1.1);
+}
+
+.navbarNavText {
+  white-space: nowrap;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+/* Hide nav text on medium screens */
+@media (max-width: 1024px) {
+  .navbarNavText {
+    display: none;
+  }
+}
+
+/* Focus states for accessibility */
+.navbarNavLink:focus {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}

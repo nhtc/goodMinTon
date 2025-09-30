@@ -1,0 +1,255 @@
+/* AuthenticationState Component Styles with Design Tokens */
+@import '../styles/design-tokens.css';
+
+.authState {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+/* ===== LOADING STATE ===== */
+.loadingState {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: var(--border-radius-xl);
+  border: 1px solid var(--color-secondary-200);
+  box-shadow: var(--shadow-md);
+}
+
+.loadingSpinner {
+  font-size: var(--font-size-base);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingText {
+  font-size: var(--font-size-sm);
+  color: var(--color-secondary-600);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ===== GUEST STATE ===== */
+.guestState {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.guestInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: var(--border-radius-xl);
+  border: 1px solid var(--color-secondary-200);
+  box-shadow: var(--shadow-md);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.guestIcon {
+  font-size: var(--font-size-lg);
+  opacity: 0.8;
+}
+
+.guestDetails {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.guestTitle {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-secondary-700);
+}
+
+.guestDescription {
+  font-size: var(--font-size-xs);
+  color: var(--color-secondary-500);
+}
+
+.loginButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-accent-600));
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-xl);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  transition: all var(--transition-duration-base) var(--transition-timing-ease);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.loginButton:hover {
+  background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-700));
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+}
+
+.loginButton:focus {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.loginIcon {
+  font-size: var(--font-size-base);
+}
+
+/* Hide guest details on very small screens */
+@media (max-width: 480px) {
+  .guestDetails {
+    display: none;
+  }
+}
+
+/* ===== AUTHENTICATED STATE ===== */
+.authenticatedState {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.userProfile {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: var(--border-radius-2xl);
+  border: 1px solid var(--color-secondary-200);
+  box-shadow: var(--shadow-lg);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: all var(--transition-duration-base) var(--transition-timing-ease);
+}
+
+.userProfile:hover {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-1px);
+}
+
+.userAvatar {
+  transition: transform var(--transition-duration-base) var(--transition-timing-ease);
+}
+
+.userProfile:hover .userAvatar {
+  transform: scale(1.05);
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.userName {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: var(--color-secondary-900);
+  line-height: var(--line-height-tight);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userRole {
+  margin-top: var(--spacing-1);
+}
+
+.logoutButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: linear-gradient(135deg, var(--color-error-50), var(--color-error-100));
+  color: var(--color-error-700);
+  border: 1px solid var(--color-error-200);
+  border-radius: var(--border-radius-xl);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all var(--transition-duration-base) var(--transition-timing-ease);
+  box-shadow: var(--shadow-md);
+}
+
+.logoutButton:hover {
+  background: linear-gradient(135deg, var(--color-error-100), var(--color-error-200));
+  color: var(--color-error-800);
+  border-color: var(--color-error-300);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.logoutButton:focus {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.logoutIcon {
+  font-size: var(--font-size-base);
+}
+
+.logoutText {
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Hide user info and logout text on small screens */
+@media (max-width: 768px) {
+  .userInfo {
+    display: none;
+  }
+  
+  .logoutText {
+    display: none;
+  }
+}
+
+/* Extra small screens - minimal layout */
+@media (max-width: 480px) {
+  .authState {
+    gap: var(--spacing-2);
+  }
+  
+  .userProfile {
+    padding: var(--spacing-2);
+  }
+  
+  .logoutButton {
+    padding: var(--spacing-2) var(--spacing-3);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .loadingSpinner {
+    animation: none;
+  }
+  
+  .userAvatar,
+  .userProfile,
+  .loginButton,
+  .logoutButton {
+    transition: none;
+  }
+}

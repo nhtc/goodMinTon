@@ -1,0 +1,50 @@
+/* RoleBadge Component Styles with Design Tokens */
+@import '../../styles/design-tokens.css';
+
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  border-radius: var(--border-radius-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  border: 1px solid;
+}
+
+/* Variant styles */
+.variantDefault {
+  padding: var(--spacing-1) var(--spacing-2);
+  font-size: var(--font-size-xs);
+}
+
+.variantCompact {
+  padding: var(--spacing-1);
+  font-size: var(--font-size-xs);
+}
+
+/* Role-specific colors */
+.roleAdmin {
+  background: linear-gradient(135deg, var(--color-warning-100), var(--color-warning-200));
+  color: var(--color-warning-800);
+  border-color: var(--color-warning-300);
+}
+
+.roleEditor {
+  background: linear-gradient(135deg, var(--color-info-100), var(--color-info-200));
+  color: var(--color-info-800);
+  border-color: var(--color-info-300);
+}
+
+.roleViewer {
+  background: linear-gradient(135deg, var(--color-secondary-100), var(--color-secondary-200));
+  color: var(--color-secondary-700);
+  border-color: var(--color-secondary-300);
+}
+
+.roleIcon {
+  font-size: var(--font-size-xs);
+}
+
+.roleText {
+  font-weight: var(--font-weight-semibold);
+}

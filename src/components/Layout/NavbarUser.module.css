@@ -1,0 +1,172 @@
+/* NavbarUser Component Styles with Design Tokens */
+@import '../../styles/design-tokens.css';
+
+.navbarUser {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+/* User Info Button */
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-2) var(--spacing-4);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: var(--border-radius-2xl);
+  border: 1px solid var(--color-secondary-200);
+  box-shadow: var(--shadow-lg);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: all var(--transition-duration-base) var(--transition-timing-ease);
+}
+
+.userInfo:hover {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-1px);
+}
+
+.userAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--border-radius-full);
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-accent-600));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  box-shadow: var(--shadow-md);
+}
+
+.userDetails {
+  display: flex;
+  flex-direction: column;
+}
+
+.userName {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: var(--color-secondary-900);
+  line-height: var(--line-height-tight);
+}
+
+.userRole {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  margin-top: var(--spacing-1);
+}
+
+/* Hide user details on small screens */
+@media (max-width: 768px) {
+  .userDetails {
+    display: none;
+  }
+}
+
+/* Dropdown Menu Styles */
+.dropdownContent {
+  min-width: 200px;
+  background: white;
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-2);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--color-secondary-200);
+  z-index: var(--z-index-dropdown);
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-duration-fast) var(--transition-timing-ease);
+  outline: none;
+}
+
+.dropdownItem:hover {
+  background: var(--color-secondary-50);
+}
+
+.dropdownItem:focus {
+  background: var(--color-primary-50);
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.dropdownItem[data-disabled] {
+  color: var(--color-secondary-400);
+  cursor: not-allowed;
+}
+
+.dropdownItemIcon {
+  font-size: var(--font-size-base);
+}
+
+.dropdownSeparator {
+  height: 1px;
+  background: var(--color-secondary-200);
+  margin: var(--spacing-1) 0;
+}
+
+/* Guest Styles */
+.guestInfo {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-2) var(--spacing-3);
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: var(--border-radius-xl);
+  border: 1px solid var(--color-secondary-200);
+  box-shadow: var(--shadow-md);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.guestRole {
+  font-size: var(--font-size-sm);
+  color: var(--color-secondary-600);
+  font-weight: var(--font-weight-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.loginBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-accent-600));
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-xl);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  transition: all var(--transition-duration-base) var(--transition-timing-ease);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.loginBtn:hover {
+  background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-700));
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Focus states for accessibility */
+.userInfo:focus,
+.loginBtn:focus {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}

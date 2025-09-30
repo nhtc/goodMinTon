@@ -1,0 +1,37 @@
+/* UserAvatar Component Styles with Design Tokens */
+@import '../../styles/design-tokens.css';
+
+.userAvatar {
+  border-radius: var(--border-radius-full);
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-accent-600));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: var(--font-weight-bold);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition-duration-base) var(--transition-timing-ease);
+}
+
+.userAvatar:hover {
+  transform: scale(1.05);
+}
+
+/* Size variants */
+.sizeSm {
+  width: 32px;
+  height: 32px;
+  font-size: var(--font-size-xs);
+}
+
+.sizeMd {
+  width: 36px;
+  height: 36px;
+  font-size: var(--font-size-sm);
+}
+
+.sizeLg {
+  width: 40px;
+  height: 40px;
+  font-size: var(--font-size-base);
+}
