@@ -9,6 +9,17 @@ import type {
 } from '../types'
 
 /**
+ * Enhanced error handler for React Query that handles auth errors
+ */
+const handleQueryError = (error: any) => {
+  if (error.message && error.message.includes('Authentication required')) {
+    // Token has expired, the auth context will handle logout
+    console.warn('Query failed due to expired token')
+  }
+  return error
+}
+
+/**
  * Member interface for type safety
  */
 interface Member {
@@ -72,8 +83,10 @@ export const queryKeys = {
  * Configuration constants for query caching
  */
 const CACHE_CONFIG = {
-  /** Standard stale time for member data */
-  MEMBERS_STALE_TIME: 5 * 60 * 1000, // 5 minutes
+  /** Extended stale time for member data - members don't change frequently */
+  MEMBERS_STALE_TIME: 30 * 60 * 1000, // 30 minutes - much longer for members
+  /** Extended garbage collection time for members */
+  MEMBERS_GC_TIME: 60 * 60 * 1000, // 60 minutes - keep members cached longer
   /** Standard garbage collection time */
   STANDARD_GC_TIME: 10 * 60 * 1000, // 10 minutes
   /** Shorter stale time for payment-sensitive data */
@@ -97,7 +110,18 @@ export const useMembers = () => {
     queryKey: queryKeys.members,
     queryFn: apiService.members.getAll,
     staleTime: CACHE_CONFIG.MEMBERS_STALE_TIME,
-    gcTime: CACHE_CONFIG.STANDARD_GC_TIME,
+    gcTime: CACHE_CONFIG.MEMBERS_GC_TIME,
+    // Don't refetch on mount if we have cached data that's still fresh
+    refetchOnMount: false,
+    // Don't refetch on window focus for better UX
+    refetchOnWindowFocus: false,
+    // Enable background refetching when data becomes stale
+    refetchOnReconnect: 'always',
+    // Handle auth errors gracefully
+    throwOnError: (error) => {
+      handleQueryError(error)
+      return false // Don't throw, let component handle gracefully
+    },
   })
 }
 
@@ -110,7 +134,69 @@ export const useActiveMembers = () => {
     queryKey: queryKeys.activeMembers,
     queryFn: apiService.members.getActive,
     staleTime: CACHE_CONFIG.MEMBERS_STALE_TIME,
-    gcTime: CACHE_CONFIG.STANDARD_GC_TIME,
+    gcTime: CACHE_CONFIG.MEMBERS_GC_TIME,
+    // Don't refetch on mount if we have cached data that's still fresh
+    refetchOnMount: false,
+    // Don't refetch on window focus for better UX
+    refetchOnWindowFocus: false,
+    // Enable background refetching when data becomes stale
+    refetchOnReconnect: 'always',
+  })
+}
+
+/**
+ * Hook to prefetch members data for performance optimization
+ * Use this in components that will likely show member forms/modals
+ * @returns Prefetch function
+ */
+export const usePrefetchMembers = () => {
+  const queryClient = useQueryClient()
+  
+  return {
+    prefetchMembers: () => {
+      queryClient.prefetchQuery({
+        queryKey: queryKeys.members,
+        queryFn: apiService.members.getAll,
+        staleTime: CACHE_CONFIG.MEMBERS_STALE_TIME,
+      })
+    },
+    
+    prefetchActiveMembers: () => {
+      queryClient.prefetchQuery({
+        queryKey: queryKeys.activeMembers,
+        queryFn: apiService.members.getActive,
+        staleTime: CACHE_CONFIG.MEMBERS_STALE_TIME,
+      })
+    }
+  }
+}
+
+/**
+ * Optimized hook for forms that need members data with better caching strategy
+ * This hook uses a more aggressive caching strategy specifically for forms
+ * @returns Query result with members data optimized for form usage
+ */
+export const useMembersForForm = () => {
+  return useQuery({
+    queryKey: queryKeys.members,
+    queryFn: apiService.members.getAll,
+    staleTime: CACHE_CONFIG.MEMBERS_STALE_TIME,
+    gcTime: CACHE_CONFIG.MEMBERS_GC_TIME,
+    // Never refetch on mount - rely on cache first
+    refetchOnMount: false,
+    // Never refetch on window focus - forms don't need this
+    refetchOnWindowFocus: false,
+    // Don't refetch on reconnect unless data is very old
+    refetchOnReconnect: false,
+    // Enable network-idle refetching for background updates
+    refetchInterval: false,
+    // Provide placeholder data to prevent loading states
+    placeholderData: (previousData) => previousData,
+    // Handle auth errors gracefully
+    throwOnError: (error) => {
+      handleQueryError(error)
+      return false // Don't throw, let component handle gracefully
+    },
   })
 }
 

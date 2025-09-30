@@ -3,6 +3,18 @@ import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
+// Enhanced retry logic that doesn't retry on auth errors
+const retryFunction = (failureCount: number, error: any) => {
+  // Don't retry on authentication errors
+  if (error?.message?.includes('Authentication required') || 
+      error?.message?.includes('Invalid or expired token')) {
+    return false
+  }
+  
+  // Retry up to 2 times for other errors
+  return failureCount < 2
+}
+
 // Create a query client with optimized cache configuration
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -11,16 +23,34 @@ const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000, 
       // Keep cached data for 10 minutes
       gcTime: 10 * 60 * 1000, 
-      // Retry failed queries 2 times
-      retry: 2,
+      // Enhanced retry logic
+      retry: retryFunction,
       // Don't refetch on window focus for better UX
       refetchOnWindowFocus: false,
       // Refetch on mount if data is stale
-      refetchOnMount: 'always'
+      refetchOnMount: 'always',
+      // Global error handling
+      throwOnError: (error: any) => {
+        // Handle auth errors gracefully, let other errors bubble up
+        if (error?.message?.includes('Authentication required')) {
+          console.warn('Query failed due to auth error:', error.message)
+          return false
+        }
+        return true
+      }
     },
     mutations: {
-      // Retry failed mutations once
-      retry: 1
+      // Enhanced retry logic for mutations
+      retry: retryFunction,
+      // Global error handling for mutations
+      throwOnError: (error: any) => {
+        // Handle auth errors gracefully, let other errors bubble up
+        if (error?.message?.includes('Authentication required')) {
+          console.warn('Mutation failed due to auth error:', error.message)
+          return false
+        }
+        return true
+      }
     }
   }
 })

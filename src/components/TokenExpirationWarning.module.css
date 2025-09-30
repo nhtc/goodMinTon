@@ -1,0 +1,4 @@
+.tokenWarning {
+  /* This component doesn't render visible elements */
+  display: none;
+}

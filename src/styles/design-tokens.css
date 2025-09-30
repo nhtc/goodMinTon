@@ -1,0 +1,287 @@
+/* Design Tokens for goodMinTon Application
+ * Professional color palette and design system tokens
+ * Compatible with Radix UI components and Tailwind CSS
+ */
+
+:root {
+  /* ========================================
+   * COLOR PALETTE
+   * ======================================== */
+  
+  /* Primary Colors - Blue family for main actions and branding */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb; /* Main primary color */
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  --color-primary-950: #172554;
+
+  /* Secondary Colors - Gray family for neutral elements */
+  --color-secondary-50: #f9fafb;
+  --color-secondary-100: #f3f4f6;
+  --color-secondary-200: #e5e7eb;
+  --color-secondary-300: #d1d5db;
+  --color-secondary-400: #9ca3af;
+  --color-secondary-500: #6b7280;
+  --color-secondary-600: #4b5563;
+  --color-secondary-700: #374151;
+  --color-secondary-800: #1f2937; /* Main secondary color */
+  --color-secondary-900: #111827;
+  --color-secondary-950: #030712;
+
+  /* Accent Colors - Green family for success and highlights */
+  --color-accent-50: #ecfdf5;
+  --color-accent-100: #d1fae5;
+  --color-accent-200: #a7f3d0;
+  --color-accent-300: #6ee7b7;
+  --color-accent-400: #34d399;
+  --color-accent-500: #10b981; /* Main accent color */
+  --color-accent-600: #059669;
+  --color-accent-700: #047857;
+  --color-accent-800: #065f46;
+  --color-accent-900: #064e3b;
+  --color-accent-950: #022c22;
+
+  /* Semantic Colors */
+  /* Success - Green variants */
+  --color-success-50: #ecfdf5;
+  --color-success-100: #d1fae5;
+  --color-success-500: #10b981;
+  --color-success-600: #059669;
+  --color-success-700: #047857;
+
+  /* Warning - Yellow/Amber variants */
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+
+  /* Error - Red variants */
+  --color-error-50: #fef2f2;
+  --color-error-100: #fee2e2;
+  --color-error-500: #ef4444;
+  --color-error-600: #dc2626;
+  --color-error-700: #b91c1c;
+
+  /* Info - Blue variants */
+  --color-info-50: #eff6ff;
+  --color-info-100: #dbeafe;
+  --color-info-500: #3b82f6;
+  --color-info-600: #2563eb;
+  --color-info-700: #1d4ed8;
+
+  /* ========================================
+   * SPACING SCALE
+   * ======================================== */
+  
+  /* Consistent rem-based spacing for all components */
+  --spacing-0: 0;
+  --spacing-1: 0.25rem;  /* 4px */
+  --spacing-2: 0.5rem;   /* 8px */
+  --spacing-3: 0.75rem;  /* 12px */
+  --spacing-4: 1rem;     /* 16px */
+  --spacing-5: 1.25rem;  /* 20px */
+  --spacing-6: 1.5rem;   /* 24px */
+  --spacing-8: 2rem;     /* 32px */
+  --spacing-10: 2.5rem;  /* 40px */
+  --spacing-12: 3rem;    /* 48px */
+  --spacing-16: 4rem;    /* 64px */
+  --spacing-20: 5rem;    /* 80px */
+  --spacing-24: 6rem;    /* 96px */
+
+  /* ========================================
+   * TYPOGRAPHY SYSTEM
+   * ======================================== */
+  
+  /* Font Families */
+  --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-mono: 'Fira Code', 'Consolas', 'Monaco', monospace;
+
+  /* Font Sizes */
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --font-size-3xl: 1.875rem;  /* 30px */
+  --font-size-4xl: 2.25rem;   /* 36px */
+  --font-size-5xl: 3rem;      /* 48px */
+
+  /* Font Weights */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* Line Heights */
+  --line-height-tight: 1.25;
+  --line-height-snug: 1.375;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+  --line-height-loose: 2;
+
+  /* Letter Spacing */
+  --letter-spacing-tighter: -0.05em;
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.025em;
+  --letter-spacing-wider: 0.05em;
+
+  /* ========================================
+   * COMPONENT TOKENS
+   * ======================================== */
+  
+  /* Border Radius */
+  --border-radius-none: 0;
+  --border-radius-sm: 0.125rem;   /* 2px */
+  --border-radius-base: 0.25rem;  /* 4px */
+  --border-radius-md: 0.375rem;   /* 6px */
+  --border-radius-lg: 0.5rem;     /* 8px */
+  --border-radius-xl: 0.75rem;    /* 12px */
+  --border-radius-2xl: 1rem;      /* 16px */
+  --border-radius-full: 9999px;
+
+  /* Box Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-base: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+
+  /* Animation Timing */
+  --transition-duration-fast: 150ms;
+  --transition-duration-base: 200ms;
+  --transition-duration-slow: 300ms;
+  --transition-timing-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-timing-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --transition-timing-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --transition-timing-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Z-Index Scale */
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+  --z-index-toast: 1080;
+
+  /* ========================================
+   * RADIX UI SPECIFIC TOKENS
+   * ======================================== */
+  
+  /* Focus Ring */
+  --focus-ring-color: var(--color-primary-500);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-style: solid;
+
+  /* Component States */
+  --state-hover-opacity: 0.9;
+  --state-active-opacity: 0.8;
+  --state-disabled-opacity: 0.5;
+
+  /* Button Variants */
+  --button-height-sm: 2rem;     /* 32px */
+  --button-height-base: 2.5rem; /* 40px */
+  --button-height-lg: 3rem;     /* 48px */
+  --button-padding-x-sm: var(--spacing-3);
+  --button-padding-x-base: var(--spacing-4);
+  --button-padding-x-lg: var(--spacing-6);
+
+  /* Input Components */
+  --input-height-sm: 2rem;      /* 32px */
+  --input-height-base: 2.5rem;  /* 40px */
+  --input-height-lg: 3rem;      /* 48px */
+  --input-padding-x: var(--spacing-3);
+  --input-border-width: 1px;
+  --input-border-color: var(--color-secondary-300);
+  --input-border-color-focus: var(--color-primary-500);
+
+  /* Card Components */
+  --card-padding: var(--spacing-6);
+  --card-border-radius: var(--border-radius-lg);
+  --card-border-color: var(--color-secondary-200);
+  --card-background: #ffffff;
+  --card-shadow: var(--shadow-sm);
+  --card-shadow-hover: var(--shadow-md);
+
+  /* Modal/Dialog Components */
+  --modal-backdrop-color: rgb(0 0 0 / 0.5);
+  --modal-border-radius: var(--border-radius-xl);
+  --modal-padding: var(--spacing-6);
+  --modal-max-width: 32rem; /* 512px */
+
+  /* ========================================
+   * BREAKPOINTS
+   * ======================================== */
+  
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
+/* ========================================
+ * DARK MODE SUPPORT (Future Enhancement)
+ * ======================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Override specific tokens for dark mode when needed */
+    --card-background: var(--color-secondary-900);
+    --card-border-color: var(--color-secondary-700);
+    --input-border-color: var(--color-secondary-600);
+  }
+}
+
+/* ========================================
+ * UTILITY CLASSES FOR DESIGN TOKENS
+ * ======================================== */
+
+/* Common spacing utilities using design tokens */
+.dt-spacing-1 { margin: var(--spacing-1); }
+.dt-spacing-2 { margin: var(--spacing-2); }
+.dt-spacing-3 { margin: var(--spacing-3); }
+.dt-spacing-4 { margin: var(--spacing-4); }
+.dt-spacing-6 { margin: var(--spacing-6); }
+.dt-spacing-8 { margin: var(--spacing-8); }
+
+/* Typography utilities using design tokens */
+.dt-text-primary { color: var(--color-primary-600); }
+.dt-text-secondary { color: var(--color-secondary-600); }
+.dt-text-accent { color: var(--color-accent-600); }
+.dt-text-success { color: var(--color-success-600); }
+.dt-text-warning { color: var(--color-warning-600); }
+.dt-text-error { color: var(--color-error-600); }
+
+/* Background utilities using design tokens */
+.dt-bg-primary { background-color: var(--color-primary-600); }
+.dt-bg-secondary { background-color: var(--color-secondary-100); }
+.dt-bg-accent { background-color: var(--color-accent-600); }
+.dt-bg-success { background-color: var(--color-success-50); }
+.dt-bg-warning { background-color: var(--color-warning-50); }
+.dt-bg-error { background-color: var(--color-error-50); }
+
+/* Border utilities using design tokens */
+.dt-border { border: 1px solid var(--color-secondary-300); }
+.dt-border-primary { border-color: var(--color-primary-500); }
+.dt-border-radius { border-radius: var(--border-radius-base); }
+.dt-border-radius-lg { border-radius: var(--border-radius-lg); }
+
+/* Shadow utilities using design tokens */
+.dt-shadow { box-shadow: var(--shadow-base); }
+.dt-shadow-lg { box-shadow: var(--shadow-lg); }
+.dt-shadow-none { box-shadow: none; }

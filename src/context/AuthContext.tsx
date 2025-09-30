@@ -1,6 +1,13 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useState, useEffect, useCallback } from "react"
+import { 
+  getValidToken, 
+  clearAuthData, 
+  isTokenExpired, 
+  isTokenExpiringSoon, 
+  getTimeUntilExpiration 
+} from "@/lib/tokenManager"
 
 interface User {
   id: string
@@ -16,6 +23,9 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<boolean>
   logout: () => Promise<void>
   loading: boolean
+  tokenExpiring: boolean
+  timeUntilExpiration: number | null
+  checkTokenExpiration: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -32,17 +42,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [tokenExpiring, setTokenExpiring] = useState(false)
+  const [timeUntilExpiration, setTimeUntilExpiration] = useState<number | null>(null)
 
   // Check if user has edit permissions
   const isAuthorized = user?.role === "admin" || user?.role === "editor"
   const isAuthenticated = !!user
 
+  // Logout function
+  const logout = useCallback(async () => {
+    try {
+      // Call logout API to clear server-side cookies
+      await fetch("/api/auth/login", {
+        method: "DELETE",
+      })
+    } catch (error) {
+      console.error("Logout API call failed:", error)
+    }
+    
+    // Clear all auth data
+    clearAuthData()
+    setUser(null)
+    setTokenExpiring(false)
+    setTimeUntilExpiration(null)
+  }, [])
+
+  // Token expiration checking function
+  const checkTokenExpiration = useCallback(() => {
+    const token = getValidToken()
+    
+    if (!token) {
+      if (user) {
+        // Token is expired or invalid, logout user
+        setUser(null)
+        setTokenExpiring(false)
+        setTimeUntilExpiration(null)
+        console.log("Token expired, logging out user")
+      }
+      return
+    }
+
+    // Check if token is expiring soon (within 5 minutes)
+    const expiringSoon = isTokenExpiringSoon(token, 5)
+    setTokenExpiring(expiringSoon || false)
+
+    // Get time until expiration
+    const timeRemaining = getTimeUntilExpiration(token)
+    setTimeUntilExpiration(timeRemaining)
+
+    // If token is expired, logout immediately
+    if (isTokenExpired(token)) {
+      logout()
+    }
+  }, [user, logout])
+
   useEffect(() => {
     // Check for stored auth token on app load
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem("auth_token")
+        const token = getValidToken()
         if (token) {
           const response = await fetch("/api/auth/verify", {
             headers: {
@@ -53,20 +112,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           if (response.ok) {
             const userData = await response.json()
             setUser(userData.user)
+            // Start token expiration checking
+            checkTokenExpiration()
           } else {
-            localStorage.removeItem("auth_token")
+            clearAuthData()
           }
         }
       } catch (error) {
         console.error("Auth check failed:", error)
-        localStorage.removeItem("auth_token")
+        clearAuthData()
       } finally {
         setLoading(false)
       }
     }
 
     checkAuth()
-  }, [])
+  }, [checkTokenExpiration])
+
+  // Set up periodic token expiration checking
+  useEffect(() => {
+    if (!user) return
+
+    // Check token expiration every minute
+    const interval = setInterval(() => {
+      checkTokenExpiration()
+    }, 60000) // 1 minute
+
+    // Also check immediately
+    checkTokenExpiration()
+
+    return () => clearInterval(interval)
+  }, [user, checkTokenExpiration])
+
+  // Listen for token expiration events from API calls
+  useEffect(() => {
+    const handleTokenExpired = () => {
+      console.log('Received token expiration event')
+      logout()
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('auth:token-expired', handleTokenExpired)
+      
+      return () => {
+        window.removeEventListener('auth:token-expired', handleTokenExpired)
+      }
+    }
+  }, [logout])
 
   const login = async (
     username: string,
@@ -95,10 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }
 
-  const logout = async () => {
-    setUser(null)
-    localStorage.removeItem("auth_token")
-  }
+
 
   return (
     <AuthContext.Provider
@@ -109,6 +198,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         login,
         logout,
         loading,
+        tokenExpiring,
+        timeUntilExpiration,
+        checkTokenExpiration,
       }}
     >
       {children}

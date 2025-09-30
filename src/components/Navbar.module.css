@@ -1,30 +1,105 @@
-/* ===== FRIENDLY NAVBAR STYLES ===== */
-.navbar {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff7b7b 100%);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  box-shadow: 0 10px 40px rgba(102, 126, 234, 0.2);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: navbarSlideIn 0.6s ease-out;
-  /* Performance optimizations */
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-  will-change: transform;
+/* ===== MODERN NAVBAR STYLES ===== */
+/* Custom animations and effects that complement Tailwind CSS */
+
+/* Smooth scroll behavior for the page */
+html {
+  scroll-behavior: smooth;
 }
 
-@keyframes navbarSlideIn {
+/* Custom backdrop blur support for older browsers */
+@supports not (backdrop-filter: blur(10px)) {
+  .backdrop-blur-sm {
+    background-color: rgba(255, 255, 255, 0.95);
+  }
+  
+  .backdrop-blur-md {
+    background-color: rgba(255, 255, 255, 0.98);
+  }
+}
+
+/* Enhanced focus states for accessibility */
+.nav-focus:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Custom animations */
+@keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Animation classes */
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Improved mobile scrolling */
+@media (max-width: 768px) {
+  .mobile-nav-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-behavior: smooth;
+    padding-bottom: 2px; /* Prevents cut-off shadows */
+  }
+  
+  .mobile-nav-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Enhanced shadow utilities */
+.shadow-glow {
+  box-shadow: 0 4px 14px 0 rgba(31, 38, 135, 0.37);
+}
+
+.shadow-glow-blue {
+  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.4);
+}
+
+.shadow-glow-purple {
+  box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.4);
+}
+
+/* Backdrop blur fallbacks */
+@supports not (backdrop-filter: blur()) {
+  .backdrop-blur-fallback {
+    background-color: rgba(255, 255, 255, 0.95);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .navbar-high-contrast {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

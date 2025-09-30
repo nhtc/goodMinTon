@@ -3,6 +3,8 @@ import { Inter } from "next/font/google"
 
 import "./globals.css" // This imports your global styles
 import Navbar from "../components/Navbar"
+import GlobalDataPreloader from "../components/GlobalDataPreloader"
+import TokenExpirationWarning from "../components/TokenExpirationWarning"
 import { AuthProvider } from "@/context/AuthContext"
 import { ToastProvider } from "@/context/ToastContext"
 import { AlertProvider } from "@/context/AlertContext"
@@ -27,6 +29,8 @@ export default function RootLayout({
           <AuthProvider>
             <ToastProvider>
               <AlertProvider>
+                <GlobalDataPreloader />
+                <TokenExpirationWarning />
                 <Navbar />
                 <main className='main-content'>{children}</main>
               </AlertProvider>

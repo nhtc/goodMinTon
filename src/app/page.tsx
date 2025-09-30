@@ -397,7 +397,7 @@ const HomePage = () => {
               <div className={styles.demoActions}>
                 <Link href='/login' className={styles.demoButton}>
                   <span>🔑</span>
-                  <span>Đăng nhập Admin</span>
+                  <span>Đăng nhập</span>
                   <small>(admin / password123)</small>
                 </Link>
                 <Link href='/members' className={styles.demoButton}>

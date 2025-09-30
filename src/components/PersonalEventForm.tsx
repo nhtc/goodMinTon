@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import _ from 'lodash'
 import styles from './PersonalEventForm.module.css'
 import MemberAutocomplete from './MemberAutocomplete'
-import { useMembers } from '@/hooks/useQueries'
+import { useMembersForForm } from '@/hooks/useQueries'
 import type { 
   Member, 
   PersonalEventFormData, 
@@ -35,8 +35,8 @@ const PersonalEventForm: React.FC<PersonalEventFormProps> = ({
   isSubmitting = false,
   className = ""
 }) => {
-  // Fetch members data using shared hook
-  const { data: members = [], isLoading: membersLoading, error: membersError } = useMembers()
+  // Fetch members data using optimized form hook
+  const { data: members = [], isLoading: membersLoading, error: membersError } = useMembersForForm()
   // Form state
   const [title, setTitle] = useState(initialData?.title || "")
   const [description, setDescription] = useState(initialData?.description || "")

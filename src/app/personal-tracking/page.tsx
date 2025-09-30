@@ -8,7 +8,7 @@ import PersonalEventDetailsModal from '@/components/PersonalEventDetailsModal'
 import PersonalEventForm from '@/components/PersonalEventForm'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import Modal from '@/components/Modal'
-import { usePersonalEvents, useDeletePersonalEvent, useUpdatePersonalEvent, useCreatePersonalEvent } from '@/hooks/useQueries'
+import { usePersonalEvents, useDeletePersonalEvent, useUpdatePersonalEvent, useCreatePersonalEvent, usePrefetchMembers } from '@/hooks/useQueries'
 import { useToast } from '@/hooks/useToast'
 import { useAuth } from '@/context/AuthContext'
 import { apiService } from '@/lib/api'
@@ -65,6 +65,7 @@ const PersonalTrackingPage: React.FC = () => {
   const deletePersonalEventMutation = useDeletePersonalEvent()
   const updatePersonalEventMutation = useUpdatePersonalEvent()
   const createPersonalEventMutation = useCreatePersonalEvent()
+  const { prefetchMembers } = usePrefetchMembers()
   const { addToast } = useToast()
 
   // Filter events based on search term
@@ -241,6 +242,8 @@ const PersonalTrackingPage: React.FC = () => {
             >
               <button
                 onClick={handleCreateEvent}
+                onMouseEnter={prefetchMembers} // Prefetch when user hovers
+                onFocus={prefetchMembers} // Prefetch when user focuses (keyboard navigation)
                 className={styles.createEventBtn}
                 title={TEXT_CONSTANTS.personalEvent.titles.createEvent}
               >
@@ -430,6 +433,8 @@ const PersonalTrackingPage: React.FC = () => {
               >
                 <button
                   onClick={handleCreateEvent}
+                  onMouseEnter={prefetchMembers} // Prefetch when user hovers
+                  onFocus={prefetchMembers} // Prefetch when user focuses (keyboard navigation)
                   className={styles.emptyAction}
                 >
                   <span className={styles.btnIcon}>➕</span>

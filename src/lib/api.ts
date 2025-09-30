@@ -35,7 +35,7 @@ const handleApiError = (error: any): Error => {
 }
 
 /**
- * Generic fetch wrapper with consistent error handling
+ * Generic fetch wrapper with consistent error handling and auth management
  * @param url - The API endpoint URL
  * @param options - Fetch options (method, headers, body, etc.)
  * @returns Promise resolving to response data
@@ -43,6 +43,25 @@ const handleApiError = (error: any): Error => {
 const fetchWithErrorHandling = async (url: string, options?: RequestInit) => {
   try {
     const response = await fetch(url, options)
+    
+    // Handle 401 Unauthorized responses
+    if (response.status === 401) {
+      // Token is expired or invalid
+      console.warn('API request failed with 401 - token may be expired')
+      
+      // Clear local auth data
+      if (typeof window !== 'undefined') {
+        const { clearAuthData } = await import('./tokenManager')
+        clearAuthData()
+        
+        // Dispatch a custom event to notify auth context
+        window.dispatchEvent(new CustomEvent('auth:token-expired'))
+      }
+      
+      const error = await response.json().catch(() => ({ error: 'Authentication required' }))
+      throw new Error(error.error || 'Authentication required. Please login again.')
+    }
+    
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Request failed' }))
       throw new Error(error.error || `Request failed with status ${response.status}`)
