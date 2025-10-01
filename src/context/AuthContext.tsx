@@ -73,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const token = getValidToken()
     
     if (!token) {
-      if (user) {
+      if (user?.id) {
         // Token is expired or invalid, logout user
         setUser(null)
         setTokenExpiring(false)
@@ -95,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     if (isTokenExpired(token)) {
       logout()
     }
-  }, [user, logout])
+  }, [user?.id, logout])
 
   useEffect(() => {
     // Check for stored auth token on app load

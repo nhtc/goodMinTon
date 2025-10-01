@@ -55,6 +55,33 @@ a:hover {
   text-decoration: underline;
 }
 
+/* Remove underline from buttons and interactive elements */
+button,
+.btn,
+.featureButton,
+.ctaButton,
+.quickActionBtn,
+.demoButton,
+[role="button"],
+a[class*="button"],
+a[class*="Button"],
+a[class*="btn"] {
+  text-decoration: none !important;
+}
+
+button:hover,
+.btn:hover,
+.featureButton:hover,
+.ctaButton:hover,
+.quickActionBtn:hover,
+.demoButton:hover,
+[role="button"]:hover,
+a[class*="button"]:hover,
+a[class*="Button"]:hover,
+a[class*="btn"]:hover {
+  text-decoration: none !important;
+}
+
 a:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);

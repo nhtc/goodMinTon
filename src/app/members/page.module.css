@@ -76,14 +76,11 @@
   font-size: 3rem;
   font-weight: 900;
   margin-bottom: 1rem;
-  background: linear-gradient(45deg, #ffffff, #f0f9ff, #ffffff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: white;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
   letter-spacing: -0.02em;
   will-change: transform;
-  /* Removed infinite bounce animation for better performance */
+  /* Removed gradient to ensure visibility */
 }
 
 /* Add gentle hover effect instead of infinite animation */
@@ -520,17 +517,18 @@
 .search-input {
   width: 100%;
   padding: var(--spacing-4) var(--spacing-4) var(--spacing-4) var(--spacing-12);
-  border: 2px solid var(--color-border-subtle);
-  border-radius: var(--radius-xl);
+  border: 2px solid var(--color-secondary-300);
+  border-radius: var(--border-radius-xl);
   font-size: var(--font-size-base);
-  background: var(--color-background-primary);
+  background: white;
+  color: var(--color-secondary-900);
   transition: all var(--transition-duration-fast) ease;
 }
 
 .search-input:focus {
   outline: none;
   border-color: var(--color-primary-500);
-  box-shadow: var(--shadow-focus);
+  box-shadow: 0 0 0 3px var(--color-primary-100);
 }
 
 .search-clear {
@@ -539,19 +537,24 @@
   top: 50%;
   transform: translateY(-50%);
   background: var(--color-error-500);
-  color: var(--color-text-inverted);
+  color: white;
   border: none;
-  border-radius: var(--radius-full);
-  width: 24px;
-  height: 24px;
+  border-radius: var(--border-radius-full);
+  width: 28px;
+  height: 28px;
   font-size: var(--font-size-sm);
   cursor: pointer;
   transition: all var(--transition-duration-fast) ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
 }
 
 .search-clear:hover {
   background: #dc2626;
   transform: translateY(-50%) scale(1.1);
+  box-shadow: var(--shadow-md);
 }
 
 .search-results {
