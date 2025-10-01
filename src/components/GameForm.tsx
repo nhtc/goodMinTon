@@ -504,7 +504,16 @@ const GameForm: React.FC<GameFormProps> = ({
     paid => paid
   ).length
   const unpaidCount = selectedMembers.length - paidCount
-  const totalCollected = paidCount * costPerMember
+  
+  // Calculate total collected from members who have paid
+  // This includes their base share + custom amounts (if any)
+  const totalCollected = selectedMembers.reduce((sum, memberId) => {
+    const isPaid = memberPaymentStatus[memberId] || false
+    if (!isPaid) return sum
+    
+    const extraAmount = memberCustomAmounts[memberId] || 0
+    return sum + costPerMember + extraAmount
+  }, 0)
 
   return (
     <div className={styles.gameFormContainer}>
@@ -545,7 +554,10 @@ const GameForm: React.FC<GameFormProps> = ({
 
       <form onSubmit={handleSubmit} className={styles.gameFormFriendly}>
         {/* Section 1: Basic Info */}
-        <div className={styles.formSection}>
+        <FormSection 
+          title="📅 Thông tin cơ bản"
+          description="Chọn ngày và địa điểm chơi"
+        >
           <div className={styles.sectionHeader}>
             <div className={styles.sectionIcon}>📅</div>
             <div className={styles.sectionTitle}>
@@ -583,15 +595,11 @@ const GameForm: React.FC<GameFormProps> = ({
 
             {/* Location field - full width */}
             <div className={styles.formRow}>
-              <div className={styles.fieldGroup}>
-                <label
-                  htmlFor='location'
-                  className={`${styles.fieldLabel} ${styles.friendly}`}
-                >
+              <FormField error={errors.location}>
+                <FormLabel htmlFor="location" required>
                   <span className={styles.labelIcon}>📍</span>
                   <span className={styles.labelText}>{text.field.gameLocation()}</span>
-                  <span className={styles.requiredStar}>*</span>
-                </label>
+                </FormLabel>
 
                 {/* Preset location buttons */}
                 <div className={styles.presetGrid}>
@@ -614,42 +622,37 @@ const GameForm: React.FC<GameFormProps> = ({
                   ))}
                 </div>
 
-                <div className={styles.inputWrapper}>
-                  <input
-                    type='text'
-                    id='location'
-                    value={location}
-                    onChange={e => {
-                      setLocation(e.target.value)
-                      if (errors.location)
-                        setErrors(prev => _.omit(prev, "location"))
-                    }}
-                    className={`${styles.formInput} ${styles.friendly} ${
-                      errors.location ? "error" : ""
-                    } ${location.trim() ? "filled" : ""}`}
-                    placeholder='Hoặc nhập địa điểm khác...'
-                    maxLength={100}
-                  />
-                  <div className={styles.inputGlow}></div>
-                  {location.trim() && (
-                    <div className={styles.inputCheck}>✓</div>
-                  )}
-                </div>
+                <FormInput
+                  id="location"
+                  value={location}
+                  onChange={(e) => {
+                    setLocation(e.target.value)
+                    if (errors.location)
+                      setErrors(prev => _.omit(prev, "location"))
+                  }}
+                  placeholder="Hoặc nhập địa điểm khác..."
+                  maxLength={100}
+                  variant="friendly"
+                />
+                
                 {errors.location && (
-                  <div className={`${styles.fieldError} ${styles.friendly}`}>
-                    <span>😅 {errors.location}</span>
-                  </div>
+                  <FormMessage variant="error">
+                    😅 {errors.location}
+                  </FormMessage>
                 )}
                 <div className={styles.fieldTip}>
                   <span>💡 Ghi rõ tên sân để lần sau dễ nhớ nha!</span>
                 </div>
-              </div>
+              </FormField>
             </div>
           </div>
-        </div>
+        </FormSection>
 
         {/* Section 2: Costs */}
-        <div className={styles.formSection}>
+        <FormSection 
+          title="💰 Chi phí"
+          description="Nhập các khoản chi phí cho trận đấu"
+        >
           <div className={styles.sectionHeader}>
             <div className={styles.sectionIcon}>💰</div>
             <div className={styles.sectionTitle}>
@@ -691,46 +694,37 @@ const GameForm: React.FC<GameFormProps> = ({
               </div>
 
               <div className={styles.fieldGroup}>
-                <label
-                  htmlFor='yardCost'
-                  className={`${styles.fieldLabel} ${styles.friendly}`}
-                >
+                <FormLabel htmlFor="yardCost">
                   <span className={styles.labelText}>
                     Hoặc nhập số tiền khác
                   </span>
-                </label>
-                <div className={`${styles.inputWrapper} ${styles.money}`}>
-                  <div className={styles.inputPrefix}>×1000</div>
-                  <input
-                    type='text'
-                    id='yardCost'
-                    value={yardCost === 0 ? "" : (yardCost / 1000).toString()}
-                    onFocus={e => e.target.select()}
-                    onChange={e => {
-                      const value = e.target.value.replace(/[^0-9]/g, "") // Only allow numbers
-                      setYardCost(value === "" ? 0 : Number(value) * 1000)
-                      if (errors.yardCost)
-                        setErrors(prev => _.omit(prev, "yardCost"))
-                    }}
-                    className={`${styles.formInput} ${styles.friendly} ${
-                      styles.money
-                    } ${errors.yardCost ? "error" : ""} ${
-                      yardCost > 0 ? "filled" : ""
-                    }`}
-                    placeholder='160'
-                  />
-                  <div className={`${styles.inputSuffix} ${styles.money}`}>
-                    đ
-                  </div>
-                  <div className={styles.inputGlow}></div>
-                </div>
+                </FormLabel>
+                
+                <FormInput
+                  type="text"
+                  id="yardCost"
+                  value={yardCost === 0 ? "" : (yardCost / 1000).toString()}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, "") // Only allow numbers
+                    setYardCost(value === "" ? 0 : Number(value) * 1000)
+                    if (errors.yardCost)
+                      setErrors(prev => _.omit(prev, "yardCost"))
+                  }}
+                  placeholder="160"
+                  variant="money"
+                  prefix="×1000"
+                  suffix="đ"
+                  hasError={!!errors.yardCost}
+                />
+                
                 <div className={styles.fieldTip}>
                   <span>💡 Nhập 160 = 160,000đ (tự động nhân 1000)</span>
                 </div>
                 {errors.yardCost && (
-                  <div className={`${styles.fieldError} ${styles.friendly}`}>
-                    <span>😅 {errors.yardCost}</span>
-                  </div>
+                  <FormMessage variant="error">
+                    😅 {errors.yardCost}
+                  </FormMessage>
                 )}
               </div>
             </div>
@@ -780,13 +774,10 @@ const GameForm: React.FC<GameFormProps> = ({
 
               <div className={styles.formRow}>
                 <div className={styles.fieldGroup}>
-                  <label
-                    htmlFor='shuttleCockQuantity'
-                    className={`${styles.fieldLabel} ${styles.friendly}`}
-                  >
+                  <FormLabel htmlFor="shuttleCockQuantity">
                     <span className={styles.labelIcon}>🔢</span>
                     <span className={styles.labelText}>{text.field.shuttleCockQuantity()}</span>
-                  </label>
+                  </FormLabel>
 
                   {/* Quick quantity selection buttons */}
                   <div className={styles.quantityPresets}>
@@ -812,81 +803,71 @@ const GameForm: React.FC<GameFormProps> = ({
                     ))}
                   </div>
 
-                  <div className={styles.inputWrapper}>
-                    <input
-                      type='text'
-                      id='shuttleCockQuantity'
-                      value={
-                        shuttleCockQuantity === 0
-                          ? ""
-                          : shuttleCockQuantity.toString()
-                      }
-                      onFocus={e => e.target.select()}
-                      onChange={e => {
-                        const value = e.target.value.replace(/[^0-9]/g, "") // Only allow numbers
-                        setShuttleCockQuantity(value === "" ? 0 : Number(value))
-                        if (errors.shuttleCockQuantity)
-                          setErrors(prev => _.omit(prev, "shuttleCockQuantity"))
-                      }}
-                      className={`${styles.formInput} ${styles.friendly} ${
-                        errors.shuttleCockQuantity ? "error" : ""
-                      }`}
-                      placeholder='0'
-                    />
-                    <div className={styles.inputSuffix}>quả</div>
-                    <div className={styles.inputGlow}></div>
-                  </div>
+                  <FormInput
+                    type="text"
+                    id="shuttleCockQuantity"
+                    value={
+                      shuttleCockQuantity === 0
+                        ? ""
+                        : shuttleCockQuantity.toString()
+                    }
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, "") // Only allow numbers
+                      setShuttleCockQuantity(value === "" ? 0 : Number(value))
+                      if (errors.shuttleCockQuantity)
+                        setErrors(prev => _.omit(prev, "shuttleCockQuantity"))
+                    }}
+                    placeholder="0"
+                    variant="friendly"
+                    suffix="quả"
+                    hasError={!!errors.shuttleCockQuantity}
+                  />
+                  
                   {errors.shuttleCockQuantity && (
-                    <div className={`${styles.fieldError} ${styles.friendly}`}>
-                      <span>😅 {errors.shuttleCockQuantity}</span>
-                    </div>
+                    <FormMessage variant="error">
+                      😅 {errors.shuttleCockQuantity}
+                    </FormMessage>
                   )}
                 </div>
 
                 <div className={styles.fieldGroup}>
-                  <label
-                    htmlFor='shuttleCockPrice'
-                    className={`${styles.fieldLabel} ${styles.friendly}`}
-                  >
+                  <FormLabel htmlFor="shuttleCockPrice">
                     <span className={styles.labelIcon}>💰</span>
                     <span className={styles.labelText}>Giá mỗi quả</span>
-                  </label>
-                  <div className={`${styles.inputWrapper} ${styles.money}`}>
-                    <div className={styles.inputPrefix}>×1000</div>
-                    <input
-                      type='text'
-                      id='shuttleCockPrice'
-                      value={
-                        shuttleCockPrice === 0
-                          ? ""
-                          : (shuttleCockPrice / 1000).toString()
-                      }
-                      onFocus={e => e.target.select()}
-                      onChange={e => {
-                        const value = e.target.value.replace(/[^0-9]/g, "") // Only allow numbers
-                        setShuttleCockPrice(
-                          value === "" ? 0 : Number(value) * 1000
-                        )
-                        if (errors.shuttleCockPrice)
-                          setErrors(prev => _.omit(prev, "shuttleCockPrice"))
-                      }}
-                      className={`${styles.formInput} ${styles.friendly} ${
-                        styles.money
-                      } ${errors.shuttleCockPrice ? "error" : ""}`}
-                      placeholder='15'
-                    />
-                    <div className={`${styles.inputSuffix} ${styles.money}`}>
-                      đ
-                    </div>
-                    <div className={styles.inputGlow}></div>
-                  </div>
+                  </FormLabel>
+                  
+                  <FormInput
+                    type="text"
+                    id="shuttleCockPrice"
+                    value={
+                      shuttleCockPrice === 0
+                        ? ""
+                        : (shuttleCockPrice / 1000).toString()
+                    }
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, "") // Only allow numbers
+                      setShuttleCockPrice(
+                        value === "" ? 0 : Number(value) * 1000
+                      )
+                      if (errors.shuttleCockPrice)
+                        setErrors(prev => _.omit(prev, "shuttleCockPrice"))
+                    }}
+                    placeholder="15"
+                    variant="money"
+                    prefix="×1000"
+                    suffix="đ"
+                    hasError={!!errors.shuttleCockPrice}
+                  />
+                  
                   <div className={styles.fieldTip}>
                     <span>💡 Nhập 15 = 15,000đ (tự động nhân 1000)</span>
                   </div>
                   {errors.shuttleCockPrice && (
-                    <div className={`${styles.fieldError} ${styles.friendly}`}>
-                      <span>😅 {errors.shuttleCockPrice}</span>
-                    </div>
+                    <FormMessage variant="error">
+                      😅 {errors.shuttleCockPrice}
+                    </FormMessage>
                   )}
                 </div>
               </div>
@@ -906,41 +887,33 @@ const GameForm: React.FC<GameFormProps> = ({
 
             {/* Other Fees */}
             <div className={styles.fieldGroup}>
-              <label
-                htmlFor='otherFees'
-                className={`${styles.fieldLabel} ${styles.friendly}`}
-              >
+              <FormLabel htmlFor="otherFees" required>
                 <span className={styles.labelIcon}>📋</span>
                 <span className={styles.labelText}>Chi phí khác</span>
-                <span className={styles.requiredStar}>*</span>
-              </label>
-              <div className={`${styles.inputWrapper} ${styles.money}`}>
-                <div className={styles.inputPrefix}>×1000</div>
-                <input
-                  type='text'
-                  id='otherFees'
-                  value={otherFees === 0 ? "" : (otherFees / 1000).toString()}
-                  onFocus={e => e.target.select()}
-                  onChange={e => {
-                    const value = e.target.value.replace(/[^0-9]/g, "") // Only allow numbers
-                    setOtherFees(value === "" ? 0 : Number(value) * 1000)
-                    if (errors.otherFees)
-                      setErrors(prev => _.omit(prev, "otherFees"))
-                  }}
-                  className={`${styles.formInput} ${styles.friendly} ${
-                    styles.money
-                  } ${errors.otherFees ? "error" : ""} ${
-                    otherFees > 0 ? "filled" : ""
-                  }`}
-                  placeholder='Nhập chi phí...'
-                />
-                <div className={`${styles.inputSuffix} ${styles.money}`}>đ</div>
-                <div className={styles.inputGlow}></div>
-              </div>
+              </FormLabel>
+              
+              <FormInput
+                type="text"
+                id="otherFees"
+                value={otherFees === 0 ? "" : (otherFees / 1000).toString()}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, "") // Only allow numbers
+                  setOtherFees(value === "" ? 0 : Number(value) * 1000)
+                  if (errors.otherFees)
+                    setErrors(prev => _.omit(prev, "otherFees"))
+                }}
+                placeholder="Nhập chi phí..."
+                variant="money"
+                prefix="×1000"
+                suffix="đ"
+                hasError={!!errors.otherFees}
+              />
+              
               {errors.otherFees && (
-                <div className={`${styles.fieldError} ${styles.friendly}`}>
-                  <span>😅 {errors.otherFees}</span>
-                </div>
+                <FormMessage variant="error">
+                  😅 {errors.otherFees}
+                </FormMessage>
               )}
               <div className={styles.fieldTip}>
                 <span>
@@ -1047,10 +1020,13 @@ const GameForm: React.FC<GameFormProps> = ({
               </div>
             )}
           </div>
-        </div>
+        </FormSection>
 
         {/* Section 3: Members */}
-        <div className={styles.formSection}>
+        <FormSection 
+          title="👥 Thành viên"
+          description="Chọn những người chơi cùng và nhập thông tin thanh toán"
+        >
           <div className={styles.sectionHeader}>
             <div className={styles.sectionIcon}>👥</div>
             <div className={styles.sectionTitle}>
@@ -1228,8 +1204,7 @@ const GameForm: React.FC<GameFormProps> = ({
                               />
                             ) : null}
                             <div 
-                              className={styles.memberAvatarFallback}
-                              style={{ display: member.avatar ? 'none' : 'flex' }}
+                              className={`${styles.memberAvatarFallback} ${member.avatar ? styles.hidden : ''}`}
                             >
                               {member.name.charAt(0).toUpperCase()}
                             </div>
@@ -1516,7 +1491,7 @@ const GameForm: React.FC<GameFormProps> = ({
               </div>
             )}
           </div>
-        </div>
+        </FormSection>
 
         {/* Submit Section */}
         {members.length > 0 && (
