@@ -16,6 +16,8 @@ import {
 } from "recharts"
 import CountUp from "react-countup"
 import NotificationDemo from "../components/NotificationDemo"
+import { Container, Section } from "../components/Layout"
+import { StatCard, InfoCard } from "../components/Card"
 import styles from "./page.module.css"
 
 const HomePage = () => {
@@ -68,9 +70,9 @@ const HomePage = () => {
 
   return (
     <div className={`min-h-screen ${styles.homeGradient} smooth-scroll`}>
-      {/* Hero Section */}
-      <div className={styles.heroSection}>
-        <div className='container mx-auto px-6 py-20'>
+      <Container>
+        {/* Hero Section */}
+        <Section className={styles.heroSection}>
           <div className={`text-center  mb-20 ${styles.animateOnScroll}`}>
             <h1 className={`${styles.heroTitle} ${styles.colorfulText}`}>
               <TypeAnimation
@@ -98,41 +100,34 @@ const HomePage = () => {
           </div>
 
           {/* Statistics Section */}
-          <div className={`${styles.statsSection} ${styles.animateOnScroll}`}>
+          <Section className={`${styles.statsSection} ${styles.animateOnScroll}`}>
             <div className={styles.statsGrid}>
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>🏸</div>
-                <div className={styles.statNumber}>
-                  <CountUp end={247} duration={2.5} />
-                </div>
-                <div className={styles.statLabel}>Trận đấu hoàn thành</div>
-              </div>
-
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>👥</div>
-                <div className={styles.statNumber}>
-                  <CountUp end={89} duration={2.5} />
-                </div>
-                <div className={styles.statLabel}>Thành viên tích cực</div>
-              </div>
-
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>💰</div>
-                <div className={styles.statNumber}>
-                  <CountUp end={12500000} duration={2.5} separator=',' />₫
-                </div>
-                <div className={styles.statLabel}>Tổng chi phí quản lý</div>
-              </div>
-
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>📈</div>
-                <div className={styles.statNumber}>
-                  <CountUp end={95} duration={2.5} />%
-                </div>
-                <div className={styles.statLabel}>Mức độ hài lòng</div>
-              </div>
+              <StatCard
+                title="Trận đấu hoàn thành"
+                value="247"
+                icon="🏸"
+                color="primary"
+              />
+              <StatCard
+                title="Thành viên tích cực"
+                value="89"
+                icon="👥"
+                color="success"
+              />
+              <StatCard
+                title="Tổng chi phí quản lý"
+                value="12,500,000₫"
+                icon="💰"
+                color="warning"
+              />
+              <StatCard
+                title="Mức độ hài lòng"
+                value="95%"
+                icon="📈"
+                color="info"
+              />
             </div>
-          </div>
+          </Section>
 
           {/* Charts Section */}
           <div className={`${styles.chartsSection} ${styles.animateOnScroll}`}>
@@ -273,10 +268,12 @@ const HomePage = () => {
           </div>
 
           {/* System Features Overview */}
-          <div className={`${styles.infoSection} ${styles.animateOnScroll}`}>
+          <Section className={`${styles.infoSection} ${styles.animateOnScroll}`}>
             <div className={styles.infoGrid}>
-              <div className={styles.infoCard}>
-                <h3 className={styles.infoTitle}>🎯 Tính năng chính</h3>
+              <InfoCard
+                title="🎯 Tính năng chính"
+                variant="info"
+              >
                 <ul className={styles.featureList}>
                   <li>✅ Quản lý thành viên (thêm/sửa/xóa)</li>
                   <li>✅ Ghi lại chi tiết từng trận đấu</li>
@@ -285,10 +282,12 @@ const HomePage = () => {
                   <li>✅ Tạo QR code chuyển khoản</li>
                   <li>✅ Báo cáo thống kê chi tiết</li>
                 </ul>
-              </div>
+              </InfoCard>
 
-              <div className={styles.infoCard}>
-                <h3 className={styles.infoTitle}>📋 Hướng dẫn sử dụng</h3>
+              <InfoCard
+                title="📋 Hướng dẫn sử dụng"
+                variant="success"
+              >
                 <div className={styles.stepsList}>
                   <div className={styles.step}>
                     <span className={styles.stepNumber}>1</span>
@@ -307,10 +306,12 @@ const HomePage = () => {
                     <span>Chia sẻ QR thanh toán</span>
                   </div>
                 </div>
-              </div>
+              </InfoCard>
 
-              <div className={styles.infoCard}>
-                <h3 className={styles.infoTitle}>💡 Mẹo sử dụng</h3>
+              <InfoCard
+                title="💡 Mẹo sử dụng"
+                variant="warning"
+              >
                 <div className={styles.tipsList}>
                   <div className={styles.tip}>
                     <span className={styles.tipIcon}>🏸</span>
@@ -331,9 +332,9 @@ const HomePage = () => {
                     <span>Theo dõi ai đã thanh toán, ai chưa thanh toán</span>
                   </div>
                 </div>
-              </div>
+              </InfoCard>
             </div>
-          </div>
+          </Section>
 
           {/* Notification Demo Section */}
           <div className={`${styles.demoSection} ${styles.animateOnScroll}`}>
@@ -435,8 +436,8 @@ const HomePage = () => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </Section>
+      </Container>
     </div>
   )
 }
