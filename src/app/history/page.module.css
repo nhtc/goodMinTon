@@ -2588,3 +2588,12 @@
     min-width: auto;
   }
 }
+
+/* ===== AVATAR VISIBILITY CLASSES ===== */
+.avatarHidden {
+  display: none !important;
+}
+
+.avatarVisible {
+  display: flex !important;
+}

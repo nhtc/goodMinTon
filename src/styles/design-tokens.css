@@ -235,15 +235,72 @@
 }
 
 /* ========================================
- * DARK MODE SUPPORT (Future Enhancement)
+ * DARK MODE SUPPORT WITH IMPROVED CONTRAST
  * ======================================== */
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Override specific tokens for dark mode when needed */
-    --card-background: var(--color-secondary-900);
-    --card-border-color: var(--color-secondary-700);
+    /* Override specific tokens for dark mode with better accessibility */
+    --card-background: var(--color-secondary-800);
+    --card-border-color: var(--color-secondary-600);
     --input-border-color: var(--color-secondary-600);
+    --color-secondary-50: var(--color-secondary-900);
+    --color-secondary-100: var(--color-secondary-800);
+    --color-secondary-900: var(--color-secondary-100);
+    --color-secondary-800: var(--color-secondary-200);
+    
+    /* Improved contrast ratios for dark mode */
+    --modal-backdrop-color: rgb(0 0 0 / 0.8);
+    --shadow-sm: 0 1px 2px 0 rgb(255 255 255 / 0.05);
+    --shadow-base: 0 1px 3px 0 rgb(255 255 255 / 0.1), 0 1px 2px -1px rgb(255 255 255 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(255 255 255 / 0.1), 0 4px 6px -4px rgb(255 255 255 / 0.1);
+  }
+}
+
+/* ========================================
+ * BROWSER-SPECIFIC OPTIMIZATIONS
+ * ======================================== */
+
+/* Safari optimizations */
+@supports (-webkit-appearance: none) {
+  :root {
+    /* Webkit-specific backdrop filter fallback */
+    --webkit-backdrop-filter-fallback: blur(12px);
+  }
+  
+  .backdrop-blur {
+    -webkit-backdrop-filter: var(--webkit-backdrop-filter-fallback);
+  }
+}
+
+/* Firefox optimizations */
+@-moz-document url-prefix() {
+  :root {
+    /* Firefox scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary-500) var(--color-secondary-200);
+  }
+}
+
+/* Chrome/Edge optimizations */
+@supports (backdrop-filter: blur(1px)) {
+  .modal-overlay,
+  .backdrop-blur {
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+}
+
+/* Fallback for browsers without backdrop-filter */
+@supports not (backdrop-filter: blur(1px)) {
+  .modal-overlay {
+    background: var(--color-secondary-900);
+    opacity: 0.9;
+  }
+  
+  .backdrop-blur {
+    background: var(--color-secondary-50);
+    opacity: 0.95;
   }
 }
 

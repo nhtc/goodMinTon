@@ -1239,7 +1239,7 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: colorfulGradient var(--animation-duration-slow) ease-in-out infinite;
+  animation: colorfulGradient var(--transition-duration-slow) ease-in-out infinite;
 }
 
 @keyframes colorfulGradient {
@@ -1269,15 +1269,15 @@
 }
 
 .statCard {
-  background: linear-gradient(145deg, var(--color-background-card), var(--color-background-subtle));
-  border-radius: var(--radius-3xl);
+  background: linear-gradient(145deg, var(--card-background), var(--color-secondary-50));
+  border-radius: var(--border-radius-2xl);
   padding: var(--spacing-10) var(--spacing-8);
   text-align: center;
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
-  border: 2px solid var(--color-border-subtle);
+  border: 2px solid var(--card-border-color);
   box-shadow: var(--shadow-lg);
-  transition: all var(--transition-duration-normal) var(--transition-timing-smooth);
+  transition: all var(--transition-duration-base) var(--transition-timing-ease);
   position: relative;
   overflow: hidden;
 }
@@ -1297,8 +1297,8 @@
     var(--color-primary-400) 100%
   );
   background-size: 300% 100%;
-  animation: friendlyCardGlow var(--animation-duration-slow) ease-in-out infinite;
-  border-radius: var(--radius-3xl) var(--radius-3xl) 0 0;
+  animation: friendlyCardGlow var(--transition-duration-slow) ease-in-out infinite;
+  border-radius: var(--border-radius-2xl) var(--border-radius-2xl) 0 0;
 }
 
 @keyframes friendlyCardGlow {
@@ -1314,16 +1314,16 @@
 
 .statCard:hover {
   transform: translateY(-12px) scale(1.03);
-  background: linear-gradient(145deg, var(--color-background-primary), var(--color-background-card));
+  background: linear-gradient(145deg, var(--color-primary-50), var(--card-background));
   box-shadow: var(--shadow-xl);
-  border-color: var(--color-border-primary);
+  border-color: var(--color-primary-200);
 }
 
 .statIcon {
   font-size: var(--font-size-4xl);
   margin-bottom: var(--spacing-6);
-  filter: drop-shadow(0 4px 8px var(--color-shadow-light));
-  animation: iconBounce var(--animation-duration-base) ease-in-out infinite;
+  filter: drop-shadow(0 4px 8px var(--color-secondary-300));
+  animation: iconBounce var(--transition-duration-base) ease-in-out infinite;
 }
 
 @keyframes iconBounce {
@@ -1337,21 +1337,19 @@
 
 .statNumber {
   font-size: var(--font-size-3xl);
-  font-weight: var(--font-weight-black);
+  font-weight: var(--font-weight-extrabold);
   margin-bottom: var(--spacing-3);
   background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-600), var(--color-primary-500));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: var(--shadow-text-subtle);
 }
 
 .statLabel {
   font-size: var(--font-size-lg);
-  color: var(--color-text-secondary);
+  color: var(--color-secondary-600);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-relaxed);
-  text-shadow: var(--shadow-text-light);
 }
 
 /* Charts Section with design tokens */
@@ -1370,14 +1368,14 @@
 
 /* Enhanced friendly charts with design tokens */
 .chartCard {
-  background: linear-gradient(145deg, var(--color-background-card), var(--color-background-subtle));
-  border-radius: var(--radius-3xl);
+  background: linear-gradient(145deg, var(--card-background), var(--color-secondary-50));
+  border-radius: var(--border-radius-2xl);
   padding: var(--spacing-12) var(--spacing-10);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
-  border: 2px solid var(--color-border-subtle);
+  border: 2px solid var(--card-border-color);
   box-shadow: var(--shadow-xl);
-  transition: all var(--transition-duration-normal) var(--transition-timing-smooth);
+  transition: all var(--transition-duration-base) var(--transition-timing-ease);
   position: relative;
   overflow: hidden;
 }
@@ -1397,8 +1395,8 @@
     var(--color-accent-300) 100%
   );
   background-size: 300% 100%;
-  animation: friendlyChartGlow var(--animation-duration-slowest) ease-in-out infinite;
-  border-radius: var(--radius-3xl) var(--radius-3xl) 0 0;
+  animation: friendlyChartGlow var(--transition-duration-slow) ease-in-out infinite;
+  border-radius: var(--border-radius-2xl) var(--border-radius-2xl) 0 0;
 }
 
 @keyframes friendlyChartGlow {
@@ -1418,14 +1416,13 @@
 .chartTitle {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-extrabold);
-  color: var(--color-text-primary);
+  color: var(--color-secondary-900);
   margin-bottom: var(--spacing-8);
   text-align: center;
   background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-600), var(--color-primary-500));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: var(--shadow-text-subtle);
 }
 
 .chartContainer {

@@ -1,0 +1,411 @@
+/* ========================================
+ * COMMON UTILITY CLASSES USING DESIGN TOKENS
+ * Consolidated patterns to reduce CSS duplication
+ * ======================================== */
+
+/* ========================================
+ * BUTTON UTILITIES
+ * ======================================== */
+
+/* Base button reset and common styles */
+.btn-reset {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Button variants using design tokens */
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
+  border: 2px solid var(--color-primary-600);
+  color: var(--color-secondary-50);
+  padding: var(--spacing-3) var(--spacing-6);
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  transition: all var(--transition-duration-base) var(--transition-timing-ease);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-800) 100%);
+  border-color: var(--color-primary-700);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, var(--color-secondary-100) 0%, var(--color-secondary-200) 100%);
+  border: 2px solid var(--color-secondary-300);
+  color: var(--color-secondary-700);
+  padding: var(--spacing-3) var(--spacing-6);
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  transition: all var(--transition-duration-base) var(--transition-timing-ease);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(135deg, var(--color-secondary-200) 0%, var(--color-secondary-300) 100%);
+  border-color: var(--color-secondary-400);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-accent {
+  background: linear-gradient(135deg, var(--color-accent-500) 0%, var(--color-accent-600) 100%);
+  border: 2px solid var(--color-accent-500);
+  color: var(--color-secondary-50);
+  padding: var(--spacing-3) var(--spacing-6);
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  transition: all var(--transition-duration-base) var(--transition-timing-ease);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-accent:hover {
+  background: linear-gradient(135deg, var(--color-accent-600) 0%, var(--color-accent-700) 100%);
+  border-color: var(--color-accent-600);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Button sizes */
+.btn-sm {
+  padding: var(--spacing-2) var(--spacing-4);
+  font-size: var(--font-size-xs);
+  min-height: var(--button-height-sm);
+}
+
+.btn-base {
+  padding: var(--spacing-3) var(--spacing-6);
+  font-size: var(--font-size-sm);
+  min-height: var(--button-height-base);
+}
+
+.btn-lg {
+  padding: var(--spacing-4) var(--spacing-8);
+  font-size: var(--font-size-base);
+  min-height: var(--button-height-lg);
+}
+
+/* ========================================
+ * CARD UTILITIES
+ * ======================================== */
+
+.card-base {
+  background: var(--card-background);
+  border: 1px solid var(--card-border-color);
+  border-radius: var(--card-border-radius);
+  padding: var(--card-padding);
+  box-shadow: var(--card-shadow);
+  transition: all var(--transition-duration-base) var(--transition-timing-ease);
+}
+
+.card-hover {
+  cursor: pointer;
+}
+
+.card-hover:hover {
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.card-interactive {
+  background: linear-gradient(145deg, var(--card-background), var(--color-secondary-50));
+  border: 2px solid var(--card-border-color);
+  border-radius: var(--border-radius-xl);
+  transition: all var(--transition-duration-base) var(--transition-timing-ease);
+  position: relative;
+  overflow: hidden;
+}
+
+.card-interactive:hover {
+  border-color: var(--color-primary-300);
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-4px) scale(1.02);
+}
+
+/* ========================================
+ * INPUT UTILITIES
+ * ======================================== */
+
+.input-base {
+  width: 100%;
+  padding: var(--input-padding-x);
+  border: var(--input-border-width) solid var(--input-border-color);
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-sm);
+  color: var(--color-secondary-900);
+  background: var(--card-background);
+  transition: all var(--transition-duration-fast) var(--transition-timing-ease);
+  min-height: var(--input-height-base);
+}
+
+.input-base:focus {
+  outline: none;
+  border-color: var(--input-border-color-focus);
+  box-shadow: 0 0 0 var(--focus-ring-width) var(--color-primary-200);
+}
+
+.input-error {
+  border-color: var(--color-error-500);
+}
+
+.input-error:focus {
+  border-color: var(--color-error-600);
+  box-shadow: 0 0 0 var(--focus-ring-width) var(--color-error-200);
+}
+
+/* ========================================
+ * ANIMATION UTILITIES
+ * ======================================== */
+
+.animate-fade-in {
+  animation: fadeIn var(--transition-duration-base) var(--transition-timing-ease);
+}
+
+.animate-slide-up {
+  animation: slideUp var(--transition-duration-base) var(--transition-timing-ease);
+}
+
+.animate-bounce {
+  animation: bounce var(--transition-duration-base) ease-in-out infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+/* ========================================
+ * LAYOUT UTILITIES
+ * ======================================== */
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.flex-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.grid-auto-fit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-6);
+}
+
+/* ========================================
+ * SPACING UTILITIES
+ * ======================================== */
+
+.gap-1 { gap: var(--spacing-1); }
+.gap-2 { gap: var(--spacing-2); }
+.gap-3 { gap: var(--spacing-3); }
+.gap-4 { gap: var(--spacing-4); }
+.gap-6 { gap: var(--spacing-6); }
+.gap-8 { gap: var(--spacing-8); }
+
+.p-0 { padding: var(--spacing-0); }
+.p-1 { padding: var(--spacing-1); }
+.p-2 { padding: var(--spacing-2); }
+.p-3 { padding: var(--spacing-3); }
+.p-4 { padding: var(--spacing-4); }
+.p-6 { padding: var(--spacing-6); }
+.p-8 { padding: var(--spacing-8); }
+
+.m-0 { margin: var(--spacing-0); }
+.m-1 { margin: var(--spacing-1); }
+.m-2 { margin: var(--spacing-2); }
+.m-3 { margin: var(--spacing-3); }
+.m-4 { margin: var(--spacing-4); }
+.m-6 { margin: var(--spacing-6); }
+.m-8 { margin: var(--spacing-8); }
+
+/* ========================================
+ * FOCUS AND ACCESSIBILITY UTILITIES
+ * ======================================== */
+
+.focus-ring {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.focus-visible {
+  outline: none;
+}
+
+.focus-visible:focus-visible {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ========================================
+ * BACKDROP AND MODAL UTILITIES
+ * ======================================== */
+
+.backdrop-blur {
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--modal-backdrop-color);
+  z-index: var(--z-index-modal-backdrop);
+}
+
+.modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--card-background);
+  border-radius: var(--modal-border-radius);
+  box-shadow: var(--shadow-xl);
+  z-index: var(--z-index-modal);
+  max-width: var(--modal-max-width);
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+/* ========================================
+ * RESPONSIVE UTILITIES
+ * ======================================== */
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  .btn-primary,
+  .btn-secondary,
+  .btn-accent {
+    min-height: var(--button-height-lg);
+    padding: var(--spacing-4) var(--spacing-6);
+  }
+  
+  .input-base {
+    min-height: var(--button-height-lg);
+    padding: var(--spacing-4);
+  }
+  
+  .card-hover {
+    transform: none !important;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-bounce,
+  .animate-pulse {
+    animation: none !important;
+  }
+  
+  .btn-primary,
+  .btn-secondary,
+  .btn-accent,
+  .card-hover,
+  .card-interactive {
+    transition: none !important;
+  }
+  
+  .card-hover:hover,
+  .card-interactive:hover {
+    transform: none !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .card-base,
+  .card-interactive {
+    border-width: 2px;
+  }
+  
+  .btn-primary,
+  .btn-secondary,
+  .btn-accent {
+    border-width: 2px;
+  }
+}

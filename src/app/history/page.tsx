@@ -805,8 +805,7 @@ const HistoryPage = () => {
                                       />
                                     ) : null}
                                     <div 
-                                      className={styles.participantAvatarFallback}
-                                      style={{ display: participant.avatar ? 'none' : 'flex' }}
+                                      className={`${styles.participantAvatarFallback} ${participant.avatar ? styles.avatarHidden : styles.avatarVisible}`}
                                     >
                                       {participant.name.charAt(0).toUpperCase()}
                                     </div>
