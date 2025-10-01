@@ -1,5 +1,4 @@
 /* NavbarLogo Component Styles with Design Tokens */
-@import '../../styles/design-tokens.css';
 
 .navbarLogo {
   display: flex;

@@ -1,9 +1,6 @@
 /* ===== MODERN NAVBAR STYLES WITH RADIX UI & DESIGN TOKENS ===== */
 /* Enhanced Navbar component using Radix UI primitives and design tokens */
 
-/* Import design tokens */
-@import '../styles/design-tokens.css';
-
 /* ===== BASE NAVBAR STYLES ===== */
 .navbarWrapper {
   position: sticky;
@@ -514,7 +511,12 @@
 
 /* ===== REDUCED MOTION SUPPORT ===== */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  .navbarWrapper,
+  .navbarNav,
+  .navbarNavLink,
+  .userInfo,
+  .loginBtn,
+  .mobileNavLink {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

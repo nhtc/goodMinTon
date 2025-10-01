@@ -1,5 +1,4 @@
 /* UserAvatar Component Styles with Design Tokens */
-@import '../../styles/design-tokens.css';
 
 .userAvatar {
   border-radius: var(--border-radius-full);

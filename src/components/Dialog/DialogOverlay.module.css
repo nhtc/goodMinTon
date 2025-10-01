@@ -1,0 +1,30 @@
+/* Dialog Overlay Styles */
+.overlay {
+  background: var(--modal-backdrop-color);
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-index-modal-backdrop);
+  animation: fadeIn var(--transition-duration-slow) var(--transition-timing-ease-out);
+}
+
+.blur {
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Support for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .overlay {
+    animation: none;
+  }
+}

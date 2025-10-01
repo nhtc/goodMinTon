@@ -5,6 +5,7 @@ import _ from "lodash"
 import { EditableContent, usePermissions } from "./AuthorizedComponent"
 import { useText } from "../hooks/useText"
 import { TEXT_CONSTANTS } from "../lib/constants/text"
+import { FormField, FormLabel, FormInput, FormSection, FormActions, FormMessage } from "./Form"
 import styles from "./GameForm.module.css"
 
 interface Member {
@@ -556,37 +557,28 @@ const GameForm: React.FC<GameFormProps> = ({
           <div className={styles.sectionContent}>
             {/* Date field - full width */}
             <div className={styles.formRow}>
-              <div className={styles.fieldGroup}>
-                <label
-                  htmlFor='date'
-                  className={`${styles.fieldLabel} ${styles.friendly}`}
-                >
+              <FormField error={errors.date}>
+                <FormLabel htmlFor="date" required>
                   <span className={styles.labelIcon}>📅</span>
                   <span className={styles.labelText}>{text.field.gameDate()}</span>
-                  <span className={styles.requiredStar}>*</span>
-                </label>
-                <div className={styles.inputWrapper}>
-                  <input
-                    type='date'
-                    id='date'
-                    value={date}
-                    onChange={e => {
-                      setDate(e.target.value)
-                      if (errors.date) setErrors(prev => _.omit(prev, "date"))
-                    }}
-                    className={`${styles.formInput} ${styles.friendly} ${
-                      errors.date ? "error" : ""
-                    }`}
-                    max={new Date().toISOString().split("T")[0]}
-                  />
-                  <div className={styles.inputGlow}></div>
-                </div>
+                </FormLabel>
+                <FormInput
+                  type="date"
+                  id="date"
+                  value={date}
+                  onChange={e => {
+                    setDate(e.target.value)
+                    if (errors.date) setErrors(prev => _.omit(prev, "date"))
+                  }}
+                  max={new Date().toISOString().split("T")[0]}
+                  hasError={!!errors.date}
+                />
                 {errors.date && (
-                  <div className={`${styles.fieldError} ${styles.friendly}`}>
-                    <span>😅 {errors.date}</span>
-                  </div>
+                  <FormMessage variant="error">
+                    😅 {errors.date}
+                  </FormMessage>
                 )}
-              </div>
+              </FormField>
             </div>
 
             {/* Location field - full width */}

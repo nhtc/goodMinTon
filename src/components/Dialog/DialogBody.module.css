@@ -1,0 +1,74 @@
+/* Dialog Body Styles */
+.body {
+  padding: 0 var(--spacing-6) var(--spacing-6) var(--spacing-6);
+  flex: 1;
+  min-height: 0;
+}
+
+.bodyNoPadding {
+  padding: 0;
+  flex: 1;
+  min-height: 0;
+}
+
+.bodySmallPadding {
+  padding: 0 var(--spacing-4) var(--spacing-4) var(--spacing-4);
+  flex: 1;
+  min-height: 0;
+}
+
+.bodyLargePadding {
+  padding: 0 var(--spacing-8) var(--spacing-8) var(--spacing-8);
+  flex: 1;
+  min-height: 0;
+}
+
+.scrollable {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.noScroll {
+  overflow: hidden;
+}
+
+/* Custom scrollbar styling */
+.scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollable::-webkit-scrollbar-track {
+  background: var(--color-secondary-100);
+  border-radius: var(--border-radius-full);
+}
+
+.scrollable::-webkit-scrollbar-thumb {
+  background: var(--color-secondary-300);
+  border-radius: var(--border-radius-full);
+  transition: background var(--transition-duration-base) var(--transition-timing-ease);
+}
+
+.scrollable::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary-400);
+}
+
+/* Firefox scrollbar */
+.scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-secondary-300) var(--color-secondary-100);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .body {
+    padding: 0 var(--spacing-4) var(--spacing-4) var(--spacing-4);
+  }
+  
+  .bodySmallPadding {
+    padding: 0 var(--spacing-3) var(--spacing-3) var(--spacing-3);
+  }
+  
+  .bodyLargePadding {
+    padding: 0 var(--spacing-6) var(--spacing-6) var(--spacing-6);
+  }
+}

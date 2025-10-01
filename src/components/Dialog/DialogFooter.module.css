@@ -1,0 +1,51 @@
+/* Dialog Footer Styles */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-6);
+  border-top: 1px solid var(--color-secondary-200);
+  background: var(--card-background);
+  flex-shrink: 0;
+}
+
+.sticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+}
+
+/* Justify content variants */
+.justifyStart {
+  justify-content: flex-start;
+}
+
+.justifyCenter {
+  justify-content: center;
+}
+
+.justifyEnd {
+  justify-content: flex-end;
+}
+
+.justifyBetween {
+  justify-content: space-between;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .footer {
+    padding: var(--spacing-4);
+    gap: var(--spacing-2);
+    flex-direction: column-reverse;
+  }
+  
+  .footer > * {
+    width: 100%;
+  }
+  
+  .justifyBetween {
+    flex-direction: column-reverse;
+    gap: var(--spacing-3);
+  }
+}

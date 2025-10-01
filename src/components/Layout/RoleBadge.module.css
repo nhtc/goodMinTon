@@ -1,5 +1,4 @@
 /* RoleBadge Component Styles with Design Tokens */
-@import '../../styles/design-tokens.css';
 
 .roleBadge {
   display: inline-flex;

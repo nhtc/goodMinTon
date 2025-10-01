@@ -1,5 +1,4 @@
 /* AuthenticationState Component Styles with Design Tokens */
-@import '../styles/design-tokens.css';
 
 .authState {
   display: flex;

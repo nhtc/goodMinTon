@@ -1,0 +1,44 @@
+/* Form Field Styles */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-4);
+}
+
+.errorMessage {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-error-600);
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--color-error-50);
+  border: 1px solid var(--color-error-200);
+  border-radius: var(--border-radius-md);
+  animation: slideIn var(--transition-duration-base) var(--transition-timing-ease-out);
+}
+
+.errorIcon {
+  flex-shrink: 0;
+  font-size: var(--font-size-base);
+}
+
+/* Animation for error message */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Support for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .errorMessage {
+    animation: none;
+  }
+}

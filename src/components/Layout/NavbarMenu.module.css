@@ -1,5 +1,4 @@
 /* NavbarMenu Component Styles with Design Tokens */
-@import '../../styles/design-tokens.css';
 
 .navbarMenu {
   display: none;

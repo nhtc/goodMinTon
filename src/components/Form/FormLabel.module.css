@@ -1,0 +1,32 @@
+/* Form Label Styles */
+.label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-secondary-700);
+  margin-bottom: var(--spacing-1);
+  cursor: pointer;
+  transition: color var(--transition-duration-base) var(--transition-timing-ease);
+}
+
+.label:hover {
+  color: var(--color-secondary-900);
+}
+
+.icon {
+  font-size: var(--font-size-base);
+  flex-shrink: 0;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+
+.required {
+  color: var(--color-error-500);
+  font-weight: var(--font-weight-bold);
+  margin-left: var(--spacing-1);
+}

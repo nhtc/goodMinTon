@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react'
-import Modal from './Modal'
+import { BaseDialog, DialogHeader, DialogBody, DialogFooter } from './Dialog'
 import ConfirmationModal from './ConfirmationModal'
 import PersonalEventForm from './PersonalEventForm'
 import { AuthorizedComponent } from './AuthorizedComponent'
@@ -200,32 +200,35 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
   // If showing edit form
   if (showEditForm && currentEvent) {
     return (
-      <Modal 
-        isOpen={isOpen} 
-        onClose={() => setShowEditForm(false)}
-        title="Chỉnh sửa sự kiện"
-        size="large"
+      <BaseDialog 
+        open={isOpen} 
+        onOpenChange={(open) => !open && setShowEditForm(false)}
+        size="lg"
         disableOverlayClose={true}
       >
-        <PersonalEventForm
-          onSubmit={handleFormSubmit}
-          initialData={currentEvent}
-          isEditing={true}
-          isSubmitting={isSubmitting}
-        />
-      </Modal>
+        <DialogHeader title="Chỉnh sửa sự kiện" />
+        <DialogBody>
+          <PersonalEventForm
+            onSubmit={handleFormSubmit}
+            initialData={currentEvent}
+            isEditing={true}
+            isSubmitting={isSubmitting}
+          />
+        </DialogBody>
+      </BaseDialog>
     )
   }
 
   return (
     <>
-      <Modal 
-        isOpen={isOpen} 
-        onClose={onClose}
-        size="large"
-        title={currentEvent?.title}
+      <BaseDialog 
+        open={isOpen} 
+        onOpenChange={(open) => !open && onClose()}
+        size="lg"
         disableOverlayClose={true}
       >
+        <DialogHeader title={currentEvent?.title} />
+        <DialogBody>
         <div className={styles.modalContent}>
           {/* Event Header */}
           <div className={styles.eventHeader}>
@@ -557,7 +560,8 @@ const PersonalEventDetailsModal: React.FC<PersonalEventModalProps> = ({
             </div>
           </div>
         </div>
-      </Modal>
+        </DialogBody>
+      </BaseDialog>
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal

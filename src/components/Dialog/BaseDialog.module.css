@@ -1,0 +1,187 @@
+/* Base Dialog Content Styles */
+.content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: var(--modal-max-width);
+  max-height: 85vh;
+  background: var(--card-background);
+  border-radius: var(--modal-border-radius);
+  box-shadow: var(--shadow-xl);
+  z-index: var(--z-index-modal);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideIn var(--transition-duration-slow) var(--transition-timing-ease-out);
+  /* Performance optimizations */
+  contain: layout style paint;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* Size variants */
+.contentSm {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: 24rem; /* 384px */
+  max-height: 85vh;
+  background: var(--card-background);
+  border-radius: var(--modal-border-radius);
+  box-shadow: var(--shadow-xl);
+  z-index: var(--z-index-modal);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideIn var(--transition-duration-slow) var(--transition-timing-ease-out);
+  contain: layout style paint;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.contentLg {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: 48rem; /* 768px */
+  max-height: 90vh;
+  background: var(--card-background);
+  border-radius: var(--modal-border-radius);
+  box-shadow: var(--shadow-xl);
+  z-index: var(--z-index-modal);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideIn var(--transition-duration-slow) var(--transition-timing-ease-out);
+  contain: layout style paint;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.contentXl {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 95vw;
+  max-width: 64rem; /* 1024px */
+  max-height: 95vh;
+  background: var(--card-background);
+  border-radius: var(--modal-border-radius);
+  box-shadow: var(--shadow-xl);
+  z-index: var(--z-index-modal);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideIn var(--transition-duration-slow) var(--transition-timing-ease-out);
+  contain: layout style paint;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.contentFull {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+  background: var(--card-background);
+  border-radius: 0;
+  box-shadow: none;
+  z-index: var(--z-index-modal);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideIn var(--transition-duration-slow) var(--transition-timing-ease-out);
+  contain: layout style paint;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Focus styles for accessibility */
+.content:focus,
+.contentSm:focus,
+.contentLg:focus,
+.contentXl:focus,
+.contentFull:focus {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .content,
+  .contentSm,
+  .contentLg,
+  .contentXl {
+    width: 95vw;
+    max-height: 90vh;
+  }
+}
+
+@media (max-width: 640px) {
+  .content,
+  .contentSm,
+  .contentLg,
+  .contentXl {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    top: 0;
+    left: 0;
+    transform: none;
+  }
+  
+  .content,
+  .contentSm,
+  .contentLg,
+  .contentXl {
+    animation: slideInMobile var(--transition-duration-slow) var(--transition-timing-ease-out);
+  }
+}
+
+/* Mobile slide animation */
+@keyframes slideInMobile {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Support for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .content,
+  .contentSm,
+  .contentLg,
+  .contentXl,
+  .contentFull {
+    animation: none;
+  }
+}

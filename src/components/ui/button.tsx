@@ -6,39 +6,42 @@ import { cn } from "../../lib/utils"
 
 // Base button styles following design system
 const BASE_BUTTON_STYLES = [
-  "inline-flex items-center justify-center whitespace-nowrap",
-  "rounded-lg text-sm font-medium transition-all duration-200",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2",
-  "disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed"
+  "inline-flex items-center justify-center whitespace-nowrap gap-2",
+  "rounded-lg text-sm font-medium transition-all",
+  "duration-200 ease-in-out cursor-pointer",
+  "focus-visible:outline-none focus-visible:ring-2",
+  "focus-visible:ring-primary-500 focus-visible:ring-offset-2",
+  "disabled:pointer-events-none disabled:opacity-50",
+  "disabled:cursor-not-allowed active:scale-95"
 ].join(" ")
 
 // Hover animation styles for elevated buttons
-const ELEVATED_HOVER_STYLES = "shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+const ELEVATED_HOVER_STYLES = "shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
 
 /**
  * Button variant configurations using design tokens
  */
 const BUTTON_VARIANTS = {
-  primary: `bg-primary-600 text-white hover:bg-primary-700 ${ELEVATED_HOVER_STYLES}`,
+  primary: `bg-primary-600 text-white border border-primary-600 hover:bg-primary-700 hover:border-primary-700 ${ELEVATED_HOVER_STYLES}`,
   secondary: `bg-white text-secondary-700 border border-secondary-300 hover:bg-secondary-50 hover:border-secondary-400 ${ELEVATED_HOVER_STYLES}`,
-  accent: `bg-accent-600 text-white hover:bg-accent-700 ${ELEVATED_HOVER_STYLES}`,
-  outline: `bg-transparent text-primary-600 border border-primary-600 hover:bg-primary-50 ${ELEVATED_HOVER_STYLES}`,
-  ghost: "bg-transparent text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900",
-  success: `bg-success-600 text-white hover:bg-success-700 ${ELEVATED_HOVER_STYLES}`,
-  warning: `bg-warning-600 text-white hover:bg-warning-700 ${ELEVATED_HOVER_STYLES}`,
-  error: `bg-error-600 text-white hover:bg-error-700 ${ELEVATED_HOVER_STYLES}`,
-  link: "text-primary-600 underline-offset-4 hover:underline bg-transparent p-0 h-auto",
+  accent: `bg-accent-600 text-white border border-accent-600 hover:bg-accent-700 hover:border-accent-700 ${ELEVATED_HOVER_STYLES}`,
+  outline: `bg-transparent text-primary-600 border border-primary-600 hover:bg-primary-50 hover:border-primary-700 ${ELEVATED_HOVER_STYLES}`,
+  ghost: "bg-transparent text-secondary-600 border border-transparent hover:bg-secondary-100 hover:text-secondary-900",
+  success: `bg-success-600 text-white border border-success-600 hover:bg-success-700 hover:border-success-700 ${ELEVATED_HOVER_STYLES}`,
+  warning: `bg-warning-600 text-white border border-warning-600 hover:bg-warning-700 hover:border-warning-700 ${ELEVATED_HOVER_STYLES}`,
+  destructive: `bg-error-600 text-white border border-error-600 hover:bg-error-700 hover:border-error-700 ${ELEVATED_HOVER_STYLES}`,
+  link: "text-primary-600 underline-offset-4 hover:underline bg-transparent border-transparent p-0 h-auto",
 }
 
 /**
- * Button size configurations
+ * Button size configurations using design tokens
  */
 const BUTTON_SIZES = {
-  sm: "h-8 px-3 text-xs rounded-md",
-  base: "h-10 px-4 py-2",
-  lg: "h-12 px-6 text-base rounded-lg",
-  xl: "h-14 px-8 text-lg rounded-xl",
-  icon: "h-10 w-10",
+  sm: "h-8 px-3 text-xs rounded-md min-w-16",
+  base: "h-10 px-4 py-2 text-sm rounded-lg min-w-20",
+  lg: "h-12 px-6 text-base rounded-lg min-w-24",
+  xl: "h-14 px-8 text-lg rounded-xl min-w-28",
+  icon: "h-10 w-10 p-0 rounded-lg",
 }
 
 const buttonVariants = cva(BASE_BUTTON_STYLES, {

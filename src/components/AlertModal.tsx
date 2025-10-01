@@ -1,5 +1,5 @@
 import React from 'react'
-import styles from './AlertModal.module.css'
+import { AlertDialog } from './Dialog'
 
 interface AlertModalProps {
   isOpen: boolean
@@ -24,68 +24,25 @@ const AlertModal: React.FC<AlertModalProps> = ({
   showCloseButton = true,
   actions = []
 }) => {
-  if (!isOpen) return null
-
-  const getIcon = () => {
-    switch (type) {
-      case 'success': return '✅'
-      case 'error': return '❌'
-      case 'warning': return '⚠️'
-      case 'info': return 'ℹ️'
-      default: return 'ℹ️'
-    }
-  }
-
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
       onClose()
     }
   }
 
   return (
-    <div className={styles.overlay} onClick={handleOverlayClick}>
-      <div className={`${styles.modal} ${styles[type]}`}>
-        <div className={styles.header}>
-          <div className={styles.iconContainer}>
-            <span className={styles.icon}>{getIcon()}</span>
-          </div>
-          <h3 className={styles.title}>{title}</h3>
-          {showCloseButton && (
-            <button
-              onClick={onClose}
-              className={styles.closeButton}
-            >
-              ✕
-            </button>
-          )}
-        </div>
-        
-        <div className={styles.content}>
-          <p className={styles.message}>{message}</p>
-        </div>
-        
-        <div className={styles.actions}>
-          {actions.length > 0 ? (
-            actions.map((action, index) => (
-              <button
-                key={index}
-                onClick={action.onClick}
-                className={`${styles.actionButton} ${styles[action.variant || 'primary']}`}
-              >
-                {action.label}
-              </button>
-            ))
-          ) : (
-            <button
-              onClick={onClose}
-              className={`${styles.actionButton} ${styles.primary}`}
-            >
-              OK
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
+    <AlertDialog
+      open={isOpen}
+      onOpenChange={handleOpenChange}
+      variant={type}
+      title={title}
+      message={message}
+      showCloseButton={showCloseButton}
+      actions={actions.map(action => ({
+        ...action,
+        type: action.variant || 'primary'
+      }))}
+    />
   )
 }
 

@@ -1,6 +1,5 @@
 import React from "react"
-import Modal from "./Modal"
-import styles from "./ConfirmationModal.module.css"
+import { ConfirmationDialog } from "./Dialog"
 
 interface ConfirmationModalProps {
   isOpen: boolean
@@ -25,67 +24,28 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   type = "danger",
   isLoading = false,
 }) => {
-  const handleConfirm = () => {
-    if (!isLoading) {
-      onConfirm()
-    }
-  }
-
-  const handleCancel = () => {
-    if (!isLoading) {
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
       onClose()
     }
   }
 
+  // Map type to variant for ConfirmationDialog
+  const variant = type === "danger" ? "destructive" : "default"
+
   return (
-    <Modal isOpen={isOpen} onClose={handleCancel} showHeader={false}>
-      <div className={styles.confirmationModal}>
-        {/* Icon */}
-        <div className={`${styles.icon} ${styles[type]}`}>
-          {type === "danger" && "⚠️"}
-          {type === "warning" && "🚨"}
-          {type === "info" && "ℹ️"}
-        </div>
-
-        {/* Content */}
-        <div className={styles.content}>
-          <h3 className={styles.title}>{title}</h3>
-          <p className={styles.message}>{message}</p>
-        </div>
-
-        {/* Actions */}
-        <div className={styles.actions}>
-          <button
-            onClick={handleCancel}
-            className={`${styles.button} ${styles.cancelButton}`}
-            disabled={isLoading}
-          >
-            <span className={styles.buttonIcon}>❌</span>
-            <span>{cancelText}</span>
-          </button>
-          
-          <button
-            onClick={handleConfirm}
-            className={`${styles.button} ${styles.confirmButton} ${styles[type]}`}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <div className={styles.spinner}></div>
-                <span>Đang xử lý...</span>
-              </>
-            ) : (
-              <>
-                <span className={styles.buttonIcon}>
-                  {type === "danger" ? "🗑️" : "✅"}
-                </span>
-                <span>{confirmText}</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    </Modal>
+    <ConfirmationDialog
+      open={isOpen}
+      onOpenChange={handleOpenChange}
+      title={title}
+      description={message}
+      confirmText={confirmText}
+      cancelText={cancelText}
+      onConfirm={onConfirm}
+      onCancel={onClose}
+      variant={variant}
+      loading={isLoading}
+    />
   )
 }
 

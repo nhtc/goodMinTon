@@ -1,0 +1,168 @@
+/* Confirmation Dialog Styles */
+.confirmButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-4);
+  height: var(--button-height-base);
+  background: var(--color-primary-600);
+  color: white;
+  border: 1px solid var(--color-primary-600);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-duration-base) var(--transition-timing-ease);
+  outline: none;
+}
+
+.confirmButton:hover:not(:disabled) {
+  background: var(--color-primary-700);
+  border-color: var(--color-primary-700);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.confirmButton:focus {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.confirmButton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.confirmButton:disabled {
+  opacity: var(--state-disabled-opacity);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.confirmButtonDestructive {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-4);
+  height: var(--button-height-base);
+  background: var(--color-error-600);
+  color: white;
+  border: 1px solid var(--color-error-600);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-duration-base) var(--transition-timing-ease);
+  outline: none;
+}
+
+.confirmButtonDestructive:hover:not(:disabled) {
+  background: var(--color-error-700);
+  border-color: var(--color-error-700);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.confirmButtonDestructive:focus {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-error-500);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.confirmButtonDestructive:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.confirmButtonDestructive:disabled {
+  opacity: var(--state-disabled-opacity);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.cancelButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2) var(--spacing-4);
+  height: var(--button-height-base);
+  background: var(--card-background);
+  color: var(--color-secondary-700);
+  border: 1px solid var(--color-secondary-300);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-duration-base) var(--transition-timing-ease);
+  outline: none;
+}
+
+.cancelButton:hover:not(:disabled) {
+  background: var(--color-secondary-50);
+  border-color: var(--color-secondary-400);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.cancelButton:focus {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.cancelButton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.cancelButton:disabled {
+  opacity: var(--state-disabled-opacity);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Loading spinner */
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  animation: spin 1s linear infinite;
+}
+
+.spinnerCircle {
+  animation: dash 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 200;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -35px;
+  }
+  100% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -124px;
+  }
+}
+
+/* Support for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .spinnerCircle {
+    animation: none;
+  }
+}
