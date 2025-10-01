@@ -1,7 +1,7 @@
 /* ===== HISTORY PAGE STYLES ===== */
 .historyPage {
   min-height: 100vh;
-  background: #f8fafc;
+  background: var(--color-background-subtle);
 }
 
 .historyLoading {
@@ -9,15 +9,15 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #f8fafc;
+  background: var(--color-background-subtle);
 }
 
 .loadingContent {
   text-align: center;
-  padding: 2rem;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-8);
+  background: var(--color-background-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
 }
 
 .loadingSpinner {

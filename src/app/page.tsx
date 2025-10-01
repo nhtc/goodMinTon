@@ -73,7 +73,7 @@ const HomePage = () => {
       <Container>
         {/* Hero Section */}
         <Section className={styles.heroSection}>
-          <div className={`text-center  mb-20 ${styles.animateOnScroll}`}>
+          <div className={`text-center mb-20 ${styles.animateOnScroll}`}>
             <h1 className={`${styles.heroTitle} ${styles.colorfulText}`}>
               <TypeAnimation
                 sequence={[
@@ -97,6 +97,10 @@ const HomePage = () => {
                 }}
               />
             </h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mt-6">
+              Hệ thống quản lý câu lạc bộ cầu lông hiện đại, giúp bạn dễ dàng tính toán chi phí, 
+              theo dõi thành viên và tạo QR code thanh toán tự động.
+            </p>
           </div>
 
           {/* Statistics Section */}

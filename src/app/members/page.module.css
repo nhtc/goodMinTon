@@ -33,19 +33,25 @@
 /* ===== OPTIMIZED MEMBERS PAGE STYLES ===== */
 .membersPageBg {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  /* Removed infinite background animation for better performance */
+  background: linear-gradient(135deg, var(--color-background-subtle) 0%, var(--color-secondary-100) 100%);
+  /* Hardware acceleration for better performance */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 .membersHeader {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff7b7b 100%);
-  color: white;
-  padding: 3rem;
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-accent-600) 50%, var(--color-primary-500) 100%);
+  color: var(--color-text-inverted);
+  padding: var(--spacing-12);
   position: relative;
   overflow: hidden;
   will-change: box-shadow;
-  /* Removed infinite glow animation for better performance */
-  box-shadow: 0 20px 60px rgba(102, 126, 234, 0.2);
+  box-shadow: var(--shadow-xl);
+  /* Hardware acceleration */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 /* Add glow effect only on hover for better performance */
@@ -491,9 +497,9 @@
   padding: 1.5rem;
 }
 
-/* Search Section */
+/* Search Section with design tokens */
 .search-section {
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-8);
 }
 
 .search-container {
@@ -504,43 +510,43 @@
 
 .search-icon {
   position: absolute;
-  left: 1rem;
+  left: var(--spacing-4);
   top: 50%;
   transform: translateY(-50%);
-  color: #9ca3af;
-  font-size: 1.125rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
 }
 
 .search-input {
   width: 100%;
-  padding: 1rem 1rem 1rem 3rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  font-size: 1rem;
-  background: white;
-  transition: all 0.2s ease;
+  padding: var(--spacing-4) var(--spacing-4) var(--spacing-4) var(--spacing-12);
+  border: 2px solid var(--color-border-subtle);
+  border-radius: var(--radius-xl);
+  font-size: var(--font-size-base);
+  background: var(--color-background-primary);
+  transition: all var(--transition-duration-fast) ease;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--color-primary-500);
+  box-shadow: var(--shadow-focus);
 }
 
 .search-clear {
   position: absolute;
-  right: 1rem;
+  right: var(--spacing-4);
   top: 50%;
   transform: translateY(-50%);
-  background: #ef4444;
-  color: white;
+  background: var(--color-error-500);
+  color: var(--color-text-inverted);
   border: none;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   width: 24px;
   height: 24px;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-duration-fast) ease;
 }
 
 .search-clear:hover {
@@ -742,6 +748,18 @@
   top: 0;
   left: 0;
   z-index: 0;
+}
+
+.avatarHidden {
+  display: none !important;
+}
+
+.avatarVisible {
+  display: flex !important;
+}
+
+.avatarImageHidden {
+  display: none !important;
 }
 
 .avatarCircle::before {

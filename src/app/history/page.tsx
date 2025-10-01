@@ -3,6 +3,7 @@ import React, { useEffect, useState, lazy, Suspense } from "react"
 import Link from "next/link"
 import styles from "./page.module.css"
 import { apiService } from "../../lib/api"
+import { Container, Section, PageHeader } from "../../components/Layout"
 import {
   AuthorizedComponent,
   EditableContent,
@@ -47,7 +48,7 @@ interface Game {
 const HistoryPage = () => {
   const [games, setGames] = useState<Game[]>([])
   const [members, setMembers] = useState<Member[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>("")
   const [showForm, setShowForm] = useState(false)
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)

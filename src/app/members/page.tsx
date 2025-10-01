@@ -4,6 +4,8 @@ import Link from "next/link"
 import styles from "./page.module.css"
 import Modal from "../../components/Modal"
 import ConfirmationModal from "../../components/ConfirmationModal"
+import { Container, Section, PageHeader } from "../../components/Layout"
+import { StatCard } from "../../components/Card"
 import {
   AuthorizedComponent,
   EditableContent,
@@ -475,15 +477,14 @@ const MembersPage = () => {
                             className={styles.avatarImage}
                             onError={(e) => {
                               // Fallback to initials if image fails to load
-                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.classList.add(styles.avatarImageHidden);
                               const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                              if (fallback) fallback.style.display = 'flex';
+                              if (fallback) fallback.classList.remove(styles.avatarHidden);
                             }}
                           />
                         ) : null}
                         <div 
-                          className={styles.avatarFallback}
-                          style={{ display: member.avatar ? 'none' : 'flex' }}
+                          className={`${styles.avatarFallback} ${member.avatar ? styles.avatarHidden : styles.avatarVisible}`}
                         >
                           {member.name.charAt(0).toUpperCase()}
                         </div>
