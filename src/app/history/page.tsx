@@ -28,6 +28,7 @@ interface Member {
   paidAt?: string // Payment timestamp
   prePaid?: number // ✅ Add pre-paid amount
   prePaidCategory?: string // ✅ Add pre-paid category
+  customAmount?: number // ✅ Add custom amount for this participant
 }
 
 interface Game {
@@ -93,7 +94,9 @@ const HistoryPage = () => {
     costPerMember: number
   ) => {
     const prePaid = participant.prePaid || 0
-    return costPerMember - prePaid // Allow negative values for overpayment
+    const customAmount = participant.customAmount || 0
+    const actualAmount = costPerMember + customAmount - prePaid
+    return actualAmount
   }
 
   // ✅ Helper function to get total pre-paid for a game
@@ -757,6 +760,8 @@ const HistoryPage = () => {
                               game.costPerMember
                             )
                             const prePaid = participant.prePaid || 0
+                            const customAmount = participant.customAmount || 0
+                            const actualAmount = game.costPerMember + customAmount // Total amount they need to pay
 
                             return (
                               <div
@@ -817,21 +822,33 @@ const HistoryPage = () => {
                                       {participant.name}
                                     </div>
                                     <div className={styles.participantAmount}>
-                                      {/* ✅ Show remaining amount instead of full cost */}
-                                      {prePaid > 0 ? (
+                                      {/* ✅ Show detailed amount breakdown */}
+                                      {(prePaid > 0 || customAmount > 0) ? (
                                         <div className={styles.amountBreakdown}>
                                           <div
-                                            className={styles.originalAmount}
+                                            className={styles.baseAmount}
                                           >
                                             {game.costPerMember.toLocaleString(
                                               "vi-VN"
                                             )}
                                             đ
                                           </div>
-                                          <div className={styles.prepaidAmount}>
-                                            -💸{prePaid.toLocaleString("vi-VN")}
-                                            đ
-                                          </div>
+                                          
+                                          {/* Custom additional amount */}
+                                          {customAmount > 0 && (
+                                            <div className={styles.customAmount}>
+                                              +⚙️ {customAmount.toLocaleString("vi-VN")}đ
+                                            </div>
+                                          )}
+                                          
+                                          {/* Keep existing prepaid amount display */}
+                                          {prePaid > 0 && (
+                                            <div className={styles.prepaidAmount}>
+                                              -💸{prePaid.toLocaleString("vi-VN")}đ
+                                            </div>
+                                          )}
+                                          
+                                          {/* Final remaining amount */}
                                           <div
                                             className={styles.remainingAmount}
                                           >
@@ -843,9 +860,16 @@ const HistoryPage = () => {
                                           </div>
                                         </div>
                                       ) : (
-                                        `${remainingAmount.toLocaleString(
-                                          "vi-VN"
-                                        )}đ`
+                                        <div>
+                                          {remainingAmount.toLocaleString(
+                                            "vi-VN"
+                                          )}đ
+                                          {customAmount > 0 && (
+                                            <span className={styles.customAmountIndicator} title={`Có thêm phí: +${customAmount.toLocaleString("vi-VN")}đ (Tổng: ${(game.costPerMember + customAmount).toLocaleString("vi-VN")}đ)`}>
+                                              ⚙️
+                                            </span>
+                                          )}
+                                        </div>
                                       )}
                                     </div>
                                     {/* ✅ Move payment time inside participant info */}
@@ -1266,6 +1290,8 @@ const HistoryPage = () => {
                         selectedGame.costPerMember
                       )
                       const prePaid = participant.prePaid || 0
+                      const customAmount = participant.customAmount || 0
+                      const actualAmount = selectedGame.costPerMember + customAmount // Total amount they need to pay
 
                       return (
                         <div
@@ -1310,11 +1336,19 @@ const HistoryPage = () => {
                               >
                                 <div className={styles.breakdownItem}>
                                   <span>
-                                    💰 Phải trả:{" "}
-                                    {selectedGame.costPerMember.toLocaleString(
-                                      "vi-VN"
-                                    )}
-                                    đ
+                                    🏸 Cơ bản: {selectedGame.costPerMember.toLocaleString("vi-VN")}đ
+                                  </span>
+                                </div>
+                                {customAmount > 0 && (
+                                  <div className={`${styles.breakdownItem} ${styles.custom}`}>
+                                    <span>
+                                      ⚙️ Phí thêm: +{customAmount.toLocaleString("vi-VN")}đ
+                                    </span>
+                                  </div>
+                                )}
+                                <div className={`${styles.breakdownItem} ${styles.total}`}>
+                                  <span>
+                                    💰 Tổng phải trả: {(selectedGame.costPerMember + customAmount).toLocaleString("vi-VN")}đ
                                   </span>
                                 </div>
                                 {prePaid > 0 && (

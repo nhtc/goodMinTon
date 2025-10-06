@@ -470,7 +470,37 @@ const PersonalTrackingPage: React.FC = () => {
             mode="view"
             onClose={() => setSelectedEvent(null)}
             onSave={async (data) => {
-              // Handle save if needed
+              try {
+                if (selectedEvent) {
+                  // Update existing event
+                  await updatePersonalEventMutation.mutateAsync({
+                    eventId: selectedEvent.id,
+                    eventData: data as UpdatePersonalEventData
+                  })
+                  addToast('success', TEXT_CONSTANTS.common.messages.success, TEXT_CONSTANTS.personalEvent.messages.eventUpdated)
+                  
+                  // Refetch data to get updated event
+                  const refetchResult = await refetch()
+                  
+                  // Update selectedEvent with fresh data
+                  if (refetchResult.data) {
+                    const updatedEvent = refetchResult.data.data.find((e: PersonalEvent) => e.id === selectedEvent.id)
+                    if (updatedEvent) {
+                      setSelectedEvent(updatedEvent)
+                    }
+                  }
+                } else {
+                  // This shouldn't happen in the details modal since we always have a selectedEvent
+                  // But handle it for completeness
+                  await createPersonalEventMutation.mutateAsync(data as CreatePersonalEventData)
+                  addToast('success', TEXT_CONSTANTS.common.messages.success, TEXT_CONSTANTS.personalEvent.messages.eventCreated)
+                  setSelectedEvent(null)
+                }
+              } catch (error) {
+                console.error('Error saving event:', error)
+                addToast('error', TEXT_CONSTANTS.common.messages.error, TEXT_CONSTANTS.personalEvent.messages.saveError)
+                throw error // Re-throw to let the modal handle the error state
+              }
             }}
             onDelete={async (eventId) => {
               const event = personalEvents.find(e => e.id === eventId)

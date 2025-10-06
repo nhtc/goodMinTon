@@ -2577,6 +2577,33 @@
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
+/* ===== CUSTOM AMOUNT INDICATOR ===== */
+.customAmountIndicator {
+  color: #f59e0b;
+  font-size: 0.8em;
+  opacity: 0.8;
+  margin-left: 4px;
+  cursor: help;
+}
+
+/* ===== DETAILED AMOUNT BREAKDOWN ===== */
+.baseAmount {
+  color: #10b981;
+  font-size: 0.8em;
+  font-weight: 500;
+}
+
+.customAmount {
+  color: #f59e0b;
+  font-size: 0.8em;
+  font-weight: 500;
+}
+
+.originalAmount {
+  color: #6b7280;
+  text-decoration: line-through;
+}
+
 /* ===== RESPONSIVE FILTER CONTROLS ===== */
 @media (max-width: 768px) {
   .filterControls {
