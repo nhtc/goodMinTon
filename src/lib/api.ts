@@ -67,11 +67,31 @@ api.interceptors.response.use(
 export const apiService = {
   games: {
     /**
-     * Retrieves all games from the server
-     * @returns Promise resolving to array of game objects
+     * Retrieves all games from the server with optional pagination and filtering
+     * @param options - Optional pagination and filter parameters
+     * @returns Promise resolving to games data (array or paginated response)
      */
-    async getAll() {
-      return fetchWithErrorHandling('/api/games')
+    async getAll(options?: { 
+      page?: number; 
+      limit?: number; 
+      paginate?: boolean;
+      search?: string;
+      paymentStatus?: 'all' | 'paid' | 'unpaid';
+    }) {
+      const searchParams = new URLSearchParams()
+      
+      if (options?.page) searchParams.set('page', options.page.toString())
+      if (options?.limit) searchParams.set('limit', options.limit.toString())
+      if (options?.paginate === false) searchParams.set('paginate', 'false')
+      if (options?.search) searchParams.set('search', options.search)
+      if (options?.paymentStatus && options.paymentStatus !== 'all') {
+        searchParams.set('paymentStatus', options.paymentStatus)
+      }
+      
+      const queryString = searchParams.toString()
+      const url = `/api/games${queryString ? `?${queryString}` : ''}`
+      
+      return fetchWithErrorHandling(url)
     },
 
     /**

@@ -1,5 +1,16 @@
+"use client"
+
 import React from "react"
-import Modal from "./Modal"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog"
+import { Button } from "./ui/button"
+import { cn } from "../lib/utils"
 import styles from "./ConfirmationModal.module.css"
 
 interface ConfirmationModalProps {
@@ -37,55 +48,94 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     }
   }
 
+  // Get icon based on type
+  const getIcon = () => {
+    switch (type) {
+      case "danger":
+        return "⚠️"
+      case "warning":
+        return "🚨"
+      case "info":
+        return "ℹ️"
+      default:
+        return "⚠️"
+    }
+  }
+
+  // Get confirm button icon
+  const getConfirmIcon = () => {
+    return type === "danger" ? "🗑️" : "✅"
+  }
+
   return (
-    <Modal isOpen={isOpen} onClose={handleCancel} showHeader={false}>
-      <div className={styles.confirmationModal}>
-        {/* Icon */}
-        <div className={`${styles.icon} ${styles[type]}`}>
-          {type === "danger" && "⚠️"}
-          {type === "warning" && "🚨"}
-          {type === "info" && "ℹ️"}
-        </div>
+    <Dialog open={isOpen} onOpenChange={handleCancel}>
+      <DialogContent 
+        className="sm:max-w-[425px] p-0 gap-0 overflow-hidden"
+        onPointerDownOutside={(e) => {
+          if (isLoading) {
+            e.preventDefault()
+          }
+        }}
+        onEscapeKeyDown={(e) => {
+          if (isLoading) {
+            e.preventDefault()
+          }
+        }}
+      >
+        <div className={styles.confirmationModal}>
+          {/* Icon */}
+          <div className={cn(styles.icon, styles[type])}>
+            {getIcon()}
+          </div>
 
-        {/* Content */}
-        <div className={styles.content}>
-          <h3 className={styles.title}>{title}</h3>
-          <p className={styles.message}>{message}</p>
-        </div>
+          {/* Content */}
+          <DialogHeader className={styles.content}>
+            <DialogTitle className={styles.title}>
+              {title}
+            </DialogTitle>
+            <DialogDescription className={styles.message}>
+              {message}
+            </DialogDescription>
+          </DialogHeader>
 
-        {/* Actions */}
-        <div className={styles.actions}>
-          <button
-            onClick={handleCancel}
-            className={`${styles.button} ${styles.cancelButton}`}
-            disabled={isLoading}
-          >
-            <span className={styles.buttonIcon}>❌</span>
-            <span>{cancelText}</span>
-          </button>
-          
-          <button
-            onClick={handleConfirm}
-            className={`${styles.button} ${styles.confirmButton} ${styles[type]}`}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <div className={styles.spinner}></div>
-                <span>Đang xử lý...</span>
-              </>
-            ) : (
-              <>
-                <span className={styles.buttonIcon}>
-                  {type === "danger" ? "🗑️" : "✅"}
-                </span>
-                <span>{confirmText}</span>
-              </>
-            )}
-          </button>
+          {/* Actions */}
+          <DialogFooter className={styles.actions}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isLoading}
+              className={cn(styles.button, styles.cancelButton)}
+            >
+              <span className={styles.buttonIcon}>❌</span>
+              <span>{cancelText}</span>
+            </Button>
+            
+            <Button
+              type="button"
+              variant={type === "danger" ? "destructive" : type === "info" ? "default" : "default"}
+              onClick={handleConfirm}
+              disabled={isLoading}
+              className={cn(styles.button, styles.confirmButton, styles[type])}
+            >
+              {isLoading ? (
+                <>
+                  <div className={styles.spinner}></div>
+                  <span>Đang xử lý...</span>
+                </>
+              ) : (
+                <>
+                  <span className={styles.buttonIcon}>
+                    {getConfirmIcon()}
+                  </span>
+                  <span>{confirmText}</span>
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </div>
-      </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   )
 }
 

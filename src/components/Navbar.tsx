@@ -1,23 +1,24 @@
 "use client"
-import React, { useEffect, useState } from "react"
+import React, {useEffect, useState} from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useAuth } from "@/context/AuthContext"
-import { usePermissions } from "./AuthorizedComponent"
+import {usePathname} from "next/navigation"
+import {useAuth} from "@/context/AuthContext"
+import {usePermissions} from "./AuthorizedComponent"
 import styles from "./Navbar.module.css"
+import NavbarUser from "@/components/NavbarUser"
 
 const Navbar = () => {
   const pathname = usePathname()
   const [isScrolled, setIsScrolled] = useState(false)
-  const { isAuthenticated, user, logout } = useAuth()
-  const { userRole, canEdit } = usePermissions()
+  const {isAuthenticated, user, logout} = useAuth()
+  const {userRole, canEdit} = usePermissions()
 
   const navigation = [
-    { name: "Nhà", href: "/", icon: "🏠" },
-    { name: "Thành Viên", href: "/members", icon: "👥" },
-    { name: "Cầu lông", href: "/history", icon: "🏸" },
-    { name: "Tiệc tùng", href: "/personal-tracking", icon: "🎉" },
-    { name: "QR Thanh toán", href: "/payment", icon: "💳" },
+    {name: "Nhà", href: "/", icon: "🏠"},
+    {name: "Thành Viên", href: "/members", icon: "👥"},
+    {name: "Cầu lông", href: "/history", icon: "🏸"},
+    {name: "Tiệc tùng", href: "/personal-tracking", icon: "🎉"},
+    {name: "QR Thanh toán", href: "/payment", icon: "💳"},
   ]
 
   const isActive = (href: string) => {
@@ -52,9 +53,8 @@ const Navbar = () => {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`${styles.navbarNavItem} ${
-                  isActive(item.href) ? styles.active : ""
-                }`}
+                className={`${styles.navbarNavItem} ${isActive(item.href) ? styles.active : ""
+                  }`}
               >
                 <span className={styles.navbarNavIcon}>{item.icon}</span>
                 <span className={styles.navbarNavText}>{item.name}</span>
@@ -63,7 +63,7 @@ const Navbar = () => {
           </div>
 
           {/* User Info or Login Button */}
-          {isAuthenticated && user ? (
+          {/* {isAuthenticated && user ? (
             <div className={styles.navbarUser}>
               <div className={styles.userInfo}>
                 <div className={styles.userAvatar}>
@@ -97,7 +97,13 @@ const Navbar = () => {
                 Đăng nhập Admin
               </Link>
             </div>
-          )}
+          )} */}
+
+          <NavbarUser
+            isAuthenticated={isAuthenticated}
+            user={user}
+            userRole={userRole}
+            onLogout={logout} />
         </div>
       </div>
     </nav>

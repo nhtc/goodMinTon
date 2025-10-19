@@ -16,6 +16,7 @@ import { PersonalEvent, PersonalEventFilters, CreatePersonalEventData, UpdatePer
 import { filterPersonalEventsByPaymentStatus, PaymentStatusFilter } from '@/utils/paymentFilters'
 import { CompoundSelect } from '@/components/ui/select'
 import { TEXT_CONSTANTS } from '@/lib/constants/text'
+import { exportPersonalEventsToExcel } from '@/utils/excelExport'
 import styles from './page.module.css'// Constants
 const PAYMENT_STATUS_OPTIONS = {
   ALL: 'all' as const,
@@ -205,6 +206,28 @@ const PersonalTrackingPage: React.FC = () => {
     setEditingEvent(null)
   }
 
+  const handleExportToExcel = async () => {
+    try {
+      // Fetch all personal events without pagination
+      const response = await apiService.personalEvents.getAll()
+      const allEvents = Array.isArray(response) ? response : response?.data || []
+      
+      if (allEvents.length === 0) {
+        addToast('warning', 'Không có dữ liệu', 'Không có sự kiện nào để xuất!')
+        return
+      }
+      
+      // Export to Excel
+      exportPersonalEventsToExcel(allEvents)
+      
+      // Show success message
+      addToast('success', 'Xuất dữ liệu thành công', `Đã xuất ${allEvents.length} sự kiện ra file Excel!`)
+    } catch (error) {
+      console.error('Export error:', error)
+      addToast('error', 'Lỗi xuất dữ liệu', 'Không thể xuất dữ liệu. Vui lòng thử lại!')
+    }
+  }
+
   const clearSearch = () => {
     setSearchTerm('')
   }
@@ -248,6 +271,18 @@ const PersonalTrackingPage: React.FC = () => {
                 <span>Tạo Sự Kiện</span>
               </button>
             </AuthorizedComponent>
+
+            {/* Export to Excel Button (visible to all) */}
+            {filteredEvents.length > 0 && isAuthorized && (
+              <button
+                onClick={handleExportToExcel}
+                className={styles.exportBtn}
+                title='Xuất toàn bộ sự kiện ra file Excel'
+              >
+                <span className={styles.btnIcon}>📊</span>
+                <span>Xuất Excel</span>
+              </button>
+            )}
           </div>
 
           {/* Statistics */}

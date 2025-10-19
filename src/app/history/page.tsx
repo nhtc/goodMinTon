@@ -1,8 +1,9 @@
 "use client"
-import React, { useEffect, useState, lazy, Suspense } from "react"
+import React, { useEffect, useState, useRef, useMemo, useCallback, lazy, Suspense } from "react"
 import Link from "next/link"
 import styles from "./page.module.css"
 import { apiService } from "../../lib/api"
+import { LoadingToast } from "../../components/LoadingToast"
 import {
   AuthorizedComponent,
   EditableContent,
@@ -13,7 +14,10 @@ import { capitalize } from "lodash"
 import Modal from "../../components/Modal"
 import ConfirmationModal from "../../components/ConfirmationModal"
 import { CompoundSelect } from "../../components/ui/select"
-import { filterGamesByPaymentStatus, PaymentStatusFilter } from "../../utils/paymentFilters"
+import { PaymentStatusFilter } from "../../utils/paymentFilters"
+import Pagination from "../../components/Pagination"
+import { exportGamesToExcel } from "../../utils/excelExport"
+import {useAuth} from "@/context/AuthContext"
 
 // Lazy load heavy components for better performance
 const GameForm = lazy(() => import("../../components/GameForm"))
@@ -46,9 +50,11 @@ interface Game {
 }
 
 const HistoryPage = () => {
+  const { isAuthorized, isAuthenticated } = useAuth()
   const [games, setGames] = useState<Game[]>([])
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
+  const [isSearching, setIsSearching] = useState(false) // Separate loading for search/filter
   const [error, setError] = useState<string>("")
   const [showForm, setShowForm] = useState(false)
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
@@ -63,6 +69,19 @@ const HistoryPage = () => {
   // Filter states
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatusFilter>('all')
   const [searchTerm, setSearchTerm] = useState("")
+  
+  // Debounce ref for search
+  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 0,
+    page: 1,
+    limit: 20,
+    hasMore: false
+  })
 
   // Payment status filter options
   const paymentStatusOptions = [
@@ -128,12 +147,34 @@ const HistoryPage = () => {
     return categoryBreakdown
   }
 
-  const fetchGames = async () => {
+  const fetchGames = async (page: number = currentPage, filters?: { search?: string; paymentStatus?: PaymentStatusFilter }) => {
     try {
-      setLoading(true)
+      // Use isSearching for filter/search operations, loading for initial load
+      const isInitialLoad = games.length === 0 && !filters
+      if (isInitialLoad) {
+        setLoading(true)
+      } else {
+        setIsSearching(true)
+      }
       setError("")
-      const data = await apiService.games.getAll()
-      setGames(data)
+      
+      const response = await apiService.games.getAll({ 
+        page, 
+        limit: 20, 
+        paginate: true,
+        search: filters?.search !== undefined ? filters.search : searchTerm,
+        paymentStatus: filters?.paymentStatus || paymentStatus
+      })
+      
+      // Handle paginated response
+      if (response.data && response.pagination) {
+        setGames(response.data)
+        setPagination(response.pagination)
+        setCurrentPage(page)
+      } else {
+        // Fallback for non-paginated response (backward compatibility)
+        setGames(Array.isArray(response) ? response : [])
+      }
     } catch (error) {
       console.error("Error fetching games:", error)
       setError(
@@ -144,6 +185,68 @@ const HistoryPage = () => {
       setGames([])
     } finally {
       setLoading(false)
+      setIsSearching(false)
+    }
+  }
+  
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    fetchGames(page)
+    // Scroll to top of games list
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+  
+  const handleSearchChange = useCallback((search: string) => {
+    // Update search term immediately for responsive input
+    setSearchTerm(search)
+    
+    // Clear existing timeout
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current)
+    }
+    
+    // Don't search if empty or cleared
+    if (search.trim() === '') {
+      setCurrentPage(1)
+      fetchGames(1, { search: '', paymentStatus })
+      return
+    }
+    
+    // Debounce the API call by 500ms
+    searchDebounceRef.current = setTimeout(() => {
+      setCurrentPage(1) // Reset to first page
+      fetchGames(1, { search, paymentStatus })
+    }, 500)
+  }, [paymentStatus]) // Only recreate if paymentStatus changes
+  
+  const handlePaymentStatusChange = (status: PaymentStatusFilter) => {
+    setPaymentStatus(status)
+    setCurrentPage(1) // Reset to first page
+    fetchGames(1, { search: searchTerm, paymentStatus: status })
+  }
+
+  const handleExportToExcel = async () => {
+    try {
+      setIsSearching(true)
+      // Fetch all games without pagination for export
+      const response = await apiService.games.getAll({ paginate: false })
+      const allGames = Array.isArray(response) ? response : response?.data || []
+      
+      if (allGames.length === 0) {
+        alert('Không có dữ liệu để xuất!')
+        return
+      }
+      
+      // Export to Excel
+      exportGamesToExcel(allGames)
+      
+      // Show success message
+      alert(`✅ Xuất thành công ${allGames.length} trận đấu ra file Excel!`)
+    } catch (error) {
+      console.error('Export error:', error)
+      alert('❌ Lỗi khi xuất dữ liệu. Vui lòng thử lại!')
+    } finally {
+      setIsSearching(false)
     }
   }
 
@@ -162,6 +265,15 @@ const HistoryPage = () => {
       await Promise.all([fetchGames(), fetchMembers()])
     }
     loadData()
+  }, [])
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current)
+      }
+    }
   }, [])
 
   const handleGameCreated = async () => {
@@ -302,7 +414,8 @@ const HistoryPage = () => {
     })
   }
 
-  const getTotalStats = () => {
+  // Memoize stats calculation to prevent recalculation on every render
+  const stats = useMemo(() => {
     const totalGames = games.length
     const totalCost = games.reduce((sum, game) => sum + game.totalCost, 0)
     const avgCostPerGame = totalGames > 0 ? totalCost / totalGames : 0
@@ -310,28 +423,13 @@ const HistoryPage = () => {
       games.flatMap(game => game.participants.map(p => p.id))
     ).size
     return { totalGames, totalCost, avgCostPerGame, totalParticipants }
-  }
-
-  const filteredGames = games.filter(
-    game =>
-      formatDate(game.date).toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (game.location &&
-        game.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      game.participants.some(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-  )
-
-  // Apply payment status filter
-  const finalFilteredGames = filterGamesByPaymentStatus(filteredGames, paymentStatus)
-
-  const stats = getTotalStats()
+  }, [games])
 
   // Modal close handlers
   const handleCloseModal = () => {
     setSelectedGame(null)
   }
-
+  
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       handleCloseModal()
@@ -371,6 +469,9 @@ const HistoryPage = () => {
 
   return (
     <AuthorizedComponent>
+      {/* Radix Toast Loading Indicator */}
+      <LoadingToast open={isSearching} message="Đang tìm kiếm..." />
+      
       <div className={styles.historyPage}>
         {/* Header Section */}
         <div className={styles.historyHeader}>
@@ -391,7 +492,7 @@ const HistoryPage = () => {
             <div className={styles.headerActions}>
               {error && (
                 <button
-                  onClick={fetchGames}
+                  onClick={() => fetchGames()}
                   className={`${styles.actionBtn} ${styles.retryBtn}`}
                   disabled={loading}
                   aria-label='Thử lại tải dữ liệu'
@@ -418,6 +519,28 @@ const HistoryPage = () => {
                 </span>
                 <span>{capitalize(userRole)}</span>
               </div>
+
+              {/* Export to Excel Button (visible to all) */}
+              {games.length > 0 && isAuthorized && (
+                <button
+                  onClick={handleExportToExcel}
+                  className={`${styles.actionBtn} ${styles.primaryBtn}`}
+                  disabled={loading || isSearching}
+                  aria-label='Xuất dữ liệu ra Excel'
+                  title='Xuất toàn bộ lịch sử trận đấu ra file Excel'
+                >
+                  {isSearching ? (
+                    <div className={styles.btnSpinner} aria-hidden='true'></div>
+                  ) : (
+                    <span className={styles.btnIcon} aria-hidden='true'>
+                      📊
+                    </span>
+                  )}
+                  <span className={styles.btnText}>
+                    {isSearching ? 'Đang xuất...' : 'Xuất Excel'}
+                  </span>
+                </button>
+              )}
 
               {/* Edit-only: Add Game Button */}
               <EditableContent
@@ -557,7 +680,6 @@ const HistoryPage = () => {
             </Modal>
 
           {/* Search and Filter */}
-          {games.length > 0 && (
             <div className={styles.searchSection}>
               <div className={styles.searchWrapper}>
                 <div className={styles.searchIcon}>🔍</div>
@@ -565,12 +687,12 @@ const HistoryPage = () => {
                   type='text'
                   placeholder='Tìm kiếm theo ngày, địa điểm hoặc tên thành viên...'
                   value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
+                  onChange={e => handleSearchChange(e.target.value)}
                   className={styles.searchInput}
                 />
                 {searchTerm && (
                   <button
-                    onClick={() => setSearchTerm("")}
+                    onClick={() => handleSearchChange("")}
                     className={styles.searchClear}
                   >
                     ✕
@@ -584,7 +706,7 @@ const HistoryPage = () => {
                   <label className={styles.filterLabel}>Trạng thái thanh toán:</label>
                   <CompoundSelect
                     value={paymentStatus}
-                    onValueChange={(value) => setPaymentStatus(value as PaymentStatusFilter)}
+                    onValueChange={(value) => handlePaymentStatusChange(value as PaymentStatusFilter)}
                     options={paymentStatusOptions}
                     className={styles.filterSelect}
                     placeholder="Chọn trạng thái thanh toán"
@@ -593,7 +715,7 @@ const HistoryPage = () => {
 
                 {paymentStatus !== 'all' && (
                   <button
-                    onClick={() => setPaymentStatus('all')}
+                    onClick={() => handlePaymentStatusChange('all')}
                     className={styles.clearFiltersBtn}
                   >
                     Xóa bộ lọc
@@ -601,16 +723,15 @@ const HistoryPage = () => {
                 )}
               </div>
 
-              {(searchTerm || paymentStatus !== 'all') && (
+              {(searchTerm || paymentStatus !== 'all') && pagination.total !== undefined && (
                 <div className={styles.searchResults}>
-                  Tìm thấy {finalFilteredGames.length} trận đấu
+                  Tìm thấy {pagination.total} trận đấu
                 </div>
               )}
             </div>
-          )}
 
           {/* Games List */}
-          {finalFilteredGames.length === 0 ? (
+          {games.length === 0 ? (
             <div className={styles.emptyState}>
               <div className={styles.emptyIcon}>🏸</div>
               <h3 className={styles.emptyTitle}>
@@ -638,12 +759,12 @@ const HistoryPage = () => {
               <div className={styles.sectionHeader}>
                 <h2>📅 Danh Sách Trận Đấu</h2>
                 <div className={styles.gamesCount}>
-                  {finalFilteredGames.length} trận đấu
+                  {games.length} trận đấu
                 </div>
               </div>
 
               <div className={styles.gamesGrid}>
-                {finalFilteredGames.map((game, index) => {
+                {games.map((game, index) => {
                   const paidCount = game.participants.filter(
                     p => p.hasPaid
                   ).length
@@ -1031,6 +1152,18 @@ const HistoryPage = () => {
                   )
                 })}
               </div>
+              
+              {/* Pagination Component */}
+              {pagination.totalPages > 1 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={pagination.totalPages}
+                  onPageChange={handlePageChange}
+                  total={pagination.total}
+                  limit={pagination.limit}
+                  showInfo={true}
+                />
+              )}
             </div>
           )}
         </div>

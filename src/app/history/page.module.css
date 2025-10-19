@@ -2615,3 +2615,57 @@
     min-width: auto;
   }
 }
+
+/* Floating Loading Overlay */
+.floatingLoader {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: rgba(59, 130, 246, 0.95);
+  backdrop-filter: blur(10px);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+  z-index: 1000;
+  animation: slideInRight 0.3s ease-out;
+  font-weight: 500;
+}
+
+.floatingLoader .spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .floatingLoader {
+    top: 60px;
+    right: 10px;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  
+  .floatingLoader .spinner {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+}

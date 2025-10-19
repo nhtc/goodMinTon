@@ -1,10 +1,103 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '../../../lib/prisma'
 
-// GET - Fetch all games
-export async function GET() {
+// GET - Fetch games with pagination and filtering support
+export async function GET(request: NextRequest) {
   try {
-    const games = await prisma.game.findMany({
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const paginate = searchParams.get('paginate') !== 'false' // Default to true
+    const searchTerm = searchParams.get('search') || ''
+    const paymentStatus = searchParams.get('paymentStatus') || 'all' // 'all', 'paid', 'unpaid'
+    
+    // Calculate skip value for pagination
+    const skip = (page - 1) * limit
+
+    // Build where clause for filtering
+    const whereClause: any = {}
+    
+    // Search filter (search in location, date, or participant names)
+    if (searchTerm) {
+      whereClause.OR = [
+        {
+          location: {
+            contains: searchTerm,
+            mode: 'insensitive'
+          }
+        },
+        {
+          participants: {
+            some: {
+              member: {
+                name: {
+                  contains: searchTerm,
+                  mode: 'insensitive'
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+
+    // If pagination is disabled, return all filtered games (backward compatibility)
+    if (!paginate) {
+      const games = await prisma.game.findMany({
+        where: whereClause,
+        include: {
+          participants: {
+            include: {
+              member: true
+            }
+          }
+        },
+        orderBy: [
+          {
+            createdAt: 'desc'
+          },
+          {
+            date: 'desc'
+          }
+        ]
+      })
+
+      // Transform and apply payment status filter (client-side for unpaginated)
+      let transformedGames = games.map((game: any) => ({
+        ...game,
+        participants: game.participants.map((p: any) => ({
+          ...p.member,
+          participantId: p.id,
+          hasPaid: p.hasPaid,
+          paidAt: p.paidAt,
+          prePaid: p.prePaid,
+          prePaidCategory: p.prePaidCategory,
+          customAmount: p.customAmount
+        }))
+      }))
+
+      // Apply payment status filter
+      if (paymentStatus === 'paid') {
+        transformedGames = transformedGames.filter((game: any) => 
+          game.participants.every((p: any) => p.hasPaid)
+        )
+      } else if (paymentStatus === 'unpaid') {
+        transformedGames = transformedGames.filter((game: any) => 
+          game.participants.some((p: any) => !p.hasPaid)
+        )
+      }
+
+      return NextResponse.json(transformedGames)
+    }
+
+    // Get total count for pagination metadata (with filters applied)
+    let totalCount = await prisma.game.count({ where: whereClause })
+
+    // Fetch paginated games with filters
+    let games = await prisma.game.findMany({
+      where: whereClause,
+      skip,
+      take: limit,
       include: {
         participants: {
           include: {
@@ -22,8 +115,8 @@ export async function GET() {
       ]
     })
 
-    // Transform the response to include payment and pre-pay data
-    const transformedGames = games.map((game: any) => ({
+    // Transform the response
+    let transformedGames = games.map((game: any) => ({
       ...game,
       participants: game.participants.map((p: any) => ({
         ...p.member,
@@ -36,7 +129,65 @@ export async function GET() {
       }))
     }))
 
-    return NextResponse.json(transformedGames)
+    // Apply payment status filter (after fetching but before returning)
+    // Note: This is still somewhat client-side, but done server-side
+    // For true server-side filtering of payment status, we'd need to use aggregation
+    if (paymentStatus === 'paid') {
+      transformedGames = transformedGames.filter((game: any) => 
+        game.participants.every((p: any) => p.hasPaid)
+      )
+    } else if (paymentStatus === 'unpaid') {
+      transformedGames = transformedGames.filter((game: any) => 
+        game.participants.some((p: any) => !p.hasPaid)
+      )
+    }
+
+    // Recalculate total count if payment status filter was applied
+    // This is a workaround - ideally we'd use aggregation for true server-side filtering
+    if (paymentStatus !== 'all') {
+      // Fetch all games to get accurate count (not ideal, but works)
+      const allGames = await prisma.game.findMany({
+        where: whereClause,
+        include: {
+          participants: {
+            include: {
+              member: true
+            }
+          }
+        }
+      })
+      
+      const allTransformed = allGames.map((game: any) => ({
+        ...game,
+        participants: game.participants.map((p: any) => ({
+          ...p.member,
+          participantId: p.id,
+          hasPaid: p.hasPaid,
+          paidAt: p.paidAt,
+          prePaid: p.prePaid,
+          prePaidCategory: p.prePaidCategory,
+          customAmount: p.customAmount
+        }))
+      }))
+      
+      const filteredByPayment = paymentStatus === 'paid' 
+        ? allTransformed.filter((game: any) => game.participants.every((p: any) => p.hasPaid))
+        : allTransformed.filter((game: any) => game.participants.some((p: any) => !p.hasPaid))
+      
+      totalCount = filteredByPayment.length
+    }
+
+    // Return paginated response with metadata
+    return NextResponse.json({
+      data: transformedGames,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        hasMore: page < Math.ceil(totalCount / limit)
+      }
+    })
   } catch (error) {
     console.error('Error fetching games:', error)
     return NextResponse.json(

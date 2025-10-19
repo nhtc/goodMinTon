@@ -75,7 +75,7 @@ const LoginPage = () => {
       <div className={styles.loadingScreen}>
         <div className={styles.loadingContainer}>
           <div className={styles.successIcon}>✅</div>
-          <p className={styles.successText}>Welcome back, {user?.name}!</p>
+          <p className={styles.successText}>Welcome back, {user?.name|| "sir"}!</p>
           <p className={styles.successSubtext}>Redirecting to dashboard...</p>
         </div>
       </div>

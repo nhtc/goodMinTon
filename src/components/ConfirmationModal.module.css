@@ -1,9 +1,11 @@
 /* Confirmation Modal Styles */
 .confirmationModal {
   padding: 2rem;
-  max-width: 400px;
   width: 100%;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .icon {
@@ -39,28 +41,41 @@
 
 .content {
   margin-bottom: 2rem;
+  text-align: center;
+  width: 100%;
 }
 
 .title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 0.75rem;
-  line-height: 1.3;
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  color: #1f2937 !important;
+  margin-bottom: 0.75rem !important;
+  line-height: 1.3 !important;
+  text-align: center;
 }
 
 .message {
-  font-size: 1rem;
-  color: #6b7280;
-  line-height: 1.6;
-  margin: 0;
+  font-size: 1rem !important;
+  color: #6b7280 !important;
+  line-height: 1.6 !important;
+  margin: 0 !important;
+  text-align: center;
 }
 
 .actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
+  display: flex !important;
+  gap: 1rem !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  width: 100%;
+  flex-direction: column !important;
+  align-items: stretch !important;
+}
+
+/* Override Tailwind spacing from DialogFooter */
+.actions > * {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
 
 .button {
@@ -161,7 +176,7 @@
   }
   
   .actions {
-    flex-direction: column;
+    flex-direction: column !important;
   }
   
   .button {

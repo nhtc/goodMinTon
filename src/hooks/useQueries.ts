@@ -119,13 +119,20 @@ export const useActiveMembers = () => {
 // ============================================
 
 /**
- * Hook to fetch all games with payment data
- * @returns Query result with all games data
+ * Hook to fetch all games with payment data (supports pagination and filtering)
+ * @param options - Optional pagination and filter parameters
+ * @returns Query result with games data (paginated or all)
  */
-export const useGames = () => {
+export const useGames = (options?: { 
+  page?: number; 
+  limit?: number; 
+  paginate?: boolean;
+  search?: string;
+  paymentStatus?: 'all' | 'paid' | 'unpaid';
+}) => {
   return useQuery({
-    queryKey: queryKeys.games,
-    queryFn: apiService.games.getAll,
+    queryKey: [...queryKeys.games, options],
+    queryFn: () => apiService.games.getAll(options),
     staleTime: CACHE_CONFIG.PAYMENT_STALE_TIME,
     gcTime: CACHE_CONFIG.STANDARD_GC_TIME,
   })
@@ -152,12 +159,18 @@ export const useGame = (id: string) => {
  * @returns Query result with outstanding amount and unpaid games
  */
 export const useMemberOutstanding = (memberId: string | null) => {
-  const { data: games, isLoading: gamesLoading, error: gamesError } = useGames()
+  // Fetch all games without pagination for outstanding calculations
+  const { data: gamesResponse, isLoading: gamesLoading, error: gamesError, dataUpdatedAt } = useGames({ paginate: false })
+  
+  // Handle both paginated and non-paginated responses
+  const games = Array.isArray(gamesResponse) ? gamesResponse : gamesResponse?.data || []
   
   return useQuery({
-    queryKey: queryKeys.memberOutstanding(memberId || ''),
+    queryKey: [...queryKeys.memberOutstanding(memberId || ''), dataUpdatedAt],
     queryFn: () => {
-      if (!memberId || !games) {
+      console.log('🔢 Calculating member outstanding for:', memberId, 'at:', dataUpdatedAt)
+      
+      if (!memberId || !games || games.length === 0) {
         return {
           totalOutstanding: 0,
           unpaidGames: [] as Game[]
@@ -178,13 +191,15 @@ export const useMemberOutstanding = (memberId: string | null) => {
         }
       })
 
+      console.log('💰 Member outstanding calculated:', { totalOutstanding, unpaidGamesCount: unpaidGames.length })
+      
       return {
         totalOutstanding,
         unpaidGames
       }
     },
     enabled: !!memberId && !!games && !gamesLoading,
-    staleTime: CACHE_CONFIG.CALCULATION_STALE_TIME,
+    staleTime: 0, // Always consider data stale to force refetch when dependencies change
     gcTime: CACHE_CONFIG.CALCULATION_GC_TIME,
     placeholderData: {
       totalOutstanding: 0,
@@ -500,22 +515,38 @@ export const useBulkPaymentOperation = () => {
       type: 'games' | 'personal_events' | 'both'
     }) => apiService.members.bulkPaymentOperation(memberId, operation, type),
     
-    onSuccess: (data, { type }) => {
+    onSuccess: async (data, { type, memberId }) => {
+      console.log('🔄 Bulk payment success, refetching queries...', { type, memberId })
+      
       // Invalidate all related queries to ensure fresh data
-      queryClient.invalidateQueries({ queryKey: ['member-outstanding'] })
+      await queryClient.invalidateQueries({ queryKey: ['member-outstanding'] })
       
       if (type === 'games' || type === 'both') {
-        queryClient.invalidateQueries({ queryKey: queryKeys.games })
+        await queryClient.invalidateQueries({ queryKey: queryKeys.games })
+        // Force refetch games to ensure fresh data
+        await queryClient.refetchQueries({ queryKey: queryKeys.games })
+        console.log('✅ Games queries refetched')
       }
       
       if (type === 'personal_events' || type === 'both') {
-        queryClient.invalidateQueries({ queryKey: queryKeys.personalEvents })
-        queryClient.invalidateQueries({ queryKey: ['personalEvents'] })
+        await queryClient.invalidateQueries({ queryKey: queryKeys.personalEvents })
+        // Force refetch personal events
+        await queryClient.refetchQueries({ queryKey: queryKeys.personalEvents })
+        console.log('✅ Personal events queries refetched')
       }
+      
+      // Also invalidate and refetch members query
+      await queryClient.invalidateQueries({ queryKey: queryKeys.members })
+      
+      // Force refetch member outstanding calculations
+      await queryClient.refetchQueries({ queryKey: ['member-outstanding'] })
+      console.log('✅ Member outstanding queries refetched')
+      
+      console.log('✅ All queries refetched successfully')
     },
     
     onError: (error) => {
-      console.error('Bulk payment operation failed:', error)
+      console.error('❌ Bulk payment operation failed:', error)
     }
   })
 }

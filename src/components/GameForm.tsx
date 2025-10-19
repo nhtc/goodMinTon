@@ -6,6 +6,7 @@ import { EditableContent, usePermissions } from "./AuthorizedComponent"
 import { useText } from "../hooks/useText"
 import { TEXT_CONSTANTS } from "../lib/constants/text"
 import styles from "./GameForm.module.css"
+import DatePicker from "./DatePicker"
 
 interface Member {
   id: string
@@ -34,7 +35,7 @@ const GameForm: React.FC<GameFormProps> = ({
   // Text constants hook
   const text = useText();
   
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0])
+  const [date, setDate] = useState<Date>(new Date())
   const [location, setLocation] = useState("")
   const [yardCost, setYardCost] = useState<number>(0)
   const [shuttleCockQuantity, setShuttleCockQuantity] = useState<number>(0)
@@ -67,7 +68,7 @@ const GameForm: React.FC<GameFormProps> = ({
   ]
 
   const presetShuttlecocks = [
-    { label: "🏃‍♂️ Cầu 88", quantity: 1, price: 24000, icon: "💪" },
+    { label: "🏃‍♂️ Cầu 88", quantity: 1, price: 25000, icon: "💪" },
     { label: "🏸 Vinawin Loai 2", quantity: 1, price: 18000, icon: "🎯" },
   ]
 
@@ -79,7 +80,7 @@ const GameForm: React.FC<GameFormProps> = ({
   // Initialize form data for editing
   useEffect(() => {
     if (isEditing && gameData) {
-      setDate(new Date(gameData.date).toISOString().split("T")[0])
+      setDate(new Date(gameData.date))
       setLocation(gameData.location || "")
       setYardCost(gameData.yardCost || 0)
       setShuttleCockQuantity(gameData.shuttleCockQuantity || 0)
@@ -419,7 +420,7 @@ const GameForm: React.FC<GameFormProps> = ({
 
         // Update existing game
         await apiService.games.update(gameData.id, {
-          date,
+          date: date.toISOString().split("T")[0],
           location: location.trim(),
           yardCost,
           shuttleCockQuantity,
@@ -446,7 +447,7 @@ const GameForm: React.FC<GameFormProps> = ({
 
         // Create new game
         await apiService.games.create({
-          date,
+          date: date.toISOString().split("T")[0],
           location: location.trim(),
           yardCost,
           shuttleCockQuantity,
@@ -460,7 +461,7 @@ const GameForm: React.FC<GameFormProps> = ({
         })
 
         // Reset form for new game
-        setDate(new Date().toISOString().split("T")[0])
+        setDate(new Date())
         setLocation("")
         setYardCost(0)
         setShuttleCockQuantity(0)
@@ -565,22 +566,23 @@ const GameForm: React.FC<GameFormProps> = ({
                   <span className={styles.labelText}>{text.field.gameDate()}</span>
                   <span className={styles.requiredStar}>*</span>
                 </label>
-                <div className={styles.inputWrapper}>
-                  <input
-                    type='date'
-                    id='date'
-                    value={date}
-                    onChange={e => {
-                      setDate(e.target.value)
+                <DatePicker
+                  selected={date}
+                  onChange={(newDate) => {
+                    if (newDate) {
+                      setDate(newDate)
                       if (errors.date) setErrors(prev => _.omit(prev, "date"))
-                    }}
-                    className={`${styles.formInput} ${styles.friendly} ${
-                      errors.date ? "error" : ""
-                    }`}
-                    max={new Date().toISOString().split("T")[0]}
-                  />
-                  <div className={styles.inputGlow}></div>
-                </div>
+                    }
+                  }}
+                  maxDate={new Date()}
+                  minDate={(() => {
+                    const oneYearAgo = new Date()
+                    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
+                    return oneYearAgo
+                  })()}
+                  placeholder="Chọn ngày chơi..."
+                  hasError={!!errors.date}
+                />
                 {errors.date && (
                   <div className={`${styles.fieldError} ${styles.friendly}`}>
                     <span>😅 {errors.date}</span>

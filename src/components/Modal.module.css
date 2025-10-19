@@ -180,6 +180,7 @@
   height: 100%;
   min-height: 0;
   overflow-y: auto;
+  margin: auto;
 }
 
 /* Custom scrollbar for modal body */
