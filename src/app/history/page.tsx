@@ -16,7 +16,6 @@ import ConfirmationModal from "../../components/ConfirmationModal"
 import { CompoundSelect } from "../../components/ui/select"
 import { PaymentStatusFilter } from "../../utils/paymentFilters"
 import Pagination from "../../components/Pagination"
-import { exportGamesToExcel } from "../../utils/excelExport"
 import {useAuth} from "@/context/AuthContext"
 
 // Lazy load heavy components for better performance
@@ -237,7 +236,8 @@ const HistoryPage = () => {
         return
       }
       
-      // Export to Excel
+      // Lazy load Excel export function
+      const { exportGamesToExcel } = await import("../../utils/excelExport")
       exportGamesToExcel(allGames)
       
       // Show success message

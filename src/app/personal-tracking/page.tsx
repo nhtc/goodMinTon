@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { AuthorizedComponent } from '@/components/AuthorizedComponent'
 import PersonalEventCard from '@/components/PersonalEventCard'
 import PersonalEventDetailsModal from '@/components/PersonalEventDetailsModal'
@@ -16,7 +15,6 @@ import { PersonalEvent, PersonalEventFilters, CreatePersonalEventData, UpdatePer
 import { filterPersonalEventsByPaymentStatus, PaymentStatusFilter } from '@/utils/paymentFilters'
 import { CompoundSelect } from '@/components/ui/select'
 import { TEXT_CONSTANTS } from '@/lib/constants/text'
-import { exportPersonalEventsToExcel } from '@/utils/excelExport'
 import styles from './page.module.css'// Constants
 const PAYMENT_STATUS_OPTIONS = {
   ALL: 'all' as const,
@@ -217,7 +215,8 @@ const PersonalTrackingPage: React.FC = () => {
         return
       }
       
-      // Export to Excel
+      // Lazy load Excel export function
+      const { exportPersonalEventsToExcel } = await import('@/utils/excelExport')
       exportPersonalEventsToExcel(allEvents)
       
       // Show success message

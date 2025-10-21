@@ -8,11 +8,18 @@ import { ToastProvider } from "@/context/ToastContext"
 import { AlertProvider } from "@/context/AlertContext"
 import { QueryProvider } from "@/context/QueryContext"
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ 
+  subsets: ["latin"],
+  display: 'swap', // Prevent invisible text during font load
+  preload: true,
+  variable: '--font-inter',
+})
 
 export const metadata: Metadata = {
   title: "Badminton Manager",
   description: "Manage your badminton games, members, and history efficiently",
+  viewport: 'width=device-width, initial-scale=1',
+  themeColor: '#3b82f6',
 }
 
 export default function RootLayout({

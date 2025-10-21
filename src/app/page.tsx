@@ -1,22 +1,34 @@
 "use client"
 import React, { useEffect, useRef } from "react"
 import Link from "next/link"
+import dynamic from "next/dynamic"
 import { TypeAnimation } from "react-type-animation"
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts"
 import CountUp from "react-countup"
 import NotificationDemo from "../components/NotificationDemo"
 import styles from "./page.module.css"
+
+// Dynamic import for charts to reduce initial bundle size
+const HomeCharts = dynamic(() => import("../components/HomeCharts"), {
+  ssr: false,
+  loading: () => (
+    <div className={styles.chartsGrid}>
+      <div className={styles.chartCard}>
+        <div className={styles.chartContainer}>
+          <div style={{ textAlign: 'center', padding: '100px 0', color: '#888' }}>
+            Đang tải biểu đồ...
+          </div>
+        </div>
+      </div>
+      <div className={styles.chartCard}>
+        <div className={styles.chartContainer}>
+          <div style={{ textAlign: 'center', padding: '100px 0', color: '#888' }}>
+            Đang tải biểu đồ...
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+})
 
 const HomePage = () => {
   const observerRef = useRef<IntersectionObserver | null>(null)
@@ -36,8 +48,6 @@ const HomePage = () => {
     { name: "Cầu lông", value: 25, color: "#60a5fa" },
     { name: "Khác", value: 10, color: "#f59e0b" },
   ]
-
-  const COLORS = ["#4ade80", "#60a5fa", "#f59e0b"]
 
   useEffect(() => {
     // Intersection Observer for smooth scroll animations
@@ -136,53 +146,7 @@ const HomePage = () => {
 
           {/* Charts Section */}
           <div className={`${styles.chartsSection} ${styles.animateOnScroll}`}>
-            <div className={styles.chartsGrid}>
-              <div className={styles.chartCard}>
-                <h3 className={styles.chartTitle}>📊 Hoạt động theo tháng</h3>
-                <div className={styles.chartContainer}>
-                  <ResponsiveContainer width='100%' height={300}>
-                    <BarChart data={monthlyData}>
-                      <CartesianGrid strokeDasharray='3 3' />
-                      <XAxis dataKey='name' />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey='games' fill='#4ade80' name='Trận đấu' />
-                      <Bar dataKey='members' fill='#60a5fa' name='Thành viên' />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              <div className={styles.chartCard}>
-                <h3 className={styles.chartTitle}>💸 Phân bổ chi phí</h3>
-                <div className={styles.chartContainer}>
-                  <ResponsiveContainer width='100%' height={300}>
-                    <PieChart>
-                      <Pie
-                        data={costData}
-                        cx='50%'
-                        cy='50%'
-                        labelLine={false}
-                        label={({ name, percent }) =>
-                          `${name} ${((percent || 0) * 100).toFixed(0)}%`
-                        }
-                        outerRadius={80}
-                        fill='#8884d8'
-                        dataKey='value'
-                      >
-                        {costData.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
+            <HomeCharts monthlyData={monthlyData} categoryData={costData} />
           </div>
 
           {/* Feature Cards */}

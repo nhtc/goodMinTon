@@ -1,12 +1,14 @@
 "use client"
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, Suspense, lazy } from "react"
 import { apiService } from "../lib/api"
-import _ from "lodash"
+import omit from "lodash/omit"
 import { EditableContent, usePermissions } from "./AuthorizedComponent"
 import { useText } from "../hooks/useText"
 import { TEXT_CONSTANTS } from "../lib/constants/text"
 import styles from "./GameForm.module.css"
-import DatePicker from "./DatePicker"
+
+// Lazy load DatePicker for better performance
+const DatePicker = lazy(() => import("./DatePicker"))
 
 interface Member {
   id: string
@@ -141,13 +143,13 @@ const GameForm: React.FC<GameFormProps> = ({
     })
 
     if (errors.members) {
-      setErrors(prev => _.omit(prev, "members"))
+      setErrors(prev => omit(prev, "members"))
     }
   }
 
   const selectAllMembers = () => {
     setSelectedMembers(members.map(member => member.id))
-    setErrors(prev => _.omit(prev, "members"))
+    setErrors(prev => omit(prev, "members"))
   }
 
   const clearAllMembers = () => {
@@ -535,7 +537,7 @@ const GameForm: React.FC<GameFormProps> = ({
             <div className={styles.alertMessage}>{errors.submit}</div>
           </div>
           <button
-            onClick={() => setErrors(prev => _.omit(prev, "submit"))}
+            onClick={() => setErrors(prev => omit(prev, "submit"))}
             className={styles.alertClose}
           >
             ✕
@@ -566,23 +568,25 @@ const GameForm: React.FC<GameFormProps> = ({
                   <span className={styles.labelText}>{text.field.gameDate()}</span>
                   <span className={styles.requiredStar}>*</span>
                 </label>
-                <DatePicker
-                  selected={date}
-                  onChange={(newDate) => {
-                    if (newDate) {
-                      setDate(newDate)
-                      if (errors.date) setErrors(prev => _.omit(prev, "date"))
-                    }
-                  }}
-                  maxDate={new Date()}
-                  minDate={(() => {
-                    const oneYearAgo = new Date()
-                    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
-                    return oneYearAgo
-                  })()}
-                  placeholder="Chọn ngày chơi..."
-                  hasError={!!errors.date}
-                />
+                <Suspense fallback={<div style={{ padding: '10px', textAlign: 'center', color: '#888' }}>Đang tải...</div>}>
+                  <DatePicker
+                    selected={date}
+                    onChange={(newDate) => {
+                      if (newDate) {
+                        setDate(newDate)
+                        if (errors.date) setErrors(prev => omit(prev, "date"))
+                      }
+                    }}
+                    maxDate={new Date()}
+                    minDate={(() => {
+                      const oneYearAgo = new Date()
+                      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
+                      return oneYearAgo
+                    })()}
+                    placeholder="Chọn ngày chơi..."
+                    hasError={!!errors.date}
+                  />
+                </Suspense>
                 {errors.date && (
                   <div className={`${styles.fieldError} ${styles.friendly}`}>
                     <span>😅 {errors.date}</span>
@@ -612,7 +616,7 @@ const GameForm: React.FC<GameFormProps> = ({
                       onClick={() => {
                         setLocation(preset.value)
                         if (errors.location)
-                          setErrors(prev => _.omit(prev, "location"))
+                          setErrors(prev => omit(prev, "location"))
                       }}
                       className={`${styles.presetCard} ${
                         location === preset.value ? styles.selected : ""
@@ -632,7 +636,7 @@ const GameForm: React.FC<GameFormProps> = ({
                     onChange={e => {
                       setLocation(e.target.value)
                       if (errors.location)
-                        setErrors(prev => _.omit(prev, "location"))
+                        setErrors(prev => omit(prev, "location"))
                     }}
                     className={`${styles.formInput} ${styles.friendly} ${
                       errors.location ? "error" : ""
@@ -685,7 +689,7 @@ const GameForm: React.FC<GameFormProps> = ({
                     onClick={() => {
                       setYardCost(preset.value)
                       if (errors.yardCost)
-                        setErrors(prev => _.omit(prev, "yardCost"))
+                        setErrors(prev => omit(prev, "yardCost"))
                     }}
                     className={`${styles.presetCard} ${
                       yardCost === preset.value ? styles.selected : ""
@@ -720,7 +724,7 @@ const GameForm: React.FC<GameFormProps> = ({
                       const value = e.target.value.replace(/[^0-9]/g, "") // Only allow numbers
                       setYardCost(value === "" ? 0 : Number(value) * 1000)
                       if (errors.yardCost)
-                        setErrors(prev => _.omit(prev, "yardCost"))
+                        setErrors(prev => omit(prev, "yardCost"))
                     }}
                     className={`${styles.formInput} ${styles.friendly} ${
                       styles.money
@@ -762,9 +766,9 @@ const GameForm: React.FC<GameFormProps> = ({
                       setShuttleCockQuantity(preset.quantity)
                       setShuttleCockPrice(preset.price)
                       if (errors.shuttleCockQuantity)
-                        setErrors(prev => _.omit(prev, "shuttleCockQuantity"))
+                        setErrors(prev => omit(prev, "shuttleCockQuantity"))
                       if (errors.shuttleCockPrice)
-                        setErrors(prev => _.omit(prev, "shuttleCockPrice"))
+                        setErrors(prev => omit(prev, "shuttleCockPrice"))
                     }}
                     className={`${styles.presetCard} ${
                       shuttleCockQuantity === preset.quantity &&
@@ -808,7 +812,7 @@ const GameForm: React.FC<GameFormProps> = ({
                           setShuttleCockQuantity(quantity)
                           if (errors.shuttleCockQuantity)
                             setErrors(prev =>
-                              _.omit(prev, "shuttleCockQuantity")
+                              omit(prev, "shuttleCockQuantity")
                             )
                         }}
                         className={`${styles.quantityBtn} ${
@@ -836,7 +840,7 @@ const GameForm: React.FC<GameFormProps> = ({
                         const value = e.target.value.replace(/[^0-9]/g, "") // Only allow numbers
                         setShuttleCockQuantity(value === "" ? 0 : Number(value))
                         if (errors.shuttleCockQuantity)
-                          setErrors(prev => _.omit(prev, "shuttleCockQuantity"))
+                          setErrors(prev => omit(prev, "shuttleCockQuantity"))
                       }}
                       className={`${styles.formInput} ${styles.friendly} ${
                         errors.shuttleCockQuantity ? "error" : ""
@@ -878,7 +882,7 @@ const GameForm: React.FC<GameFormProps> = ({
                           value === "" ? 0 : Number(value) * 1000
                         )
                         if (errors.shuttleCockPrice)
-                          setErrors(prev => _.omit(prev, "shuttleCockPrice"))
+                          setErrors(prev => omit(prev, "shuttleCockPrice"))
                       }}
                       className={`${styles.formInput} ${styles.friendly} ${
                         styles.money
@@ -935,7 +939,7 @@ const GameForm: React.FC<GameFormProps> = ({
                     const value = e.target.value.replace(/[^0-9]/g, "") // Only allow numbers
                     setOtherFees(value === "" ? 0 : Number(value) * 1000)
                     if (errors.otherFees)
-                      setErrors(prev => _.omit(prev, "otherFees"))
+                      setErrors(prev => omit(prev, "otherFees"))
                   }}
                   className={`${styles.formInput} ${styles.friendly} ${
                     styles.money

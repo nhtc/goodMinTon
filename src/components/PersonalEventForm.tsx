@@ -1,12 +1,9 @@
 "use client"
 import React, { useState, useEffect, useMemo } from 'react'
-import _ from 'lodash'
+import omit from 'lodash/omit'
 import styles from './PersonalEventForm.module.css'
-import MemberAutocomplete from './MemberAutocomplete'
 import { useMembers } from '@/hooks/useQueries'
 import type { 
-  Member, 
-  PersonalEventFormData, 
   CreatePersonalEventData, 
   UpdatePersonalEventData,
   PersonalEvent 
@@ -148,9 +145,9 @@ const PersonalEventForm: React.FC<PersonalEventFormProps> = ({
       if (isSelected) {
         newSelected = prev.filter(id => id !== memberId)
         // Remove custom amount and prepaid data when deselecting member
-        setMemberCustomAmounts(prevAmounts => _.omit(prevAmounts, memberId))
-        setMemberPrepaidAmounts(prevPrepaid => _.omit(prevPrepaid, memberId))
-        setMemberPrepaidCategories(prevCategories => _.omit(prevCategories, memberId))
+        setMemberCustomAmounts(prevAmounts => omit(prevAmounts, memberId))
+        setMemberPrepaidAmounts(prevPrepaid => omit(prevPrepaid, memberId))
+        setMemberPrepaidCategories(prevCategories => omit(prevCategories, memberId))
       } else {
         newSelected = [...prev, memberId]
         // Initialize with 0 - no auto-populate
@@ -170,7 +167,7 @@ const PersonalEventForm: React.FC<PersonalEventFormProps> = ({
       
       // Clear participants error if we now have selected members
       if (newSelected.length > 0 && errors.participants) {
-        setErrors(prev => _.omit(prev, 'participants'))
+        setErrors(prev => omit(prev, 'participants'))
       }
       
       return newSelected
@@ -185,7 +182,7 @@ const PersonalEventForm: React.FC<PersonalEventFormProps> = ({
     
     // Clear total cost error when amounts change
     if (errors.totalCost) {
-      setErrors(prev => _.omit(prev, 'totalCost'))
+      setErrors(prev => omit(prev, 'totalCost'))
     }
   }
 
@@ -323,7 +320,7 @@ const PersonalEventForm: React.FC<PersonalEventFormProps> = ({
                   value={title}
                   onChange={(e) => {
                     setTitle(e.target.value)
-                    if (errors.title) setErrors(prev => _.omit(prev, 'title'))
+                    if (errors.title) setErrors(prev => omit(prev, 'title'))
                   }}
                   className={`${styles.formInput} ${styles.friendly} ${errors.title ? 'error' : ''}`}
                   placeholder="VD: Tiệc sinh nhật, Đi cà phê, Ăn tối..."
@@ -369,7 +366,7 @@ const PersonalEventForm: React.FC<PersonalEventFormProps> = ({
                     value={date}
                     onChange={(e) => {
                       setDate(e.target.value)
-                      if (errors.date) setErrors(prev => _.omit(prev, 'date'))
+                      if (errors.date) setErrors(prev => omit(prev, 'date'))
                     }}
                     className={`${styles.formInput} ${styles.friendly} ${errors.date ? 'error' : ''}`}
                   />
@@ -418,7 +415,7 @@ const PersonalEventForm: React.FC<PersonalEventFormProps> = ({
                       const value = e.target.value.replace(/[^0-9]/g, "")
                       const amount = value === "" ? 0 : Number(value) * 1000
                       setTotalAmount(amount)
-                      if (errors.totalAmount) setErrors(prev => _.omit(prev, 'totalAmount'))
+                      if (errors.totalAmount) setErrors(prev => omit(prev, 'totalAmount'))
                     }}
                     className={`${styles.customAmountInput} ${errors.totalAmount ? 'error' : ''}`}
                     placeholder="0"
