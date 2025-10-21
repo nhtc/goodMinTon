@@ -34,7 +34,7 @@ export default function RootLayout({
         <Analytics />
         <QueryProvider>
           <AuthProvider>
-            <ToastProvider>lay
+            <ToastProvider>
               <AlertProvider>
                 <Navbar />
                 <main className='main-content'>{children}</main>
