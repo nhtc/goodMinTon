@@ -7,6 +7,7 @@ import { AuthProvider } from "@/context/AuthContext"
 import { ToastProvider } from "@/context/ToastContext"
 import { AlertProvider } from "@/context/AlertContext"
 import { QueryProvider } from "@/context/QueryContext"
+import { Analytics } from "@vercel/analytics/next"
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -30,9 +31,10 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body className={inter.className}>
+        <Analytics />
         <QueryProvider>
           <AuthProvider>
-            <ToastProvider>
+            <ToastProvider>lay
               <AlertProvider>
                 <Navbar />
                 <main className='main-content'>{children}</main>
