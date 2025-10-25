@@ -29,7 +29,7 @@ export function removeAuthResponse() {
 }
 // Simple mock users for testing
 const MOCK_USERS = [
-  { id: '1', username: 'admin', password: 'password123)', role: 'admin' },
+  { id: '1', username: 'admin', password: 'password123)))', role: 'admin' },
 ]
 
 export async function validateCredentials(username: string, password: string) {
