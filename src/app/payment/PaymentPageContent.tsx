@@ -4,7 +4,7 @@ import {useSearchParams} from "next/navigation"
 import Link from "next/link"
 import styles from "./page.module.css"
 import {useToast} from "../../context/ToastContext"
-import {useMembers, useMemberOutstanding, usePersonalEvents, useBulkPaymentOperation} from "../../hooks/useQueries"
+import {useMembers, useMemberPaymentInfo, useBulkPaymentOperation} from "../../hooks/useQueries"
 import MemberAutocomplete from "../../components/MemberAutocomplete"
 import ConfirmationModal from "../../components/ConfirmationModal"
 import {useAuth} from "../../context/AuthContext"
@@ -54,12 +54,6 @@ const PaymentPageContent = () => {
     error: membersError
   } = useMembers()
 
-  const {
-    data: personalEventsData,
-    isLoading: personalEventsLoading,
-    error: personalEventsError
-  } = usePersonalEvents()
-
   // Bulk payment operation hook
   const bulkPaymentMutation = useBulkPaymentOperation()
 
@@ -76,7 +70,7 @@ const PaymentPageContent = () => {
   const [isChangingMember, setIsChangingMember] = useState<boolean>(false)
   const [showAllGames, setShowAllGames] = useState<boolean>(false)
   const [showAllPersonalEvents, setShowAllPersonalEvents] = useState<boolean>(false)
-
+  
   // Confirmation modal state
   const [confirmationModal, setConfirmationModal] = useState<{
     isOpen: boolean
@@ -94,46 +88,26 @@ const PaymentPageContent = () => {
     confirmText: ''
   })
 
-  // Use the custom hook for outstanding calculation - this will cache the calculation
+  // Use the new backend API to get payment info (replaces frontend calculation)
   const {
-    data: outstandingData,
-    isLoading: outstandingLoading,
-    error: outstandingError,
-    isFetching: outstandingFetching
-  } = useMemberOutstanding(selectedMember?.id || null)
+    data: paymentInfoData,
+    isLoading: paymentInfoLoading,
+    error: paymentInfoError,
+    isFetching: paymentInfoFetching
+  } = useMemberPaymentInfo(selectedMember?.id || null)
 
-  const memberOutstandingAmount = outstandingData?.totalOutstanding || 0
-  const unpaidGames = outstandingData?.unpaidGames || []
-
-  // Calculate member personal events data when member is selected
-  const memberPersonalEventsData = React.useMemo(() => {
-    if (!selectedMember) {
-      return {unpaidPersonalEvents: [], totalAmount: 0}
-    }
-
-    const allPersonalEvents = personalEventsData?.data || []
-    const unpaidPersonalEvents = allPersonalEvents.filter(event => {
-      const participation = event.participants.find(p => p.memberId === selectedMember.id)
-      return participation && !participation.hasPaid
-    })
-
-    const totalAmount = unpaidPersonalEvents.reduce((sum, event) => {
-      const participation = event.participants.find(p => p.memberId === selectedMember.id)
-      return sum + (participation ? participation.customAmount - (participation.prePaid || 0) : 0)
-    }, 0)
-
-    return {unpaidPersonalEvents, totalAmount}
-  }, [selectedMember, personalEventsData])
-
-  const unpaidPersonalEvents = memberPersonalEventsData.unpaidPersonalEvents
-  const memberPersonalEventsAmount = memberPersonalEventsData.totalAmount
-
+  // Extract data from the backend response
+  const memberOutstandingAmount = paymentInfoData?.games.totalUnpaid || 0
+  const unpaidGames = paymentInfoData?.games.unpaidGames || []
+  const memberPersonalEventsAmount = paymentInfoData?.personalEvents.totalUnpaid || 0
+  const unpaidPersonalEvents = paymentInfoData?.personalEvents.unpaidEvents || []
+  
   // Handle members loading error
   const error = membersError ? 'Failed to load members' : null
   const loading = membersLoading
 
   // Combined loading state for better UX
-  const isCalculatingAmount = outstandingLoading || outstandingFetching || isChangingMember
+  const isCalculatingAmount = paymentInfoLoading || paymentInfoFetching || isChangingMember
 
   // Toggle function for showing all games
   const toggleShowAllGames = () => {
@@ -635,7 +609,7 @@ Nội dung: ${content}
                           </div>
                         </div>
                       </div>
-                    ) : (outstandingError || personalEventsError) ? (
+                    ) : paymentInfoError ? (
                       <div className={styles.errorState}>
                         <span className={styles.errorIcon}>⚠️</span>
                         <p>Không thể tính toán số tiền cần thanh toán</p>
@@ -692,9 +666,9 @@ Nội dung: ${content}
                                   </div>
                                 )}
                                 <div className={styles.gamesList}>
-                                  {(showAllGames ? unpaidGames : unpaidGames.slice(0, 3)).map((game, index) => {
-                                    const participation = game.participants.find(p => p.id === selectedMember.id)
-                                    const gameAmount = participation ? game.costPerMember - participation.prePaid + (participation.customAmount || 0) : game.costPerMember
+                                  {(showAllGames ? unpaidGames : unpaidGames.slice(0, 3)).map((game: any, index: number) => {
+                                    // Backend already calculated the outstanding amount
+                                    const gameAmount = game.outstandingAmount
                                     const gameDate = new Date(game.date).toLocaleDateString("vi-VN", {
                                       weekday: "short",
                                       day: "2-digit",
@@ -766,9 +740,9 @@ Nội dung: ${content}
                                   </div>
                                 )}
                                 <div className={styles.gamesList}>
-                                  {(showAllPersonalEvents ? unpaidPersonalEvents : unpaidPersonalEvents.slice(0, 3)).map((event, index) => {
-                                    const participation = event.participants.find(p => p.memberId === selectedMember.id)
-                                    const eventAmount = participation ? participation.customAmount - (participation.prePaid || 0) : 0
+                                  {(showAllPersonalEvents ? unpaidPersonalEvents : unpaidPersonalEvents.slice(0, 3)).map((event: any, index: number) => {
+                                    // Backend already calculated the outstanding amount
+                                    const eventAmount = event.outstandingAmount
                                     const eventDate = new Date(event.date).toLocaleDateString("vi-VN", {
                                       weekday: "short",
                                       day: "2-digit",

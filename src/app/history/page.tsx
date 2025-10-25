@@ -89,6 +89,7 @@ const HistoryPage = () => {
     { value: 'unpaid', label: 'Còn người chưa trả' }
   ]
   const [paymentLoading, setPaymentLoading] = useState<string | null>(null)
+  const [expandedUnpaidGames, setExpandedUnpaidGames] = useState<Set<string>>(new Set())
   const { canEdit, userRole } = usePermissions()
   const { showSuccess, showError } = useToast()
 
@@ -144,6 +145,19 @@ const HistoryPage = () => {
     })
 
     return categoryBreakdown
+  }
+
+  // Toggle function to show/hide all unpaid members
+  const toggleUnpaidMembers = (gameId: string) => {
+    setExpandedUnpaidGames(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(gameId)) {
+        newSet.delete(gameId)
+      } else {
+        newSet.add(gameId)
+      }
+      return newSet
+    })
   }
 
   const fetchGames = async (page: number = currentPage, filters?: { search?: string; paymentStatus?: PaymentStatusFilter }) => {
@@ -873,7 +887,27 @@ const HistoryPage = () => {
                         </div>
 
                         <div className={styles.participantsPaymentList}>
-                          {game.participants.map(participant => {
+                          {(() => {
+                            // Sort participants: unpaid first, then paid
+                            const sortedParticipants = [...game.participants].sort((a, b) => {
+                              if (a.hasPaid === b.hasPaid) return 0
+                              return a.hasPaid ? 1 : -1 // unpaid (false) comes before paid (true)
+                            })
+                            
+                            const isExpanded = expandedUnpaidGames.has(game.id)
+                            const maxMembersToShow = 4
+                            const hasMoreMembers = sortedParticipants.length > maxMembersToShow
+                            
+                            // Show limited members or all if expanded
+                            const participantsToDisplay = isExpanded 
+                              ? sortedParticipants 
+                              : sortedParticipants.slice(0, maxMembersToShow)
+                            
+                            const hiddenCount = sortedParticipants.length - maxMembersToShow
+                            
+                            return (
+                              <>
+                                {participantsToDisplay.map(participant => {
                             const paymentKey = `${game.id}-${participant.id}`
                             const isLoading = paymentLoading === paymentKey
                             const remainingAmount = getMemberRemainingAmount(
@@ -1032,6 +1066,28 @@ const HistoryPage = () => {
                               </div>
                             )
                           })}
+                          
+                          {/* Show More/Less button for members */}
+                          {hasMoreMembers && (
+                            <button
+                              onClick={() => toggleUnpaidMembers(game.id)}
+                              className={styles.showMoreUnpaidBtn}
+                              title={isExpanded ? 'Thu gọn danh sách' : `Hiển thị thêm ${hiddenCount} thành viên`}
+                            >
+                              <span className={styles.showMoreIcon}>
+                                {isExpanded ? '▲' : '▼'}
+                              </span>
+                              <span className={styles.showMoreText}>
+                                {isExpanded 
+                                  ? 'Thu gọn' 
+                                  : `Hiển thị thêm ${hiddenCount} thành viên`
+                                }
+                              </span>
+                            </button>
+                          )}
+                        </>
+                        )
+                      })()}
                         </div>
 
                         {/* ✅ Updated payment total to show correct amounts */}

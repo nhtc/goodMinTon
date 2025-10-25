@@ -21,12 +21,12 @@ interface NavbarUserProps {
 // Component for guest state
 const GuestSection: React.FC<{ className?: string }> = ({ className = '' }) => (
   <div className={className}>
-    <div className={styles.guestInfo}>
+    {/* <div className={styles.guestInfo}>
       <span className={styles.guestRole}>
         <span>👁️</span>
         <span>Chỉ xem</span>
       </span>
-    </div>
+    </div> */}
     <Link href="/login" className={styles.loginBtn}>
       <span>🔐</span>
       <span>Đăng nhập</span>

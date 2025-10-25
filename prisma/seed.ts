@@ -3,10 +3,11 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // Configuration for data generation
+// 🔥 PERFORMANCE TESTING MODE - Large dataset
 const CONFIG = {
-  members: 100, // Total number of members
-  games: 500, // Total number of games (spanning 2 years)
-  personalEvents: 50, // Total number of personal events
+  members: 500, // Total number of members (increased from 100)
+  games: 5000, // Total number of games (increased from 500) - spanning 2 years
+  personalEvents: 300, // Total number of personal events (increased from 50)
   avgParticipantsPerGame: 6, // Average participants per game
   avgParticipantsPerEvent: 8, // Average participants per event
 };

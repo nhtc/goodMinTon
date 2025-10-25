@@ -63,6 +63,7 @@ export const queryKeys = {
   // Parameterized keys
   game: (id: string) => ['games', id] as const,
   memberOutstanding: (memberId: string) => ['member-outstanding', memberId] as const,
+  memberPaymentInfo: (memberId: string) => ['member-payment-info', memberId] as const,
   personalEvents: ['personalEvents'] as const,
   personalEventsWithFilters: (filters?: PersonalEventFilters) => ['personalEvents', filters] as const,
   personalEvent: (id: string) => ['personalEvents', id] as const,
@@ -518,6 +519,9 @@ export const useBulkPaymentOperation = () => {
     onSuccess: async (data, { type, memberId }) => {
       console.log('🔄 Bulk payment success, refetching queries...', { type, memberId })
       
+      // Invalidate payment info for the specific member
+      await queryClient.invalidateQueries({ queryKey: queryKeys.memberPaymentInfo(memberId) })
+      
       // Invalidate all related queries to ensure fresh data
       await queryClient.invalidateQueries({ queryKey: ['member-outstanding'] })
       
@@ -538,9 +542,12 @@ export const useBulkPaymentOperation = () => {
       // Also invalidate and refetch members query
       await queryClient.invalidateQueries({ queryKey: queryKeys.members })
       
-      // Force refetch member outstanding calculations
+      // Force refetch member payment info
+      await queryClient.refetchQueries({ queryKey: queryKeys.memberPaymentInfo(memberId) })
+      
+      // Force refetch member outstanding calculations (for backwards compatibility)
       await queryClient.refetchQueries({ queryKey: ['member-outstanding'] })
-      console.log('✅ Member outstanding queries refetched')
+      console.log('✅ Member payment info refetched')
       
       console.log('✅ All queries refetched successfully')
     },
@@ -548,5 +555,44 @@ export const useBulkPaymentOperation = () => {
     onError: (error) => {
       console.error('❌ Bulk payment operation failed:', error)
     }
+  })
+}
+
+/**
+ * Hook for fetching comprehensive payment information for a member
+ * This replaces the frontend calculation by calling a backend API
+ * that returns all payment details (games + events) in one call
+ * 
+ * @param memberId - The ID of the member to fetch payment info for
+ * @returns Query result with payment information
+ */
+export const useMemberPaymentInfo = (memberId: string | null) => {
+  return useQuery({
+    queryKey: queryKeys.memberPaymentInfo(memberId || ''),
+    queryFn: async () => {
+      if (!memberId) {
+        return null
+      }
+
+      console.log('🔍 Fetching payment info for member:', memberId)
+      
+      const response = await fetch(`/api/members/${memberId}/payments/info`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch member payment information')
+      }
+
+      const data = await response.json()
+      console.log('✅ Payment info fetched:', {
+        totalOutstanding: data.summary.totalOutstanding,
+        unpaidGames: data.games.unpaidGames.length,
+        unpaidEvents: data.personalEvents.unpaidEvents.length
+      })
+      
+      return data
+    },
+    enabled: !!memberId,
+    staleTime: CACHE_CONFIG.PAYMENT_STALE_TIME,
+    gcTime: CACHE_CONFIG.STANDARD_GC_TIME,
   })
 }
