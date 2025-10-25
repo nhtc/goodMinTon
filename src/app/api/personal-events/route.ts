@@ -15,11 +15,20 @@ export async function GET(request: NextRequest) {
     // Build where clause for filtering
     const where: any = {}
     
-    // Search in title and description
+    // Search in title, description, and participant member names
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
+        { description: { contains: search, mode: 'insensitive' } },
+        {
+          participants: {
+            some: {
+              member: {
+                name: { contains: search, mode: 'insensitive' }
+              }
+            }
+          }
+        }
       ]
     }
 

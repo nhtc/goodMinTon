@@ -528,6 +528,50 @@
   flex-shrink: 0;
 }
 
+/* ===== SHOW MORE UNPAID BUTTON ===== */
+.showMoreUnpaidBtn {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #fbbf24;
+  border-radius: 8px;
+  color: #92400e;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.showMoreUnpaidBtn:hover {
+  background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
+  border-color: #f59e0b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(251, 191, 36, 0.2);
+}
+
+.showMoreUnpaidBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px -1px rgba(251, 191, 36, 0.2);
+}
+
+.showMoreIcon {
+  font-size: 0.75rem;
+  transition: transform 0.2s ease;
+}
+
+.showMoreUnpaidBtn:hover .showMoreIcon {
+  transform: scale(1.2);
+}
+
+.showMoreText {
+  font-weight: 600;
+}
+
 /* ===== PAYMENT TOTAL STYLES ===== */
 .paymentTotals {
   margin-top: 1rem;

@@ -267,7 +267,7 @@ export const apiService = {
   personalEvents: {
     /**
      * Retrieves personal events with optional filtering
-     * @param filters - Optional filters for search, date range, member, and pagination
+     * @param filters - Optional filters for search (title, description, member names), date range, member, and pagination
      * @returns Promise resolving to paginated personal events response
      */
     async getAll(filters?: PersonalEventFilters): Promise<PersonalEventListResponse> {

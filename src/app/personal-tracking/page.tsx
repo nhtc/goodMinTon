@@ -1,15 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AuthorizedComponent } from '@/components/AuthorizedComponent'
 import PersonalEventCard from '@/components/PersonalEventCard'
 import PersonalEventDetailsModal from '@/components/PersonalEventDetailsModal'
 import PersonalEventForm from '@/components/PersonalEventForm'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import Modal from '@/components/Modal'
+import Pagination from '@/components/Pagination'
 import { usePersonalEvents, useDeletePersonalEvent, useUpdatePersonalEvent, useCreatePersonalEvent } from '@/hooks/useQueries'
 import { useToast } from '@/hooks/useToast'
 import { useAuth } from '@/context/AuthContext'
+import { useDebounce } from '@/hooks/useDebounce'
 import { apiService } from '@/lib/api'
 import { PersonalEvent, PersonalEventFilters, CreatePersonalEventData, UpdatePersonalEventData } from '@/types'
 import { filterPersonalEventsByPaymentStatus, PaymentStatusFilter } from '@/utils/paymentFilters'
@@ -36,9 +38,20 @@ const PersonalTrackingPage: React.FC = () => {
   
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState<string>('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 500) // Debounce search by 500ms
   const [dateRange, setDateRange] = useState<{ start?: string; end?: string }>({})
   const [paymentStatus, setPaymentStatus] = useState<'all' | 'paid' | 'unpaid'>(PAYMENT_STATUS_OPTIONS.ALL)
   const [selectedMember, setSelectedMember] = useState<string>('')
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 0,
+    page: 1,
+    limit: 20,
+    hasMore: false
+  })
 
   // Payment status filter options
   const paymentStatusOptions = [
@@ -49,37 +62,42 @@ const PersonalTrackingPage: React.FC = () => {
 
   // Create filters object
   const filters: PersonalEventFilters = {
-    search: searchTerm || undefined,
+    search: debouncedSearchTerm || undefined,
     startDate: dateRange.start || undefined,
     endDate: dateRange.end || undefined,
     memberId: selectedMember || undefined,
+    page: currentPage,
+    limit: 20
   }
 
   // Only pass filters if there are actual filter values
   const hasActiveFilters = filters.search || filters.startDate || filters.endDate || filters.memberId
   
-  // Hooks
-  const { data: personalEventsResponse, isLoading, error, refetch } = usePersonalEvents(hasActiveFilters ? filters : undefined)
+  // Hooks - always pass filters with pagination
+  const { data: personalEventsResponse, isLoading, error, refetch } = usePersonalEvents(filters)
   const personalEvents = personalEventsResponse?.data || []
+  
+  // Update pagination state when data changes
+  useEffect(() => {
+    if (personalEventsResponse?.pagination) {
+      setPagination({
+        total: personalEventsResponse.pagination.totalCount,
+        totalPages: personalEventsResponse.pagination.totalPages,
+        page: personalEventsResponse.pagination.page,
+        limit: personalEventsResponse.pagination.limit,
+        hasMore: personalEventsResponse.pagination.hasNext
+      })
+    }
+  }, [personalEventsResponse])
   const deletePersonalEventMutation = useDeletePersonalEvent()
   const updatePersonalEventMutation = useUpdatePersonalEvent()
   const createPersonalEventMutation = useCreatePersonalEvent()
   const { addToast } = useToast()
 
-  // Filter events based on search term
-  const filteredEvents = personalEvents.filter(event => {
-    const matchesSearch = searchTerm === '' || 
-      event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||                                                              
-      (event.description && event.description.toLowerCase().includes(searchTerm.toLowerCase())) ||                                 
-      event.participants.some(p => p.member.name.toLowerCase().includes(searchTerm.toLowerCase()))                                 
-
-    return matchesSearch
-  })
-
-  // Apply payment status filter
-  const finalFilteredEvents = filterPersonalEventsByPaymentStatus(filteredEvents, paymentStatus as PaymentStatusFilter)
-
-  // Calculate statistics
+  // Apply payment status filter on current page data (backend handles search/date/member filters)
+  const finalFilteredEvents = filterPersonalEventsByPaymentStatus(personalEvents, paymentStatus as PaymentStatusFilter)
+  
+  // Calculate statistics from current page
   const totalEvents = finalFilteredEvents.length
   const totalParticipants = finalFilteredEvents.reduce((sum, event) => sum + event.participants.length, 0)
   const totalAmount = finalFilteredEvents.reduce((sum, event) => sum + event.totalCost, 0)
@@ -96,7 +114,20 @@ const PersonalTrackingPage: React.FC = () => {
     return sum + participantsToCalculate
       .filter(p => p.hasPaid)
       .reduce((participantSum, p) => participantSum + (p.customAmount - (p.prePaid || 0)), 0)
-  }, 0)// Event handlers
+  }, 0)
+
+  // Page change handler
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [debouncedSearchTerm, dateRange, paymentStatus, selectedMember])
+
+  // Event handlers
   const handleCreateEvent = () => {
     // Double-check authentication
     if (!isAuthenticated || !isAuthorized) {
@@ -272,7 +303,7 @@ const PersonalTrackingPage: React.FC = () => {
             </AuthorizedComponent>
 
             {/* Export to Excel Button (visible to all) */}
-            {filteredEvents.length > 0 && isAuthorized && (
+            {finalFilteredEvents.length > 0 && isAuthorized && (
               <button
                 onClick={handleExportToExcel}
                 className={styles.exportBtn}
@@ -493,6 +524,20 @@ const PersonalTrackingPage: React.FC = () => {
                 />
               ))}
             </div>
+            
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+              <div className={styles.paginationContainer}>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={pagination.totalPages}
+                  total={pagination.total}
+                  limit={pagination.limit}
+                  onPageChange={handlePageChange}
+                  showInfo={true}
+                />
+              </div>
+            )}
           </div>
         )}
 
