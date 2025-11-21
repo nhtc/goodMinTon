@@ -4,7 +4,7 @@ import {useSearchParams} from "next/navigation"
 import Link from "next/link"
 import styles from "./page.module.css"
 import {useToast} from "../../context/ToastContext"
-import {useMembers, useMemberPaymentInfo, useBulkPaymentOperation} from "../../hooks/useQueries"
+import {useMemberPaymentInfo, useBulkPaymentOperation, useActiveMembers} from "../../hooks/useQueries"
 import MemberAutocomplete from "../../components/MemberAutocomplete"
 import ConfirmationModal from "../../components/ConfirmationModal"
 import {useAuth} from "../../context/AuthContext"
@@ -52,7 +52,7 @@ const PaymentPageContent = () => {
     data: members = [],
     isLoading: membersLoading,
     error: membersError
-  } = useMembers()
+  } = useActiveMembers()
 
   // Bulk payment operation hook
   const bulkPaymentMutation = useBulkPaymentOperation()
@@ -70,7 +70,7 @@ const PaymentPageContent = () => {
   const [isChangingMember, setIsChangingMember] = useState<boolean>(false)
   const [showAllGames, setShowAllGames] = useState<boolean>(false)
   const [showAllPersonalEvents, setShowAllPersonalEvents] = useState<boolean>(false)
-  
+
   // Confirmation modal state
   const [confirmationModal, setConfirmationModal] = useState<{
     isOpen: boolean
@@ -101,7 +101,7 @@ const PaymentPageContent = () => {
   const unpaidGames = paymentInfoData?.games.unpaidGames || []
   const memberPersonalEventsAmount = paymentInfoData?.personalEvents.totalUnpaid || 0
   const unpaidPersonalEvents = paymentInfoData?.personalEvents.unpaidEvents || []
-  
+
   // Handle members loading error
   const error = membersError ? 'Failed to load members' : null
   const loading = membersLoading
@@ -787,7 +787,7 @@ Nội dung: ${content}
                             )}
 
                             {/* Global Bulk Actions - Only show if both games and personal events exist */}
-                                    {unpaidGames.length > 0 && unpaidPersonalEvents.length > 0 && isAuthenticated && (
+                            {unpaidGames.length > 0 && unpaidPersonalEvents.length > 0 && isAuthenticated && (
                               <div className={styles.globalBulkActions}>
                                 <div className={styles.breakdownHeader}>
                                   <span className={styles.breakdownIcon}>🔄</span>
